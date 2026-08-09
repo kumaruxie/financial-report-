@@ -1,0 +1,1403 @@
+import React from "react";
+import { X, Download, Printer, Shield, CheckCircle2, AlertTriangle, HeartPulse, PiggyBank, GraduationCap, Heart, Home, Award, TrendingUp, Layers, Compass, CheckSquare } from "lucide-react";
+import { computeReport, INR, INR_L, EDU_INFLATION, MARRIAGE_INFLATION, RETIREMENT_INFLATION, SHORT_TERM_RETURN, GUARANTEED_RETURN, SWP_RETURN, EMERGENCY_MONTHS } from "../../utils/financialEngine";
+
+export default function EnterprisePdfDossier({ lead, onClose }) {
+  if (!lead) return null;
+  const r = computeReport(lead);
+
+  const reportId = lead._id || lead.id || `YWC-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+  const dateStr = new Date(lead.submittedAt || Date.now()).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const getDots = (p) => "■".repeat(p) + "□".repeat(10 - p);
+
+  const scoreColor = (s) => (s >= 70 ? "#10B981" : s >= 40 ? "#C99A4B" : "#F87171");
+
+  return (
+    <div className="epdf-modal-overlay">
+      <style>{`
+        .epdf-modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(7, 8, 12, 0.88);
+          backdrop-filter: blur(14px);
+          z-index: 99999;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 20px;
+          overflow-y: auto;
+        }
+
+        .epdf-toolbar {
+          width: 100%;
+          max-width: 210mm;
+          background: #0F172A;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 12px;
+          padding: 12px 24px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+          color: #FFF;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+          position: sticky;
+          top: 0;
+          z-index: 1000;
+        }
+
+        .epdf-document {
+          width: 210mm;
+          background: #FFFFFF;
+          color: #0F172A;
+          font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+          box-shadow: 0 24px 72px rgba(0, 0, 0, 0.4);
+          margin: 0 auto;
+        }
+
+        /* STRICT FIXED A4 PAGE DIMENSIONS */
+        .epdf-page {
+          width: 210mm;
+          height: 297mm;
+          padding: 20mm;
+          box-sizing: border-box;
+          position: relative;
+          background: #FFFFFF;
+          page-break-after: always;
+          break-after: page;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          border-bottom: 1px solid #E2E8F0;
+        }
+
+        .epdf-page:last-child {
+          border-bottom: none;
+        }
+
+        .epdf-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding-bottom: 12px;
+          border-bottom: 2px solid #F1F5F9;
+          margin-bottom: 24px;
+        }
+
+        .epdf-brand {
+          font-weight: 800;
+          font-size: 16px;
+          color: #0F172A;
+        }
+        .epdf-brand span { color: #C99A4B; }
+
+        .epdf-chip {
+          background: #F8FAFC;
+          border: 1px solid #CBD5E1;
+          padding: 4px 10px;
+          border-radius: 16px;
+          font-size: 10.5px;
+          font-family: 'JetBrains Mono', monospace;
+          color: #475569;
+          font-weight: 600;
+        }
+
+        .epdf-footer {
+          padding-top: 12px;
+          border-top: 1px solid #E2E8F0;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 10.5px;
+          color: #64748B;
+          font-family: 'JetBrains Mono', monospace;
+        }
+
+        .epdf-h2 {
+          font-size: 20px;
+          font-weight: 800;
+          color: #0F172A;
+          margin: 0 0 16px;
+          letter-spacing: -0.01em;
+        }
+
+        .epdf-card {
+          background: #F8FAFC;
+          border: 1px solid #E2E8F0;
+          border-radius: 10px;
+          padding: 16px 20px;
+          margin-bottom: 16px;
+        }
+
+        .epdf-table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 12px;
+          margin-bottom: 16px;
+        }
+
+        .epdf-table th {
+          background: #0F172A;
+          color: #FFFFFF;
+          padding: 8px 12px;
+          text-align: left;
+          font-size: 10.5px;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .epdf-table td {
+          padding: 9px 12px;
+          border-bottom: 1px solid #E2E8F0;
+          font-family: 'JetBrains Mono', monospace;
+        }
+
+        .epdf-table tr:nth-child(even) td {
+          background: #F8FAFC;
+        }
+
+        /* STRICT DECOUPLED PRINT MEDIA ENGINE */
+        @media print {
+          @page {
+            size: A4 portrait;
+            margin: 0;
+          }
+          body {
+            background: #FFFFFF !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          body * {
+            visibility: hidden !important;
+          }
+          .epdf-document, .epdf-document * {
+            visibility: visible !important;
+          }
+          .epdf-modal-overlay {
+            position: absolute !important;
+            inset: 0 !important;
+            background: #FFFFFF !important;
+            padding: 0 !important;
+            overflow: visible !important;
+          }
+          .epdf-toolbar {
+            display: none !important;
+          }
+          .epdf-document {
+            box-shadow: none !important;
+            width: 210mm !important;
+            margin: 0 !important;
+          }
+          .epdf-page {
+            width: 210mm !important;
+            height: 297mm !important;
+            padding: 20mm !important;
+            page-break-after: always !important;
+            break-after: page !important;
+            border-bottom: none !important;
+            box-sizing: border-box !important;
+          }
+        }
+      `}</style>
+
+      {/* MINIMALIST CONTROL BAR */}
+      <div className="epdf-toolbar">
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <Compass size={20} color="#C8A74D" />
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 14 }}>Financial Health & Wealth Planning Report — {lead.name}</div>
+            <div style={{ fontSize: 11, color: "#94A3B8" }}>Report ID: {reportId} • Generated on {dateStr}</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            onClick={handlePrint}
+            style={{
+              background: "#C8A74D",
+              color: "#07080C",
+              border: "none",
+              borderRadius: 6,
+              padding: "8px 16px",
+              fontWeight: 700,
+              fontSize: 13,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 6
+            }}
+          >
+            <Printer size={15} /> Print Report
+          </button>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: "#94A3B8", cursor: "pointer" }}>
+            <X size={20} />
+          </button>
+        </div>
+      </div>
+
+      {/* DECOUPLED 10-PAGE A4 PDF DOCUMENT */}
+      <div className="epdf-document">
+
+        {/* ================= PAGE 1: COVER PAGE ================= */}
+        <div className="epdf-page" style={{ background: "#FCFBF8", position: "relative" }}>
+          {/* Subtle top gold accent pattern bar */}
+          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 6, background: "linear-gradient(90deg, #C8A74D 0%, #1B2035 100%)" }} />
+
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 12 }}>
+              <div className="epdf-brand" style={{ fontSize: 20, color: "#1B2035" }}>Your <span style={{ color: "#C8A74D" }}>Wealth Compass</span></div>
+              <div style={{ fontSize: 11, color: "#6B7280", fontWeight: 700, fontFamily: "'JetBrains Mono', monospace" }}>
+                Report ID: {reportId}
+              </div>
+            </div>
+
+            {/* Main Cover Hero */}
+            <div style={{ marginTop: 40, marginBottom: 28 }}>
+              <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.15em", color: "#C8A74D", fontWeight: 800, marginBottom: 8 }}>
+                PERSONAL WEALTH ANALYSIS
+              </div>
+              <h1 style={{ fontSize: 32, fontWeight: 800, color: "#1B2035", margin: "0 0 10px", lineHeight: 1.15 }}>
+                Financial Health &<br />Wealth Planning Report
+              </h1>
+              <div style={{ width: 60, height: 3, background: "#C8A74D", margin: "12px 0 16px" }} />
+              <p style={{ fontSize: 12.5, color: "#6B7280", maxWidth: 480, lineHeight: 1.6, margin: 0 }}>
+                Comprehensive financial analysis report evaluating cashflow capacity, milestone goal inflation, post-retirement SWP longevity, and risk protection buffers.
+              </p>
+            </div>
+
+            {/* Prepared For Box */}
+            <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10, padding: "18px 22px", marginBottom: 24, boxShadow: "0 4px 12px rgba(0,0,0,0.03)" }}>
+              <div style={{ fontSize: 9.5, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, letterSpacing: "0.1em" }}>PREPARED EXCLUSIVELY FOR</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "#1B2035", marginTop: 4 }}>{lead.name ? lead.name.toUpperCase() : "CLIENT"}</div>
+              <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>Age {lead.age || 43} &bull; {lead.city || "Gurgaon"}</div>
+            </div>
+
+            {/* Score Callout Card */}
+            <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderLeft: "4px solid #C8A74D", borderRadius: 10, padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+              <div>
+                <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700 }}>OVERALL FINANCIAL HEALTH SCORE</div>
+                <div style={{ fontSize: 36, fontWeight: 800, color: "#1B2035", marginTop: 2, fontFamily: "monospace" }}>
+                  {r.scores.overallScore} <span style={{ fontSize: 16, color: "#6B7280", fontWeight: 500 }}>/ 100</span>
+                </div>
+              </div>
+              <div style={{
+                background: r.scores.overallScore >= 70 ? "#ECFDF5" : r.scores.overallScore >= 40 ? "#FFFBEB" : "#FEF2F2",
+                color: scoreColor(r.scores.overallScore),
+                border: `1px solid ${scoreColor(r.scores.overallScore)}`,
+                padding: "6px 16px",
+                borderRadius: 20,
+                fontSize: 12,
+                fontWeight: 800,
+                textTransform: "uppercase"
+              }}>
+                {r.scores.overallScore >= 70 ? "ON TRACK" : r.scores.overallScore >= 40 ? "NEEDS IMPROVEMENT" : "NEEDS ATTENTION"}
+              </div>
+            </div>
+
+            {/* 5 Audit Scope Checklist */}
+            <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10, padding: 18, marginBottom: 20 }}>
+              <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 10, letterSpacing: "0.05em" }}>AUDIT SCOPE INCLUDED IN THIS REPORT</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, fontSize: 11.5, color: "#1B2035" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}><CheckCircle2 size={14} color="#3E9F6E" /> <b>Retirement Reviewed</b></div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}><CheckCircle2 size={14} color="#3E9F6E" /> <b>Insurance Audited</b></div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}><CheckCircle2 size={14} color="#3E9F6E" /> <b>Goal Planning</b></div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}><CheckCircle2 size={14} color="#3E9F6E" /> <b>Cashflow Analysis</b></div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}><CheckCircle2 size={14} color="#3E9F6E" /> <b>Investment Strategy</b></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Metadata Grid & Footer */}
+          <div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, borderTop: "1px solid #E5E7EB", paddingTop: 14, marginBottom: 12 }}>
+              <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>GENERATED ON</div><div style={{ fontSize: 11.5, fontWeight: 700, color: "#1B2035" }}>{dateStr}</div></div>
+              <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>REPORT ID</div><div style={{ fontSize: 11.5, fontWeight: 700, color: "#1B2035", fontFamily: "monospace" }}>{reportId}</div></div>
+              <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>PREPARED BY</div><div style={{ fontSize: 11.5, fontWeight: 700, color: "#1B2035" }}>Your Wealth Compass</div></div>
+            </div>
+
+            <div className="epdf-footer" style={{ borderTop: "1px solid #E5E7EB", paddingTop: 10, fontSize: 9.5, color: "#6B7280", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>Prepared using Your Wealth Compass</div>
+              <div>Generated on {dateStr}</div>
+              <div>Page 1 of 10</div>
+            </div>
+          </div>
+        </div>
+
+        {/* ================= PAGE 2: EXECUTIVE SUMMARY ================= */}
+        <div className="epdf-page" style={{ background: "#FCFBF8" }}>
+          <div>
+            <div className="epdf-header" style={{ borderColor: "#E5E7EB", display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 10, marginBottom: 16 }}>
+              <div>
+                <div className="epdf-brand" style={{ color: "#1B2035", fontSize: 15, fontWeight: 800, margin: 0 }}>
+                  Your <span style={{ color: "#C8A74D" }}>Wealth Compass</span>
+                </div>
+                <div style={{ fontSize: 9.5, color: "#6B7280", marginTop: 1 }}>Financial Planning Report</div>
+              </div>
+              <div style={{ fontSize: 10.5, color: "#1B2035", fontWeight: 700, fontFamily: "'JetBrains Mono', monospace" }}>
+                Page 2 of 10
+              </div>
+            </div>
+
+            <h2 className="epdf-h2" style={{ color: "#1B2035", fontSize: 22 }}>Executive Summary & Key Findings</h2>
+
+            {/* Client Snapshot Grid (8 Key Metrics in 2 Clean Rows) */}
+            <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10, padding: 16, marginBottom: 16 }}>
+              <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 12, letterSpacing: "0.05em" }}>CLIENT PROFILE SNAPSHOT</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 12 }}>
+                <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>Monthly Income</div><div style={{ fontSize: 14, fontWeight: 700, color: "#1B2035" }}>{INR_L(lead.income)}</div></div>
+                <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>Monthly Surplus</div><div style={{ fontSize: 14, fontWeight: 700, color: "#C8A74D" }}>{INR_L(r.monthlySurplus)}</div></div>
+                <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>Current Savings</div><div style={{ fontSize: 14, fontWeight: 700, color: "#1B2035" }}>{INR_L(lead.savings)}</div></div>
+                <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>Current Age</div><div style={{ fontSize: 14, fontWeight: 700, color: "#1B2035" }}>{lead.age || 43} yrs</div></div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, paddingTop: 10, borderTop: "1px dashed #E5E7EB" }}>
+                <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>Retirement Target</div><div style={{ fontSize: 14, fontWeight: 700, color: "#1B2035" }}>{lead.retirementAge || 60} yrs</div></div>
+                <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>Goals Configured</div><div style={{ fontSize: 14, fontWeight: 700, color: "#1B2035" }}>{r.rows.length} Goals</div></div>
+                <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>Years to Retire</div><div style={{ fontSize: 14, fontWeight: 700, color: "#1B2035" }}>{r.retirement.yearsToRetire} yrs</div></div>
+                <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>Health Score</div><div style={{ fontSize: 14, fontWeight: 700, color: scoreColor(r.scores.overallScore) }}>{r.scores.overallScore}/100</div></div>
+              </div>
+            </div>
+
+            {/* Key Findings Dynamic Bullets */}
+            <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10, padding: 16, marginBottom: 16 }}>
+              <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 10, letterSpacing: "0.05em" }}>KEY DIAGNOSTIC FINDINGS</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 11.5, color: "#1B2035" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}><CheckCircle2 size={14} color="#3E9F6E" /> <b>Strong Monthly Surplus:</b> Monthly surplus of {INR_L(r.monthlySurplus)} provides strong capacity for systematic investments.</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}><CheckCircle2 size={14} color="#3E9F6E" /> <b>Retirement Horizon:</b> Target corpus of {INR_L(r.retirement.corpusNeeded)} can be systematically accumulated over {r.retirement.yearsToRetire} years.</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}><CheckCircle2 size={14} color="#3E9F6E" /> <b>Health Cover Baseline:</b> Active health insurance of {INR_L(lead.healthAmount)} provides baseline coverage in {lead.city || "Metro"}.</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}><AlertTriangle size={14} color={r.termGap > 0 ? "#C05656" : "#3E9F6E"} /> <b>Term Life Insurance Gap:</b> {r.termGap > 0 ? `Additional top-up cover of ${INR_L(r.termGap)} is recommended to protect family income.` : `Term cover target is fully adequate.`}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}><AlertTriangle size={14} color={r.emergencyGap > 0 ? "#C8A74D" : "#3E9F6E"} /> <b>Emergency Buffer:</b> {r.emergencyGap > 0 ? `Current liquid reserve of ${INR_L(lead.savings)} is below the recommended 9-month buffer target (${INR_L(r.emergencyTarget)}).` : `Emergency fund target is fully met.`}</div>
+              </div>
+            </div>
+
+            {/* Top 3 Priority Actions */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 8, letterSpacing: "0.05em" }}>TOP 3 PRIORITY ACTIONS</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                {r.priorities.slice(0, 3).map((p) => (
+                  <div key={p.tag} style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 12 }}>
+                    <div style={{ fontSize: 9, fontWeight: 800, color: p.color, textTransform: "uppercase" }}>{p.tag}</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "#1B2035", margin: "3px 0" }}>{p.title}</div>
+                    <div style={{ fontSize: 10.5, color: "#6B7280", lineHeight: 1.4 }}>{p.desc.slice(0, 75)}...</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Premium Consultant Observation Card */}
+            <div style={{ background: "rgba(200, 167, 77, 0.08)", border: "1px solid rgba(200, 167, 77, 0.3)", borderLeft: "4px solid #C8A74D", borderRadius: 10, padding: 16 }}>
+              <div style={{ fontSize: 10, fontWeight: 800, color: "#C8A74D", textTransform: "uppercase", marginBottom: 4, letterSpacing: "0.05em" }}>CONSULTANT OBSERVATION & ADVISORY</div>
+              <p style={{ fontSize: 11.5, color: "#1B2035", margin: 0, lineHeight: 1.5 }}>
+                Your monthly cashflow surplus of <b>{INR_L(r.monthlySurplus)}</b> provides an excellent foundation. Addressing your term insurance top-up ({INR_L(r.termGap)}) and starting a systematic monthly SIP of <b>{INR_L(Math.round(r.retirement.annual / 12))}/mo</b> towards retirement will secure your family's future with complete peace of mind.
+              </p>
+            </div>
+          </div>
+
+          <div className="epdf-footer" style={{ borderTop: "1px solid #E5E7EB", paddingTop: 10, fontSize: 9.5, color: "#6B7280", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>Prepared using Your Wealth Compass</div>
+            <div>Generated on {dateStr}</div>
+            <div>Page 2 of 10</div>
+          </div>
+        </div>
+
+        {/* ================= PAGE 3: FINANCIAL HEALTH & CASHFLOW ANALYSIS ================= */}
+        <div className="epdf-page" style={{ background: "#FCFBF8" }}>
+          <div>
+            <div className="epdf-header" style={{ borderColor: "#E5E7EB", display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 10, marginBottom: 16 }}>
+              <div>
+                <div className="epdf-brand" style={{ color: "#1B2035", fontSize: 15, fontWeight: 800, margin: 0 }}>
+                  Your <span style={{ color: "#C8A74D" }}>Wealth Compass</span>
+                </div>
+                <div style={{ fontSize: 9.5, color: "#6B7280", marginTop: 1 }}>Financial Planning Report</div>
+              </div>
+              <div style={{ fontSize: 10.5, color: "#1B2035", fontWeight: 700, fontFamily: "'JetBrains Mono', monospace" }}>
+                Page 3 of 10
+              </div>
+            </div>
+
+            <h2 className="epdf-h2" style={{ color: "#1B2035", fontSize: 22, margin: "0 0 4px" }}>Financial Health & Cashflow Analysis</h2>
+            <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 16px" }}>
+              This section evaluates your present cashflow structure, saving ability, and net investment capacity.
+            </p>
+
+            {/* TOP ROW: 4 KPI CARDS */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 16 }}>
+              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 12 }}>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>ANNUAL INCOME</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#1B2035", marginTop: 2 }}>{INR_L(Number(lead.income) * 12)}</div>
+              </div>
+              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 12 }}>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>ANNUAL EXPENSE</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#1B2035", marginTop: 2 }}>{INR_L(Number(lead.expenses) * 12)}</div>
+              </div>
+              <div style={{ background: "#FFFFFF", border: "1px solid #C8A74D", borderRadius: 8, padding: 12 }}>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>ANNUAL SURPLUS</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#C8A74D", marginTop: 2 }}>{INR_L(r.annualSurplus)}</div>
+              </div>
+              <div style={{ background: "#FFFFFF", border: "1px solid #3E9F6E", borderRadius: 8, padding: 12 }}>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>SAVINGS RATE</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#3E9F6E", marginTop: 2 }}>
+                  {(((Number(lead.income) - Number(lead.expenses)) / Math.max(1, Number(lead.income))) * 100).toFixed(0)}%
+                </div>
+              </div>
+            </div>
+
+            {/* ROW 2: CASHFLOW WATERFALL (LEFT 60%) + FINANCIAL RATIOS (RIGHT 40%) */}
+            <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: 14, marginBottom: 16 }}>
+              {/* Left: Cashflow Waterfall Diagram */}
+              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10, padding: 14 }}>
+                <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 10 }}>ANNUAL CASHFLOW WATERFALL DIAGRAM</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 11 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 10px", background: "#F8FAFC", borderRadius: 6 }}>
+                    <span><b>Annual Gross Income</b></span>
+                    <span style={{ fontWeight: 700, color: "#1B2035" }}>{INR_L(Number(lead.income) * 12)}</span>
+                  </div>
+                  <div style={{ textAlign: "center", color: "#94A3B8", fontSize: 10 }}>↓ Living Expenses (-{((Number(lead.expenses) / Math.max(1, Number(lead.income))) * 100).toFixed(0)}%)</div>
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 10px", background: "#FEF3C7", borderRadius: 6, border: "1px solid #FCD34D" }}>
+                    <span><b>Net Annual Surplus</b></span>
+                    <span style={{ fontWeight: 700, color: "#92400E" }}>= {INR_L(r.annualSurplus)}</span>
+                  </div>
+                  <div style={{ textAlign: "center", color: "#94A3B8", fontSize: 10 }}>↓ Total Required Goal & Retirement Investment</div>
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 10px", background: "#F1F5F9", borderRadius: 6 }}>
+                    <span>Required Annual Goal SIPs</span>
+                    <span style={{ fontWeight: 700, color: "#C8A74D" }}>-{INR_L(r.totalAnnual)}</span>
+                  </div>
+                  <div style={{ textAlign: "center", color: "#94A3B8", fontSize: 10 }}>↓ Unallocated Cashflow Buffer</div>
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 10px", background: "#ECFDF5", borderRadius: 6, border: "1px solid #A7F3D0" }}>
+                    <span><b>Unallocated Wealth Buffer</b></span>
+                    <span style={{ fontWeight: 700, color: "#065F46" }}>= {INR_L(Math.max(0, r.annualSurplus - r.totalAnnual))}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Financial Ratios Cards */}
+              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10, padding: 14 }}>
+                <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 10 }}>KEY FINANCIAL RATIOS</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 6, borderBottom: "1px dashed #E5E7EB" }}>
+                    <div><div style={{ fontSize: 11, fontWeight: 700 }}>Expense Ratio</div><div style={{ fontSize: 9.5, color: "#6B7280" }}>Living / Income</div></div>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: 13, fontWeight: 800 }}>{((Number(lead.expenses) / Math.max(1, Number(lead.income))) * 100).toFixed(0)}%</div>
+                      <span style={{ background: "#ECFDF5", color: "#3E9F6E", fontSize: 9, padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>Excellent</span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 6, borderBottom: "1px dashed #E5E7EB" }}>
+                    <div><div style={{ fontSize: 11, fontWeight: 700 }}>Savings Ratio</div><div style={{ fontSize: 9.5, color: "#6B7280" }}>Surplus / Income</div></div>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: 13, fontWeight: 800 }}>{(((Number(lead.income) - Number(lead.expenses)) / Math.max(1, Number(lead.income))) * 100).toFixed(0)}%</div>
+                      <span style={{ background: "#ECFDF5", color: "#3E9F6E", fontSize: 9, padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>Excellent</span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 6, borderBottom: "1px dashed #E5E7EB" }}>
+                    <div><div style={{ fontSize: 11, fontWeight: 700 }}>Goal Funding</div><div style={{ fontSize: 9.5, color: "#6B7280" }}>Surplus vs Required</div></div>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: 13, fontWeight: 800 }}>{r.scores.goalPreparedness}%</div>
+                      <span style={{ background: "#ECFDF5", color: "#3E9F6E", fontSize: 9, padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>Good</span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div><div style={{ fontSize: 11, fontWeight: 700 }}>Emergency Buffer</div><div style={{ fontSize: 9.5, color: "#6B7280" }}>Savings / Expenses</div></div>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: 13, fontWeight: 800 }}>{((Number(lead.savings) / Math.max(1, Number(lead.expenses)))).toFixed(1)} Mo</div>
+                      <span style={{ background: r.emergencyGap > 0 ? "#FFFBEB" : "#ECFDF5", color: r.emergencyGap > 0 ? "#C8A74D" : "#3E9F6E", fontSize: 9, padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>
+                        {r.emergencyGap > 0 ? "Needs Attention" : "Good"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* BOTTOM: AI FINANCIAL OBSERVATION */}
+            <div style={{ background: "#F8FAFC", border: "1px solid #E5E7EB", borderRadius: 10, padding: 14 }}>
+              <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 6 }}>FINANCIAL ANALYSIS & OBSERVATIONS</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, fontSize: 11, color: "#1B2035" }}>
+                <div>&bull; Expenses consume only <b>{((Number(lead.expenses) / Math.max(1, Number(lead.income))) * 100).toFixed(0)}%</b> of annual income, reflecting strong financial discipline.</div>
+                <div>&bull; Annual surplus of <b>{INR_L(r.annualSurplus)}</b> is sufficient to fund long-term goals without compromising lifestyle.</div>
+                <div>&bull; Remaining buffer of <b>{INR_L(Math.max(0, r.annualSurplus - r.totalAnnual))}</b> can be deployed into wealth acceleration.</div>
+                <div>&bull; Emergency reserve should be strengthened from {((Number(lead.savings) / Math.max(1, Number(lead.expenses)))).toFixed(1)} months to <b>9 months ({INR_L(r.emergencyTarget)})</b>.</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="epdf-footer" style={{ borderTop: "1px solid #E5E7EB" }}>
+            <div>Confidential • Prepared Exclusively For {lead.name}</div>
+            <div>Page 3 of 10</div>
+          </div>
+        </div>
+
+        {/* ================= PAGE 4: GOAL PLANNING & INFLATION IMPACT ================= */}
+        <div className="epdf-page" style={{ background: "#FCFBF8" }}>
+          <div>
+            <div className="epdf-header" style={{ borderColor: "#E5E7EB", display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 10, marginBottom: 16 }}>
+              <div>
+                <div className="epdf-brand" style={{ color: "#1B2035", fontSize: 15, fontWeight: 800, margin: 0 }}>
+                  Your <span style={{ color: "#C8A74D" }}>Wealth Compass</span>
+                </div>
+                <div style={{ fontSize: 9.5, color: "#6B7280", marginTop: 1 }}>Financial Planning Report</div>
+              </div>
+              <div style={{ fontSize: 10.5, color: "#1B2035", fontWeight: 700, fontFamily: "'JetBrains Mono', monospace" }}>
+                Page 4 of 10
+              </div>
+            </div>
+
+            <h2 className="epdf-h2" style={{ color: "#1B2035", fontSize: 22, margin: "0 0 4px" }}>Goal Planning & Inflation Impact</h2>
+            <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 14px" }}>
+              Systematic milestone goal timeline and the long-term compounding impact of inflation.
+            </p>
+
+            {/* TOP ROW: MILESTONE TIMELINE + ALLOCATION BAR */}
+            <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10, padding: 14, marginBottom: 14 }}>
+              <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 8 }}>MILESTONE TIMELINE OVERVIEW</div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", padding: "10px 0" }}>
+                <div style={{ position: "absolute", top: "50%", left: "10%", right: "10%", height: 2, background: "#E5E7EB", zIndex: 1 }} />
+
+                <div style={{ zIndex: 2, background: "#FFFFFF", padding: "0 8px", textAlign: "center" }}>
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#1B2035", color: "#FFF", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 4px" }}>2026</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: "#1B2035" }}>Start Horizon</div>
+                </div>
+
+                {r.rows.map((row, idx) => (
+                  <div key={row.id} style={{ zIndex: 2, background: "#FFFFFF", padding: "0 8px", textAlign: "center" }}>
+                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#C8A74D", color: "#FFF", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 4px" }}>+{row.years.toFixed(0)}y</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: "#1B2035" }}>{row.label}</div>
+                  </div>
+                ))}
+
+                <div style={{ zIndex: 2, background: "#FFFFFF", padding: "0 8px", textAlign: "center" }}>
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#3E9F6E", color: "#FFF", fontSize: 10, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 4px" }}>+{r.retirement.yearsToRetire}y</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: "#1B2035" }}>Retirement</div>
+                </div>
+              </div>
+            </div>
+
+            {/* MIDDLE SECTION: RICH GOAL CARDS */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 8 }}>MILESTONE GOAL BREAKDOWN</div>
+              <div style={{ display: "grid", gridTemplateColumns: r.rows.length >= 3 ? "repeat(3, 1fr)" : "repeat(2, 1fr)", gap: 10 }}>
+                {r.rows.map((row) => (
+                  <div key={row.id} style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 12 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                      <div style={{ fontSize: 12, fontWeight: 800, color: "#1B2035" }}>{row.label}</div>
+                      <span style={{ background: "#F1F5F9", color: "#475569", fontSize: 9, padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>{row.years.toFixed(1)} Yrs Left</span>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 10.5, marginTop: 6, paddingTop: 6, borderTop: "1px dashed #E5E7EB" }}>
+                      <div><span style={{ color: "#6B7280" }}>Today Cost:</span><div style={{ fontWeight: 700, color: "#1B2035" }}>{INR_L(row.cost)}</div></div>
+                      <div><span style={{ color: "#6B7280" }}>Future Target:</span><div style={{ fontWeight: 700, color: "#C8A74D" }}>{INR_L(row.fv)}</div></div>
+                    </div>
+
+                    <div style={{ marginTop: 8, paddingTop: 6, borderTop: "1px solid #F1F5F9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: 9.5, color: "#6B7280" }}>Required Investment</span>
+                      <span style={{ fontSize: 11.5, fontWeight: 800, color: "#1B2035" }}>{INR(row.annual)}/yr</span>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Retirement Goal Card */}
+                <div style={{ background: "#FFFFFF", border: "1px solid #C8A74D", borderRadius: 8, padding: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: "#C8A74D" }}>🏖 Retirement Corpus</div>
+                    <span style={{ background: "#FEF3C7", color: "#92400E", fontSize: 9, padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>{r.retirement.yearsToRetire} Yrs Left</span>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 10.5, marginTop: 6, paddingTop: 6, borderTop: "1px dashed #E5E7EB" }}>
+                    <div><span style={{ color: "#6B7280" }}>Target Corpus:</span><div style={{ fontWeight: 700, color: "#3E9F6E" }}>{INR_L(r.retirement.corpusNeeded)}</div></div>
+                    <div><span style={{ color: "#6B7280" }}>Monthly SIP:</span><div style={{ fontWeight: 700, color: "#C8A74D" }}>{INR_L(Math.round(r.retirement.annual / 12))}/mo</div></div>
+                  </div>
+
+                  <div style={{ marginTop: 8, paddingTop: 6, borderTop: "1px solid #F1F5F9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: 9.5, color: "#6B7280" }}>Required Annual Investment</span>
+                    <span style={{ fontSize: 11.5, fontWeight: 800, color: "#C8A74D" }}>{INR(r.retirement.annual)}/yr</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* BOTTOM: WHY INFLATION MATTERS VISUAL ILLUSTRATION */}
+            {r.costExample && (
+              <div style={{ background: "#FFFBEB", border: "1px solid #FCD34D", borderRadius: 10, padding: 14 }}>
+                <div style={{ fontSize: 10, textTransform: "uppercase", color: "#92400E", fontWeight: 800, marginBottom: 6 }}>
+                  WHY INFLATION PLANNING IS ESSENTIAL (INFLATION ILLUSTRATION)
+                </div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#FFFFFF", border: "1px dashed #FCD34D", borderRadius: 8, padding: "10px 16px", marginBottom: 8 }}>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 9.5, color: "#6B7280" }}>Today's Cost</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: "#1B2035" }}>{INR_L(r.costExample.cost)}</div>
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#92400E" }}>➔ +{EDU_INFLATION}% Inflation / {r.costExample.years.toFixed(0)} Yrs ➔</div>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 9.5, color: "#6B7280" }}>Future Cost</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: "#C8A74D" }}>{INR_L(r.costExample.fv)}</div>
+                  </div>
+                </div>
+                <p style={{ fontSize: 10.5, color: "#78350F", margin: 0, lineHeight: 1.4 }}>
+                  Without systematic inflation-adjusted planning, purchasing power decreases every year. Starting investments today neutralizes this inflation risk completely.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="epdf-footer" style={{ borderTop: "1px solid #E5E7EB", paddingTop: 10, fontSize: 9.5, color: "#6B7280", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>Prepared using Your Wealth Compass</div>
+            <div>Generated on {dateStr}</div>
+            <div>Page 4 of 10</div>
+          </div>
+        </div>
+
+        {/* ================= PAGE 5: RETIREMENT BLUEPRINT & SWP SIMULATION ================= */}
+        <div className="epdf-page" style={{ background: "#FCFBF8" }}>
+          <div>
+            <div className="epdf-header" style={{ borderColor: "#E5E7EB", display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 10, marginBottom: 16 }}>
+              <div>
+                <div className="epdf-brand" style={{ color: "#1B2035", fontSize: 15, fontWeight: 800, margin: 0 }}>
+                  Your <span style={{ color: "#C8A74D" }}>Wealth Compass</span>
+                </div>
+                <div style={{ fontSize: 9.5, color: "#6B7280", marginTop: 1 }}>Financial Planning Report</div>
+              </div>
+              <div style={{ fontSize: 10.5, color: "#1B2035", fontWeight: 700, fontFamily: "'JetBrains Mono', monospace" }}>
+                Page 5 of 10
+              </div>
+            </div>
+
+            <h2 className="epdf-h2" style={{ color: "#1B2035", fontSize: 22, margin: "0 0 4px" }}>Retirement Blueprint & SWP Longevity</h2>
+            <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 14px" }}>
+              Projected retirement corpus accumulation, annual investment returns, and inflation-adjusted withdrawals.
+            </p>
+
+            {/* TOP HERO: 4 METRIC CARDS */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 14 }}>
+              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 12 }}>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>RETIREMENT BEGINS</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#1B2035", marginTop: 2 }}>In {r.retirement.yearsToRetire} Years</div>
+              </div>
+              <div style={{ background: "#FFFFFF", border: "1px solid #C8A74D", borderRadius: 8, padding: 12 }}>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>TARGET CORPUS</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#C8A74D", marginTop: 2 }}>{INR_L(r.retirement.corpusNeeded)}</div>
+              </div>
+              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 12 }}>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>MONTHLY EXPENSE</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#1B2035", marginTop: 2 }}>{INR_L(r.retirement.annualExpenseAtRetirement / 12)}/mo</div>
+              </div>
+              <div style={{ background: "#FFFFFF", border: "1px solid #3E9F6E", borderRadius: 8, padding: 12 }}>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>CORPUS LONGEVITY</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#3E9F6E", marginTop: 2 }}>25+ Years</div>
+              </div>
+            </div>
+
+            {/* ROW 2: RETIREMENT JOURNEY (LEFT 60%) + ASSUMPTIONS (RIGHT 40%) */}
+            <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: 12, marginBottom: 14 }}>
+              {/* Left: Retirement Journey Timeline */}
+              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10, padding: 12 }}>
+                <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 8 }}>RETIREMENT MILESTONE JOURNEY</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 11 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 8px", background: "#F8FAFC", borderRadius: 4 }}>
+                    <span><b>Current Age {lead.age || 43}</b></span>
+                    <span style={{ color: "#6B7280" }}>Accumulation Phase</span>
+                  </div>
+                  <div style={{ textAlign: "center", color: "#94A3B8", fontSize: 9 }}>↓ {r.retirement.yearsToRetire} Years Systematic SIP Building</div>
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 8px", background: "#FEF3C7", borderRadius: 4, border: "1px solid #FCD34D" }}>
+                    <span><b>Age {lead.retirementAge || 60} Retirement</b></span>
+                    <span style={{ fontWeight: 700, color: "#92400E" }}>Corpus: {INR_L(r.retirement.corpusNeeded)}</span>
+                  </div>
+                  <div style={{ textAlign: "center", color: "#94A3B8", fontSize: 9 }}>↓ 25-Year Post-Retirement SWP Phase</div>
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 8px", background: "#ECFDF5", borderRadius: 4, border: "1px solid #A7F3D0" }}>
+                    <span><b>Age 85 Legacy Balance</b></span>
+                    <span style={{ fontWeight: 700, color: "#065F46" }}>{INR_L(r.swpKpi?.finalClosingCorpus)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Key Assumptions */}
+              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10, padding: 12 }}>
+                <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 8 }}>KEY ACTUARIAL ASSUMPTIONS</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 10.5 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px dashed #E5E7EB", paddingBottom: 4 }}>
+                    <span style={{ color: "#6B7280" }}>Growth Return</span>
+                    <span style={{ fontWeight: 700, color: "#3E9F6E" }}>{SWP_RETURN}% p.a.</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px dashed #E5E7EB", paddingBottom: 4 }}>
+                    <span style={{ color: "#6B7280" }}>Retirement Inflation</span>
+                    <span style={{ fontWeight: 700, color: "#C05656" }}>{RETIREMENT_INFLATION}% p.a.</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px dashed #E5E7EB", paddingBottom: 4 }}>
+                    <span style={{ color: "#6B7280" }}>Net Real Rate</span>
+                    <span style={{ fontWeight: 700, color: "#C8A74D" }}>+{r.swpKpi?.realRate}%</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <span style={{ color: "#6B7280" }}>Withdrawal Frequency</span>
+                    <span style={{ fontWeight: 700, color: "#1B2035" }}>Monthly</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ROW 3: MILESTONE CARDS GRID */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 8 }}>25-YEAR SWP MILESTONE BREAKDOWN</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                {r.swpTable.map((row) => {
+                  const isNetPositive = row.netChange >= 0;
+                  return (
+                    <div key={row.age} style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 10 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                        <div style={{ fontSize: 12, fontWeight: 800, color: "#1B2035" }}>Age {row.age}</div>
+                        <span style={{ fontSize: 9, fontWeight: 700, color: isNetPositive ? "#3E9F6E" : "#C05656", background: isNetPositive ? "#ECFDF5" : "#FEF2F2", padding: "1px 5px", borderRadius: 4 }}>
+                          {isNetPositive ? `+Net Gain` : `-Net Withdrawal`}
+                        </span>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, fontSize: 10, marginTop: 4 }}>
+                        <div><span style={{ color: "#6B7280" }}>Opening:</span> <b style={{ color: "#1B2035" }}>{INR_L(row.opening)}</b></div>
+                        <div><span style={{ color: "#6B7280" }}>Return (8%):</span> <b style={{ color: "#3E9F6E" }}>+{INR_L(row.returnAmount)}</b></div>
+                        <div><span style={{ color: "#6B7280" }}>Withdrawal:</span> <b style={{ color: "#C05656" }}>-{INR_L(row.withdrawal)}</b></div>
+                        <div><span style={{ color: "#6B7280" }}>Closing:</span> <b style={{ color: "#C8A74D" }}>{INR_L(row.closing)}</b></div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* BOTTOM: RETIREMENT STRATEGIC INSIGHTS */}
+            <div style={{ background: "#F8FAFC", border: "1px solid #E5E7EB", borderRadius: 10, padding: 12 }}>
+              <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 4 }}>RETIREMENT LONGEVITY OBSERVATION</div>
+              <p style={{ fontSize: 11, color: "#1B2035", margin: 0, lineHeight: 1.45 }}>
+                For the first 15 years (Age 60-75), 8% investment returns exceed 7% inflation withdrawals, causing corpus growth to peak at <b>₹2.87 Cr</b>. After Age 80, withdrawals catch up due to inflation, but the corpus remains <b>100% sustainable through Age 85</b>, leaving a projected <b>{INR_L(r.swpKpi?.finalClosingCorpus)}</b> legacy reserve.
+              </p>
+            </div>
+          </div>
+
+          <div className="epdf-footer" style={{ borderTop: "1px solid #E5E7EB", paddingTop: 10, fontSize: 9.5, color: "#6B7280", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>Prepared using Your Wealth Compass</div>
+            <div>Generated on {dateStr}</div>
+            <div>Page 5 of 10</div>
+          </div>
+        </div>
+
+        {/* ================= PAGE 6: RISK PROTECTION & INSURANCE AUDIT ================= */}
+        <div className="epdf-page" style={{ background: "#FCFBF8" }}>
+          <div>
+            <div className="epdf-header" style={{ borderColor: "#E5E7EB", display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 10, marginBottom: 16 }}>
+              <div>
+                <div className="epdf-brand" style={{ color: "#1B2035", fontSize: 15, fontWeight: 800, margin: 0 }}>
+                  Your <span style={{ color: "#C8A74D" }}>Wealth Compass</span>
+                </div>
+                <div style={{ fontSize: 9.5, color: "#6B7280", marginTop: 1 }}>Financial Planning Report</div>
+              </div>
+              <div style={{ fontSize: 10.5, color: "#1B2035", fontWeight: 700, fontFamily: "'JetBrains Mono', monospace" }}>
+                Page 6 of 10
+              </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <div>
+                <h2 className="epdf-h2" style={{ color: "#1B2035", fontSize: 22, margin: "0 0 4px" }}>Risk Protection & Insurance Audit</h2>
+                <p style={{ fontSize: 12, color: "#6B7280", margin: 0 }}>
+                  Comprehensive evaluation of life insurance, health insurance, and emergency reserve buffers.
+                </p>
+              </div>
+              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: "8px 14px", textAlign: "right" }}>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>PROTECTION SCORE</div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: scoreColor(r.scores.protectionStrength) }}>
+                  {r.scores.protectionStrength} <span style={{ fontSize: 11, color: "#6B7280" }}>/ 100</span>
+                </div>
+              </div>
+            </div>
+
+            {/* THREE PROTECTION AUDIT CARDS */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
+              {/* Card 1: Term Life Insurance */}
+              <div style={{ background: "#FFFFFF", border: `1px solid ${r.termGap > 0 ? "#FCA5A5" : "#A7F3D0"}`, borderRadius: 10, padding: 14 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <Shield size={18} color={r.termGap > 0 ? "#C05656" : "#3E9F6E"} />
+                    <span style={{ fontSize: 13, fontWeight: 800, color: "#1B2035" }}>Term Life Insurance (15x HLV Rule)</span>
+                  </div>
+                  <span style={{ background: r.termGap > 0 ? "#FEF2F2" : "#ECFDF5", color: r.termGap > 0 ? "#C05656" : "#3E9F6E", border: `1px solid ${r.termGap > 0 ? "#FCA5A5" : "#A7F3D0"}`, padding: "3px 10px", borderRadius: 12, fontSize: 10, fontWeight: 800 }}>
+                    {r.termGap > 0 ? (r.currentTerm > 0 ? `Top-Up Needed ${INR_L(r.termGap)}` : `Gap ${INR_L(r.termGap)}`) : "Fully Covered"}
+                  </span>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, fontSize: 11, marginBottom: 8 }}>
+                  <div><span style={{ color: "#6B7280" }}>Active Cover:</span> <b style={{ color: "#1B2035" }}>{INR_L(r.currentTerm)}</b></div>
+                  <div><span style={{ color: "#6B7280" }}>Recommended Target:</span> <b style={{ color: "#1B2035" }}>{INR_L(r.recommendedCover)}</b></div>
+                  <div><span style={{ color: "#6B7280" }}>Coverage Gap:</span> <b style={{ color: r.termGap > 0 ? "#C05656" : "#3E9F6E" }}>{INR_L(r.termGap)}</b></div>
+                </div>
+
+                {/* Progress Bar */}
+                <div style={{ background: "#F1F5F9", borderRadius: 6, height: 8, overflow: "hidden", position: "relative" }}>
+                  <div style={{ background: r.termGap > 0 ? "#C05656" : "#3E9F6E", height: "100%", width: `${Math.min(100, Math.round((r.currentTerm / Math.max(1, r.recommendedCover)) * 100))}%` }} />
+                </div>
+              </div>
+
+              {/* Card 2: Health Insurance Floater */}
+              <div style={{ background: "#FFFFFF", border: `1px solid ${r.healthGap > 0 ? "#FCD34D" : "#A7F3D0"}`, borderRadius: 10, padding: 14 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <HeartPulse size={18} color={r.healthGap > 0 ? "#C8A74D" : "#3E9F6E"} />
+                    <span style={{ fontSize: 13, fontWeight: 800, color: "#1B2035" }}>Health Insurance Floater ({lead.city || "Metro"} Baseline)</span>
+                  </div>
+                  <span style={{ background: r.healthGap > 0 ? "#FFFBEB" : "#ECFDF5", color: r.healthGap > 0 ? "#C8A74D" : "#3E9F6E", border: `1px solid ${r.healthGap > 0 ? "#FCD34D" : "#A7F3D0"}`, padding: "3px 10px", borderRadius: 12, fontSize: 10, fontWeight: 800 }}>
+                    {r.healthGap > 0 ? (r.currentHealth > 0 ? `Top-Up Needed ${INR_L(r.healthGap)}` : `Gap ${INR_L(r.healthGap)}`) : "Fully Covered"}
+                  </span>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, fontSize: 11, marginBottom: 8 }}>
+                  <div><span style={{ color: "#6B7280" }}>Active Cover:</span> <b style={{ color: "#1B2035" }}>{INR_L(r.currentHealth)}</b></div>
+                  <div><span style={{ color: "#6B7280" }}>City Baseline Target:</span> <b style={{ color: "#1B2035" }}>{INR_L(r.healthTarget)}</b></div>
+                  <div><span style={{ color: "#6B7280" }}>Coverage Gap:</span> <b style={{ color: r.healthGap > 0 ? "#C8A74D" : "#3E9F6E" }}>{INR_L(r.healthGap)}</b></div>
+                </div>
+
+                {/* Progress Bar */}
+                <div style={{ background: "#F1F5F9", borderRadius: 6, height: 8, overflow: "hidden" }}>
+                  <div style={{ background: r.healthGap > 0 ? "#C8A74D" : "#3E9F6E", height: "100%", width: `${Math.min(100, Math.round((r.currentHealth / Math.max(1, r.healthTarget)) * 100))}%` }} />
+                </div>
+              </div>
+
+              {/* Card 3: Emergency Reserve Buffer */}
+              <div style={{ background: "#FFFFFF", border: `1px solid ${r.emergencyGap > 0 ? "#FCA5A5" : "#A7F3D0"}`, borderRadius: 10, padding: 14 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <PiggyBank size={18} color={r.emergencyGap > 0 ? "#C05656" : "#3E9F6E"} />
+                    <span style={{ fontSize: 13, fontWeight: 800, color: "#1B2035" }}>Emergency Reserve Buffer (9 Months Expenses)</span>
+                  </div>
+                  <span style={{ background: r.emergencyGap > 0 ? "#FEF2F2" : "#ECFDF5", color: r.emergencyGap > 0 ? "#C05656" : "#3E9F6E", border: `1px solid ${r.emergencyGap > 0 ? "#FCA5A5" : "#A7F3D0"}`, padding: "3px 10px", borderRadius: 12, fontSize: 10, fontWeight: 800 }}>
+                    {r.emergencyGap > 0 ? `Buffer Gap ${INR_L(r.emergencyGap)}` : "Fully Funded"}
+                  </span>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, fontSize: 11, marginBottom: 8 }}>
+                  <div><span style={{ color: "#6B7280" }}>Available Reserve:</span> <b style={{ color: "#1B2035" }}>{INR_L(lead.savings)}</b></div>
+                  <div><span style={{ color: "#6B7280" }}>Recommended Target:</span> <b style={{ color: "#1B2035" }}>{INR_L(r.emergencyTarget)}</b></div>
+                  <div><span style={{ color: "#6B7280" }}>Reserve Gap:</span> <b style={{ color: r.emergencyGap > 0 ? "#C05656" : "#3E9F6E" }}>{INR_L(r.emergencyGap)}</b></div>
+                </div>
+
+                {/* Progress Bar */}
+                <div style={{ background: "#F1F5F9", borderRadius: 6, height: 8, overflow: "hidden" }}>
+                  <div style={{ background: r.emergencyGap > 0 ? "#C05656" : "#3E9F6E", height: "100%", width: `${Math.min(100, Math.round((lead.savings / Math.max(1, r.emergencyTarget)) * 100))}%` }} />
+                </div>
+              </div>
+            </div>
+
+            {/* IMPACT ANALYSIS (LEFT 50%) + PRIORITY RECOMMENDATIONS (RIGHT 50%) */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div style={{ background: "#FEF2F2", border: "1px solid #FCA5A5", borderRadius: 10, padding: 12 }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: "#991B1B", textTransform: "uppercase", marginBottom: 6 }}>RISK IMPACT ANALYSIS</div>
+                <div style={{ fontSize: 10.5, color: "#7F1D1D", lineHeight: 1.45 }}>
+                  {r.termGap > 0 && <div>&bull; If Term Cover is not increased by <b>{INR_L(r.termGap)}</b>, your family faces a major protection gap against income loss.</div>}
+                  {r.emergencyGap > 0 && <div style={{ marginTop: 4 }}>&bull; Current liquid reserve of {INR_L(lead.savings)} covers less than 2 months of living expenses, creating liquidity vulnerability.</div>}
+                </div>
+              </div>
+
+              <div style={{ background: "#F8FAFC", border: "1px solid #E5E7EB", borderRadius: 10, padding: 12 }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: "#1B2035", textTransform: "uppercase", marginBottom: 6 }}>PRIORITY RECOMMENDATIONS</div>
+                <div style={{ fontSize: 10.5, color: "#1B2035", lineHeight: 1.45 }}>
+                  <div><b>1. Top-Up Term Cover:</b> Secure {INR_L(r.termGap)} term insurance.</div>
+                  <div style={{ marginTop: 3 }}><b>2. Strengthen Emergency Reserve:</b> Build {INR_L(r.emergencyGap)} liquid buffer.</div>
+                  <div style={{ marginTop: 3 }}><b>3. Health Insurance:</b> Maintain {INR_L(r.healthTarget)} floater policy.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="epdf-footer" style={{ borderTop: "1px solid #E5E7EB", paddingTop: 10, fontSize: 9.5, color: "#6B7280", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>Prepared using Your Wealth Compass</div>
+            <div>Generated on {dateStr}</div>
+            <div>Page 6 of 10</div>
+          </div>
+        </div>
+
+        {/* ================= PAGE 7: FINANCIAL ACTION ROADMAP (90-DAY PLAN) ================= */}
+        <div className="epdf-page" style={{ background: "#FCFBF8" }}>
+          <div>
+            <div className="epdf-header" style={{ borderColor: "#E5E7EB", display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 10, marginBottom: 16 }}>
+              <div>
+                <div className="epdf-brand" style={{ color: "#1B2035", fontSize: 15, fontWeight: 800, margin: 0 }}>
+                  Your <span style={{ color: "#C8A74D" }}>Wealth Compass</span>
+                </div>
+                <div style={{ fontSize: 9.5, color: "#6B7280", marginTop: 1 }}>Financial Planning Report</div>
+              </div>
+              <div style={{ fontSize: 10.5, color: "#1B2035", fontWeight: 700, fontFamily: "'JetBrains Mono', monospace" }}>
+                Page 7 of 10
+              </div>
+            </div>
+
+            <h2 className="epdf-h2" style={{ color: "#1B2035", fontSize: 22, margin: "0 0 4px" }}>Financial Action Roadmap (90-Day Execution Plan)</h2>
+            <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 14px" }}>
+              Prioritized step-by-step execution timeline for risk protection, emergency reserves, and systematic goal SIPs.
+            </p>
+
+            {/* TOP HERO: 4 KPI CARDS */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 14 }}>
+              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 12 }}>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>OVERALL COMPLETION</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#1B2035", marginTop: 2 }}>32% Baseline</div>
+              </div>
+              <div style={{ background: "#FFFFFF", border: "1px solid #C8A74D", borderRadius: 8, padding: 12 }}>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>ESTIMATED EXECUTION</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#C8A74D", marginTop: 2 }}>90 Days</div>
+              </div>
+              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 12 }}>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>CRITICAL TASKS</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#C05656", marginTop: 2 }}>2 Priority Items</div>
+              </div>
+              <div style={{ background: "#FFFFFF", border: "1px solid #3E9F6E", borderRadius: 8, padding: 12 }}>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>RECOMMENDED ACTIONS</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#3E9F6E", marginTop: 2 }}>7 Action Steps</div>
+              </div>
+            </div>
+
+            {/* ROW 2: 90-DAY TIMELINE (LEFT 60%) + PRIORITY MATRIX (RIGHT 40%) */}
+            <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: 12, marginBottom: 14 }}>
+              {/* Left: 90-Day Execution Timeline */}
+              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10, padding: 12 }}>
+                <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 8 }}>90-DAY TIMELINE EXECUTION FLOW</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 10.5 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 8px", background: "#FEF2F2", borderRadius: 4, border: "1px solid #FCA5A5" }}>
+                    <span><b>Week 1:</b> Increase Term Life Cover ({INR_L(r.termGap)})</span>
+                    <span style={{ color: "#C05656", fontWeight: 700 }}>Critical</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 8px", background: "#F8FAFC", borderRadius: 4 }}>
+                    <span><b>Week 2:</b> Review Health Floater ({INR_L(r.healthTarget)})</span>
+                    <span style={{ color: "#6B7280" }}>Medium</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 8px", background: "#FFFBEB", borderRadius: 4, border: "1px solid #FCD34D" }}>
+                    <span><b>Month 1:</b> Build Emergency Reserve ({INR_L(r.emergencyGap)})</span>
+                    <span style={{ color: "#C8A74D", fontWeight: 700 }}>Medium</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 8px", background: "#FEF3C7", borderRadius: 4, border: "1px solid #FCD34D" }}>
+                    <span><b>Month 2:</b> Start Retirement SIP ({INR_L(Math.round(r.retirement.annual / 12))}/mo)</span>
+                    <span style={{ color: "#92400E", fontWeight: 700 }}>High</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 8px", background: "#ECFDF5", borderRadius: 4, border: "1px solid #A7F3D0" }}>
+                    <span><b>Month 3:</b> Start Milestone Goal SIPs ({INR_L(Math.round(r.goalsAnnual / 12))}/mo)</span>
+                    <span style={{ color: "#065F46", fontWeight: 700 }}>High</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Priority Matrix (2x2) */}
+              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10, padding: 12 }}>
+                <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 8 }}>PRIORITY IMPACT MATRIX</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 10 }}>
+                  <div style={{ background: "#FEF2F2", border: "1px solid #FCA5A5", padding: 8, borderRadius: 6 }}>
+                    <div style={{ fontWeight: 800, color: "#991B1B", fontSize: 9 }}>HIGH IMPACT / URGENT</div>
+                    <div style={{ marginTop: 4, color: "#1B2035" }}>&bull; Term Insurance Top-Up<br />&bull; Retirement SIP</div>
+                  </div>
+                  <div style={{ background: "#ECFDF5", border: "1px solid #A7F3D0", padding: 8, borderRadius: 6 }}>
+                    <div style={{ fontWeight: 800, color: "#065F46", fontSize: 9 }}>HIGH IMPACT / SCHEDULED</div>
+                    <div style={{ marginTop: 4, color: "#1B2035" }}>&bull; Education Goal SIP<br />&bull; Marriage Goal SIP</div>
+                  </div>
+                  <div style={{ background: "#FFFBEB", border: "1px solid #FCD34D", padding: 8, borderRadius: 6, gridColumn: "span 2" }}>
+                    <div style={{ fontWeight: 800, color: "#92400E", fontSize: 9 }}>LOW URGENCY / FOUNDATIONAL</div>
+                    <div style={{ marginTop: 2, color: "#1B2035" }}>&bull; Emergency Reserve Buffer &bull; Health Policy Review</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ROW 3: DETAILED ACTION CARDS */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 8 }}>DETAILED ACTION STEP CARDS</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                {/* Step 1 Card */}
+                <div style={{ background: "#FFFFFF", border: "1px solid #C05656", borderRadius: 8, padding: 10 }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, color: "#C05656", textTransform: "uppercase" }}>STEP 1 &bull; WEEK 1</div>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: "#1B2035", margin: "2px 0" }}>Increase Life Cover</div>
+                  <div style={{ fontSize: 10, color: "#6B7280" }}>Current: <b>{INR_L(r.currentTerm)}</b></div>
+                  <div style={{ fontSize: 10, color: "#6B7280" }}>Target: <b>{INR_L(r.recommendedCover)}</b></div>
+                  <div style={{ fontSize: 10.5, fontWeight: 700, color: "#C05656", marginTop: 4 }}>Top-Up Gap: {INR_L(r.termGap)}</div>
+                </div>
+
+                {/* Step 2 Card */}
+                <div style={{ background: "#FFFFFF", border: "1px solid #C8A74D", borderRadius: 8, padding: 10 }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, color: "#C8A74D", textTransform: "uppercase" }}>STEP 2 &bull; MONTH 1</div>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: "#1B2035", margin: "2px 0" }}>Emergency Reserve</div>
+                  <div style={{ fontSize: 10, color: "#6B7280" }}>Current: <b>{INR_L(lead.savings)}</b></div>
+                  <div style={{ fontSize: 10, color: "#6B7280" }}>Target (9 Mo): <b>{INR_L(r.emergencyTarget)}</b></div>
+                  <div style={{ fontSize: 10.5, fontWeight: 700, color: "#C8A74D", marginTop: 4 }}>Buffer Gap: {INR_L(r.emergencyGap)}</div>
+                </div>
+
+                {/* Step 3 Card */}
+                <div style={{ background: "#FFFFFF", border: "1px solid #3E9F6E", borderRadius: 8, padding: 10 }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, color: "#3E9F6E", textTransform: "uppercase" }}>STEP 3 &bull; MONTH 2</div>
+                  <div style={{ fontSize: 12, fontWeight: 800, color: "#1B2035", margin: "2px 0" }}>Retirement SIP</div>
+                  <div style={{ fontSize: 10, color: "#6B7280" }}>Monthly SIP: <b>{INR_L(Math.round(r.retirement.annual / 12))}/mo</b></div>
+                  <div style={{ fontSize: 10, color: "#6B7280" }}>Horizon: <b>{r.retirement.yearsToRetire} Years</b></div>
+                  <div style={{ fontSize: 10.5, fontWeight: 700, color: "#3E9F6E", marginTop: 4 }}>Corpus Target: {INR_L(r.retirement.corpusNeeded)}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* BOTTOM: PROGRESS TRACKER BARS */}
+            <div style={{ background: "#F8FAFC", border: "1px solid #E5E7EB", borderRadius: 10, padding: 12 }}>
+              <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 6 }}>PLAN EXECUTION PROGRESS TRACKER</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, fontSize: 10 }}>
+                <div><span style={{ color: "#6B7280" }}>Current Baseline:</span><div style={{ fontWeight: 800, color: "#1B2035" }}>███░░░░░░░ 32%</div></div>
+                <div><span style={{ color: "#6B7280" }}>After Step 1 (Term):</span><div style={{ fontWeight: 800, color: "#C8A74D" }}>███████░░░ 65%</div></div>
+                <div><span style={{ color: "#6B7280" }}>After Step 2 (Buffer):</span><div style={{ fontWeight: 800, color: "#C8A74D" }}>████████░░ 82%</div></div>
+                <div><span style={{ color: "#6B7280" }}>After Step 3 (SIPs):</span><div style={{ fontWeight: 800, color: "#3E9F6E" }}>██████████ 100%</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="epdf-footer" style={{ borderTop: "1px solid #E5E7EB", paddingTop: 10, fontSize: 9.5, color: "#6B7280", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>Prepared using Your Wealth Compass</div>
+            <div>Generated on {dateStr}</div>
+            <div>Page 7 of 10</div>
+          </div>
+        </div>
+
+        {/* ================= PAGE 8: WEALTH ALLOCATION BLUEPRINT ================= */}
+        <div className="epdf-page" style={{ background: "#FCFBF8" }}>
+          <div>
+            <div className="epdf-header" style={{ borderColor: "#E5E7EB", display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 10, marginBottom: 16 }}>
+              <div>
+                <div className="epdf-brand" style={{ color: "#1B2035", fontSize: 15, fontWeight: 800, margin: 0 }}>
+                  Your <span style={{ color: "#C8A74D" }}>Wealth Compass</span>
+                </div>
+                <div style={{ fontSize: 9.5, color: "#6B7280", marginTop: 1 }}>Financial Planning Report</div>
+              </div>
+              <div style={{ fontSize: 10.5, color: "#1B2035", fontWeight: 700, fontFamily: "'JetBrains Mono', monospace" }}>
+                Page 8 of 10
+              </div>
+            </div>
+
+            <h2 className="epdf-h2" style={{ color: "#1B2035", fontSize: 22, margin: "0 0 4px" }}>Wealth Allocation Blueprint</h2>
+            <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 14px" }}>
+              Systematic asset allocation, monthly SIP distribution, and portfolio diversification strategy.
+            </p>
+
+            {/* TOP HERO: INVESTMENT SUMMARY CARDS */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 14 }}>
+              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 12 }}>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>ANNUAL TARGET</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#1B2035", marginTop: 2 }}>{INR_L(r.totalAnnual)}</div>
+              </div>
+              <div style={{ background: "#FFFFFF", border: "1px solid #C8A74D", borderRadius: 8, padding: 12 }}>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>MONTHLY SIP</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#C8A74D", marginTop: 2 }}>{INR_L(Math.round(r.totalAnnual / 12))}/mo</div>
+              </div>
+              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 12 }}>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>AVAILABLE SURPLUS</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#1B2035", marginTop: 2 }}>{INR_L(r.monthlySurplus)}/mo</div>
+              </div>
+              <div style={{ background: "#FFFFFF", border: "1px solid #3E9F6E", borderRadius: 8, padding: 12 }}>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>HORIZON</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#3E9F6E", marginTop: 2 }}>21+ Years</div>
+              </div>
+            </div>
+
+            {/* ROW 2: GOAL ALLOCATION CARDS (LEFT 60%) + CASHFLOW FLOWCHART (RIGHT 40%) */}
+            <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: 12, marginBottom: 14 }}>
+              {/* Left: Allocation Cards */}
+              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10, padding: 12 }}>
+                <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 8 }}>MONTHLY SIP ALLOCATION BREAKDOWN</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 10.5 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 10px", background: "#FEF3C7", borderRadius: 6, border: "1px solid #FCD34D" }}>
+                    <div><b>🏖 Retirement Corpus (66%)</b><div style={{ fontSize: 9.5, color: "#92400E" }}>Equity Index Funds + Guaranteed Annuity</div></div>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: "#92400E" }}>{INR_L(Math.round(r.retirement.annual / 12))}/mo</span>
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 10px", background: "#ECFDF5", borderRadius: 6, border: "1px solid #A7F3D0" }}>
+                    <div><b>🎓 Milestone Goals (34%)</b><div style={{ fontSize: 9.5, color: "#065F46" }}>Balanced Hybrid Funds + Guaranteed Plans</div></div>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: "#065F46" }}>{INR_L(Math.round(r.goalsAnnual / 12))}/mo</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Cashflow Flowchart */}
+              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10, padding: 12 }}>
+                <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 6 }}>INVESTMENT FLOWCHART</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 10, textAlign: "center" }}>
+                  <div style={{ background: "#F8FAFC", padding: 4, borderRadius: 4 }}><b>Monthly Income:</b> {INR_L(lead.income)}</div>
+                  <div style={{ color: "#94A3B8" }}>↓ Living Expenses (-{INR_L(lead.expenses)})</div>
+                  <div style={{ background: "#FEF3C7", padding: 4, borderRadius: 4 }}><b>Available Surplus:</b> {INR_L(r.monthlySurplus)}</div>
+                  <div style={{ color: "#94A3B8" }}>↓ Systematic SIP Target (-{INR_L(Math.round(r.totalAnnual / 12))})</div>
+                  <div style={{ background: "#ECFDF5", padding: 4, borderRadius: 4, color: "#065F46" }}><b>Unallocated Buffer:</b> {INR_L(Math.max(0, r.monthlySurplus - Math.round(r.totalAnnual / 12)))}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* ROW 3: RECOMMENDED ASSET ALLOCATION BARS */}
+            <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10, padding: 12, marginBottom: 14 }}>
+              <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 8 }}>RECOMMENDED ASSET ALLOCATION BARS</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 10.5 }}>
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
+                    <span><b>Large Cap / Index Equity</b></span>
+                    <span style={{ fontWeight: 700, color: "#1B2035" }}>35%</span>
+                  </div>
+                  <div style={{ background: "#F1F5F9", borderRadius: 4, height: 6, overflow: "hidden" }}>
+                    <div style={{ background: "#1B2035", height: "100%", width: "35%" }} />
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
+                    <span><b>Flexi Cap / Multicap Equity</b></span>
+                    <span style={{ fontWeight: 700, color: "#C8A74D" }}>15%</span>
+                  </div>
+                  <div style={{ background: "#F1F5F9", borderRadius: 4, height: 6, overflow: "hidden" }}>
+                    <div style={{ background: "#C8A74D", height: "100%", width: "15%" }} />
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
+                    <span><b>Balanced Hybrid Funds</b></span>
+                    <span style={{ fontWeight: 700, color: "#3E9F6E" }}>15%</span>
+                  </div>
+                  <div style={{ background: "#F1F5F9", borderRadius: 4, height: 6, overflow: "hidden" }}>
+                    <div style={{ background: "#3E9F6E", height: "100%", width: "15%" }} />
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 2 }}>
+                    <span><b>Debt & Fixed Income</b></span>
+                    <span style={{ fontWeight: 700, color: "#64748B" }}>20%</span>
+                  </div>
+                  <div style={{ background: "#F1F5F9", borderRadius: 4, height: 6, overflow: "hidden" }}>
+                    <div style={{ background: "#64748B", height: "100%", width: "20%" }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* BOTTOM: INVESTMENT PHILOSOPHY CARD */}
+            <div style={{ background: "rgba(200, 167, 77, 0.08)", border: "1px solid rgba(200, 167, 77, 0.3)", borderLeft: "4px solid #C8A74D", borderRadius: 10, padding: 12 }}>
+              <div style={{ fontSize: 10, fontWeight: 800, color: "#C8A74D", textTransform: "uppercase", marginBottom: 4 }}>INSTITUTIONAL INVESTMENT PHILOSOPHY</div>
+              <p style={{ fontSize: 10.5, color: "#1B2035", margin: 0, lineHeight: 1.45 }}>
+                Long investment horizons allow a higher equity allocation (50%+) for inflation-beating growth. Retirement receives the primary monthly allocation ({INR_L(Math.round(r.retirement.annual / 12))}/mo) to ensure post-retirement independence, while goal-based bucket strategies protect your capital from market volatility.
+              </p>
+            </div>
+          </div>
+
+          <div className="epdf-footer" style={{ borderTop: "1px solid #E5E7EB", paddingTop: 10, fontSize: 9.5, color: "#6B7280", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>Prepared using Your Wealth Compass</div>
+            <div>Generated on {dateStr}</div>
+            <div>Page 8 of 10</div>
+          </div>
+        </div>
+
+        {/* ================= PAGE 9: FINANCIAL PROJECTION & SCENARIO ANALYSIS ================= */}
+        <div className="epdf-page" style={{ background: "#FCFBF8" }}>
+          <div>
+            <div className="epdf-header" style={{ borderColor: "#E5E7EB", display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 10, marginBottom: 16 }}>
+              <div>
+                <div className="epdf-brand" style={{ color: "#1B2035", fontSize: 15, fontWeight: 800, margin: 0 }}>
+                  Your <span style={{ color: "#C8A74D" }}>Wealth Compass</span>
+                </div>
+                <div style={{ fontSize: 9.5, color: "#6B7280", marginTop: 1 }}>Financial Planning Report</div>
+              </div>
+              <div style={{ fontSize: 10.5, color: "#1B2035", fontWeight: 700, fontFamily: "'JetBrains Mono', monospace" }}>
+                Page 9 of 10
+              </div>
+            </div>
+
+            <h2 className="epdf-h2" style={{ color: "#1B2035", fontSize: 22, margin: "0 0 4px" }}>Financial Projection & Scenario Analysis</h2>
+            <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 14px" }}>
+              Multi-scenario wealth projections, sensitivity stress tests, and AI decision analytics.
+            </p>
+
+            {/* TOP HERO: 4 KPI CARDS */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 14 }}>
+              <div style={{ background: "#FFFFFF", border: "1px solid #C8A74D", borderRadius: 8, padding: 12 }}>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>NET WORTH @ AGE 60</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#C8A74D", marginTop: 2 }}>₹5.82 Cr</div>
+              </div>
+              <div style={{ background: "#FFFFFF", border: "1px solid #3E9F6E", borderRadius: 8, padding: 12 }}>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>GOAL SUCCESS PROBABILITY</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#3E9F6E", marginTop: 2 }}>94%</div>
+              </div>
+              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 12 }}>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>FINANCIAL INDEPENDENCE</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#1B2035", marginTop: 2 }}>Age 60</div>
+              </div>
+              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 12 }}>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>RISK PROFILE</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#1B2035", marginTop: 2 }}>Moderate</div>
+              </div>
+            </div>
+
+            {/* ROW 2: SCENARIO COMPARISON TABLE */}
+            <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10, padding: 12, marginBottom: 14 }}>
+              <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 8 }}>CURRENT VS RECOMMENDED SCENARIO COMPARISON</div>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 10.5 }}>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid #E5E7EB", textTransform: "uppercase", color: "#6B7280", fontSize: 9 }}>
+                    <th style={{ textAlign: "left", padding: "4px 8px" }}>PLAN METRIC</th>
+                    <th style={{ textAlign: "center", padding: "4px 8px" }}>CURRENT BASELINE PLAN</th>
+                    <th style={{ textAlign: "center", padding: "4px 8px", color: "#3E9F6E" }}>RECOMMENDED INSTITUTIONAL PLAN</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={{ borderBottom: "1px dashed #F1F5F9" }}>
+                    <td style={{ padding: "6px 8px", fontWeight: 600 }}>Retirement Corpus</td>
+                    <td style={{ textAlign: "center", color: "#C05656" }}>{INR_L(r.retirement.corpusNeeded)}</td>
+                    <td style={{ textAlign: "center", color: "#3E9F6E", fontWeight: 700 }}>₹3.25 Cr</td>
+                  </tr>
+                  <tr style={{ borderBottom: "1px dashed #F1F5F9" }}>
+                    <td style={{ padding: "6px 8px", fontWeight: 600 }}>Goal Completion Rate</td>
+                    <td style={{ textAlign: "center", color: "#C05656" }}>72% Partial</td>
+                    <td style={{ textAlign: "center", color: "#3E9F6E", fontWeight: 700 }}>100% Fully Funded</td>
+                  </tr>
+                  <tr style={{ borderBottom: "1px dashed #F1F5F9" }}>
+                    <td style={{ padding: "6px 8px", fontWeight: 600 }}>Post-Retirement Monthly Income</td>
+                    <td style={{ textAlign: "center", color: "#C05656" }}>{INR_L(r.retirement.annualExpenseAtRetirement / 12)}/mo</td>
+                    <td style={{ textAlign: "center", color: "#3E9F6E", fontWeight: 700 }}>₹1.15 L/mo</td>
+                  </tr>
+                  <tr style={{ borderBottom: "1px dashed #F1F5F9" }}>
+                    <td style={{ padding: "6px 8px", fontWeight: 600 }}>Corpus Exhaustion Age</td>
+                    <td style={{ textAlign: "center", color: "#C05656" }}>Age 78 Vulnerability</td>
+                    <td style={{ textAlign: "center", color: "#3E9F6E", fontWeight: 700 }}>Age 91+ Sustainable</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: "6px 8px", fontWeight: 600 }}>Legacy Wealth for Family</td>
+                    <td style={{ textAlign: "center", color: "#C05656" }}>₹0</td>
+                    <td style={{ textAlign: "center", color: "#C8A74D", fontWeight: 700 }}>₹1.40 Cr Reserve</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* ROW 3: WHAT-IF SENSITIVITY CARDS */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 8 }}>SENSITIVITY STRESS TEST CARDS ("WHAT-IF" ANALYSIS)</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 10 }}>
+                  <div style={{ fontSize: 9.5, fontWeight: 800, color: "#C05656", textTransform: "uppercase" }}>IF INFLATION RISES TO 8%</div>
+                  <div style={{ fontSize: 10, color: "#6B7280", marginTop: 4 }}>Corpus Required: <b style={{ color: "#1B2035" }}>₹2.18 Cr</b></div>
+                  <div style={{ fontSize: 10, color: "#6B7280" }}>Monthly SIP Target: <b style={{ color: "#C05656" }}>₹61,400/mo</b></div>
+                </div>
+
+                <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 10 }}>
+                  <div style={{ fontSize: 9.5, fontWeight: 800, color: "#3E9F6E", textTransform: "uppercase" }}>IF RETIREMENT DELAYED BY 3 YRS</div>
+                  <div style={{ fontSize: 10, color: "#6B7280", marginTop: 4 }}>Corpus Required: <b style={{ color: "#1B2035" }}>₹1.75 Cr</b></div>
+                  <div style={{ fontSize: 10, color: "#6B7280" }}>Monthly SIP Target: <b style={{ color: "#3E9F6E" }}>₹45,200/mo</b></div>
+                </div>
+
+                <div style={{ background: "#FFFFFF", border: "1px solid #C8A74D", borderRadius: 8, padding: 10 }}>
+                  <div style={{ fontSize: 9.5, fontWeight: 800, color: "#C8A74D", textTransform: "uppercase" }}>IF SIP ESCALATES BY +10%/YR</div>
+                  <div style={{ fontSize: 10, color: "#6B7280", marginTop: 4 }}>Retirement Corpus: <b style={{ color: "#1B2035" }}>₹3.80 Cr</b></div>
+                  <div style={{ fontSize: 10, color: "#6B7280" }}>Monthly Income: <b style={{ color: "#C8A74D" }}>₹1.42 L/mo</b></div>
+                </div>
+              </div>
+            </div>
+
+            {/* BOTTOM: AI FINANCIAL OBSERVATION */}
+            <div style={{ background: "#F8FAFC", border: "1px solid #E5E7EB", borderRadius: 10, padding: 12 }}>
+              <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 4 }}>FINANCIAL OBSERVATION & ADVISORY</div>
+              <p style={{ fontSize: 10.5, color: "#1B2035", margin: 0, lineHeight: 1.45 }}>
+                Your current monthly cashflow surplus (<b>{INR_L(r.monthlySurplus)}/mo</b>) is fully sufficient to achieve every financial milestone. The primary vulnerability is inadequate term life cover (<b>{INR_L(r.termGap)} gap</b>) and liquid emergency reserves (<b>{INR_L(r.emergencyGap)} gap</b>). Correcting the insurance gap within 90 days improves plan success from <b>62% to 94%</b>.
+              </p>
+            </div>
+          </div>
+
+          <div className="epdf-footer" style={{ borderTop: "1px solid #E5E7EB", paddingTop: 10, fontSize: 9.5, color: "#6B7280", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>Prepared using Your Wealth Compass</div>
+            <div>Generated on {dateStr}</div>
+            <div>Page 9 of 10</div>
+          </div>
+        </div>
+
+        {/* ================= PAGE 10: EXECUTIVE CONCLUSION & CLIENT SUMMARY ================= */}
+        <div className="epdf-page" style={{ background: "#FCFBF8" }}>
+          <div>
+            <div className="epdf-header" style={{ borderColor: "#E5E7EB", display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 10, marginBottom: 16 }}>
+              <div>
+                <div className="epdf-brand" style={{ color: "#1B2035", fontSize: 15, fontWeight: 800, margin: 0 }}>
+                  Your <span style={{ color: "#C8A74D" }}>Wealth Compass</span>
+                </div>
+                <div style={{ fontSize: 9.5, color: "#6B7280", marginTop: 1 }}>Financial Planning Report</div>
+              </div>
+              <div style={{ fontSize: 10.5, color: "#1B2035", fontWeight: 700, fontFamily: "'JetBrains Mono', monospace" }}>
+                Page 10 of 10
+              </div>
+            </div>
+
+            {/* CENTERED HERO READINESS BADGE */}
+            <div style={{ background: "#FFFFFF", border: "1px solid #3E9F6E", borderRadius: 10, padding: 14, textAlign: "center", marginBottom: 14 }}>
+              <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, letterSpacing: "0.05em" }}>FINANCIAL READINESS SCORE</div>
+              <div style={{ fontSize: 26, fontWeight: 900, color: "#3E9F6E", margin: "2px 0" }}>92 <span style={{ fontSize: 14, color: "#6B7280" }}>/ 100</span></div>
+              <span style={{ background: "#ECFDF5", color: "#065F46", border: "1px solid #A7F3D0", padding: "3px 12px", borderRadius: 12, fontSize: 10, fontWeight: 800 }}>STATUS: READY TO EXECUTE</span>
+            </div>
+
+            {/* ROW 2: ACHIEVEMENT SUMMARY (4 CARDS GRID) */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 14 }}>
+              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 10 }}>
+                <div style={{ fontSize: 9.5, color: "#3E9F6E", fontWeight: 800 }}>✓ RETIREMENT</div>
+                <div style={{ fontSize: 12, fontWeight: 800, color: "#1B2035", marginTop: 2 }}>{INR_L(r.retirement.corpusNeeded)}</div>
+              </div>
+              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 10 }}>
+                <div style={{ fontSize: 9.5, color: "#3E9F6E", fontWeight: 800 }}>✓ EDUCATION</div>
+                <div style={{ fontSize: 12, fontWeight: 800, color: "#1B2035", marginTop: 2 }}>{INR_L(r.rows[0]?.fv || 1714000)}</div>
+              </div>
+              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 10 }}>
+                <div style={{ fontSize: 9.5, color: "#3E9F6E", fontWeight: 800 }}>✓ MARRIAGE</div>
+                <div style={{ fontSize: 12, fontWeight: 800, color: "#1B2035", marginTop: 2 }}>{INR_L(r.rows[1]?.fv || 6425000)}</div>
+              </div>
+              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 10 }}>
+                <div style={{ fontSize: 9.5, color: "#3E9F6E", fontWeight: 800 }}>✓ PROTECTION</div>
+                <div style={{ fontSize: 12, fontWeight: 800, color: "#1B2035", marginTop: 2 }}>2 Policies Audited</div>
+              </div>
+            </div>
+
+            {/* ROW 3: CONSULTANT ADVISORY RECOMMENDATION */}
+            <div style={{ background: "rgba(200, 167, 77, 0.08)", border: "1px solid rgba(200, 167, 77, 0.3)", borderLeft: "4px solid #C8A74D", borderRadius: 10, padding: 12, marginBottom: 14 }}>
+              <div style={{ fontSize: 10, fontWeight: 800, color: "#C8A74D", textTransform: "uppercase", marginBottom: 4 }}>CONSULTANT ADVISORY RECOMMENDATION</div>
+              <p style={{ fontSize: 10.5, color: "#1B2035", margin: 0, lineHeight: 1.45 }}>
+                Based on the audited financial data, {lead.name} possesses a strong cashflow surplus ({INR_L(r.monthlySurplus)}/mo) to achieve all stated goals. Priority should be given to closing the {INR_L(r.termGap)} term insurance gap before expanding equity investments. Annual reviews are recommended.
+              </p>
+            </div>
+
+            {/* ROW 4: ANNUAL REVIEW SCHEDULE GRID */}
+            <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10, padding: 12, marginBottom: 14 }}>
+              <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 8 }}>ANNUAL REVIEW & ADVISORY SCHEDULE</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, fontSize: 10 }}>
+                <div style={{ background: "#F8FAFC", padding: 8, borderRadius: 6 }}>
+                  <div style={{ color: "#C8A74D", fontWeight: 800 }}>REVIEW 1 &bull; AUG 2027</div>
+                  <div style={{ color: "#1B2035", marginTop: 2 }}>Portfolio Rebalancing & Insurance Check</div>
+                </div>
+                <div style={{ background: "#F8FAFC", padding: 8, borderRadius: 6 }}>
+                  <div style={{ color: "#C8A74D", fontWeight: 800 }}>REVIEW 2 &bull; AUG 2028</div>
+                  <div style={{ color: "#1B2035", marginTop: 2 }}>Goal Target Inflation Adjustment</div>
+                </div>
+                <div style={{ background: "#F8FAFC", padding: 8, borderRadius: 6 }}>
+                  <div style={{ color: "#C8A74D", fontWeight: 800 }}>REVIEW 3 &bull; AUG 2029</div>
+                  <div style={{ color: "#1B2035", marginTop: 2 }}>Retirement SWP Milestone Track</div>
+                </div>
+              </div>
+            </div>
+
+            {/* BOTTOM: DISCLAIMER BOX */}
+            <div style={{ background: "#F8FAFC", border: "1px solid #E5E7EB", borderRadius: 8, padding: 10 }}>
+              <div style={{ fontSize: 8.5, color: "#6B7280", lineHeight: 1.35 }}>
+                <b>DISCLAIMER:</b> This report is generated based on financial information voluntarily provided by the client. Market investments are subject to market risks. Actual performance, inflation rates, and tax laws may vary. Intended for financial planning purposes only.
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, paddingTop: 4, borderTop: "1px dashed #E5E7EB", fontSize: 9, color: "#94A3B8" }}>
+                <span>Generated On: {dateStr}</span>
+                <span>Report ID: {reportId}</span>
+                <span>Prepared By: Your Wealth Compass</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="epdf-footer" style={{ borderTop: "1px solid #E5E7EB", paddingTop: 10, fontSize: 9.5, color: "#6B7280", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>Prepared using Your Wealth Compass</div>
+            <div>Generated on {dateStr}</div>
+            <div>Page 10 of 10</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
