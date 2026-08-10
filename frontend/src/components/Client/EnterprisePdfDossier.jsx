@@ -349,7 +349,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
               <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 12, letterSpacing: "0.05em" }}>CLIENT PROFILE SNAPSHOT</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 12 }}>
                 <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>Monthly Income</div><div style={{ fontSize: 14, fontWeight: 700, color: "#1B2035" }}>{INR_L(lead.income)}</div></div>
-                <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>Monthly Surplus</div><div style={{ fontSize: 14, fontWeight: 700, color: "#C8A74D" }}>{INR_L(r.monthlySurplus)}</div></div>
+                <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>Monthly Net Savings</div><div style={{ fontSize: 14, fontWeight: 700, color: "#C8A74D" }}>{INR_L(r.monthlySurplus)}</div></div>
                 <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>Current Savings</div><div style={{ fontSize: 14, fontWeight: 700, color: "#1B2035" }}>{INR_L(lead.savings)}</div></div>
                 <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>Current Age</div><div style={{ fontSize: 14, fontWeight: 700, color: "#1B2035" }}>{lead.age || 43} yrs</div></div>
               </div>
@@ -365,7 +365,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10, padding: 16, marginBottom: 16 }}>
               <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 10, letterSpacing: "0.05em" }}>KEY DIAGNOSTIC FINDINGS</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 11.5, color: "#1B2035" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}><CheckCircle2 size={14} color="#3E9F6E" /> <b>Strong Monthly Surplus:</b> Monthly surplus of {INR_L(r.monthlySurplus)} provides strong capacity for systematic investments.</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}><CheckCircle2 size={14} color="#3E9F6E" /> <b>Strong Net Monthly Savings:</b> Net monthly savings of {INR_L(r.monthlySurplus)} provides strong capacity for systematic investments.</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}><CheckCircle2 size={14} color="#3E9F6E" /> <b>Retirement Horizon:</b> Target corpus of {INR_L(r.retirement.corpusNeeded)} can be systematically accumulated over {r.retirement.yearsToRetire} years.</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}><CheckCircle2 size={14} color="#3E9F6E" /> <b>Health Cover Baseline:</b> Active health insurance of {INR_L(lead.healthAmount)} provides baseline coverage in {lead.city || "Metro"}.</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}><AlertTriangle size={14} color={r.termGap > 0 ? "#C05656" : "#3E9F6E"} /> <b>Term Life Insurance Gap:</b> {r.termGap > 0 ? `Additional top-up cover of ${INR_L(r.termGap)} is recommended to protect family income.` : `Term cover target is fully adequate.`}</div>
@@ -391,7 +391,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             <div style={{ background: "rgba(200, 167, 77, 0.08)", border: "1px solid rgba(200, 167, 77, 0.3)", borderLeft: "4px solid #C8A74D", borderRadius: 10, padding: 16 }}>
               <div style={{ fontSize: 10, fontWeight: 800, color: "#C8A74D", textTransform: "uppercase", marginBottom: 4, letterSpacing: "0.05em" }}>CONSULTANT OBSERVATION & ADVISORY</div>
               <p style={{ fontSize: 11.5, color: "#1B2035", margin: 0, lineHeight: 1.5 }}>
-                Your monthly cashflow surplus of <b>{INR_L(r.monthlySurplus)}</b> provides an excellent foundation. Addressing your term insurance top-up ({INR_L(r.termGap)}) and starting a systematic monthly SIP of <b>{INR_L(Math.round(r.retirement.annual / 12))}/mo</b> towards retirement will secure your family's future with complete peace of mind.
+                Your net monthly savings of <b>{INR_L(r.monthlySurplus)}</b> provides an excellent foundation. Addressing your term insurance top-up ({INR_L(r.termGap)}) and starting a systematic monthly SIP of <b>{INR_L(Math.round(r.retirement.annual / 12))}/mo</b> towards retirement will secure your family's future with complete peace of mind.
               </p>
             </div>
           </div>
@@ -434,7 +434,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
                 <div style={{ fontSize: 15, fontWeight: 800, color: "#1B2035", marginTop: 2 }}>{INR_L(Number(lead.expenses) * 12)}</div>
               </div>
               <div style={{ background: "#FFFFFF", border: "1px solid #C8A74D", borderRadius: 8, padding: 12 }}>
-                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>ANNUAL SURPLUS</div>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>ANNUAL SAVINGS</div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: "#C8A74D", marginTop: 2 }}>{INR_L(r.annualSurplus)}</div>
               </div>
               <div style={{ background: "#FFFFFF", border: "1px solid #3E9F6E", borderRadius: 8, padding: 12 }}>
@@ -457,7 +457,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
                   </div>
                   <div style={{ textAlign: "center", color: "#94A3B8", fontSize: 10 }}>↓ Living Expenses (-{((Number(lead.expenses) / Math.max(1, Number(lead.income))) * 100).toFixed(0)}%)</div>
                   <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 10px", background: "#FEF3C7", borderRadius: 6, border: "1px solid #FCD34D" }}>
-                    <span><b>Net Annual Surplus</b></span>
+                    <span><b>Net Annual Savings</b></span>
                     <span style={{ fontWeight: 700, color: "#92400E" }}>= {INR_L(r.annualSurplus)}</span>
                   </div>
                   <div style={{ textAlign: "center", color: "#94A3B8", fontSize: 10 }}>↓ Total Required Goal & Retirement Investment</div>
@@ -519,7 +519,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
               <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 6 }}>FINANCIAL ANALYSIS & OBSERVATIONS</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, fontSize: 11, color: "#1B2035" }}>
                 <div>&bull; Expenses consume only <b>{((Number(lead.expenses) / Math.max(1, Number(lead.income))) * 100).toFixed(0)}%</b> of annual income, reflecting strong financial discipline.</div>
-                <div>&bull; Annual surplus of <b>{INR_L(r.annualSurplus)}</b> is sufficient to fund long-term goals without compromising lifestyle.</div>
+                <div>&bull; Annual net savings of <b>{INR_L(r.annualSurplus)}</b> is sufficient to fund long-term goals without compromising lifestyle.</div>
                 <div>&bull; Remaining buffer of <b>{INR_L(Math.max(0, r.annualSurplus - r.totalAnnual))}</b> can be deployed into wealth acceleration.</div>
                 <div>&bull; Emergency reserve should be strengthened from {((Number(lead.savings) / Math.max(1, Number(lead.expenses)))).toFixed(1)} months to <b>9 months ({INR_L(r.emergencyTarget)})</b>.</div>
               </div>
@@ -1085,7 +1085,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
                 <div style={{ fontSize: 15, fontWeight: 800, color: "#C8A74D", marginTop: 2 }}>{INR_L(Math.round(r.totalAnnual / 12))}/mo</div>
               </div>
               <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 12 }}>
-                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>AVAILABLE SURPLUS</div>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>MONTHLY SAVINGS</div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: "#1B2035", marginTop: 2 }}>{INR_L(r.monthlySurplus)}/mo</div>
               </div>
               <div style={{ background: "#FFFFFF", border: "1px solid #3E9F6E", borderRadius: 8, padding: 12 }}>
@@ -1118,7 +1118,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
                 <div style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 10, textAlign: "center" }}>
                   <div style={{ background: "#F8FAFC", padding: 4, borderRadius: 4 }}><b>Monthly Income:</b> {INR_L(lead.income)}</div>
                   <div style={{ color: "#94A3B8" }}>↓ Living Expenses (-{INR_L(lead.expenses)})</div>
-                  <div style={{ background: "#FEF3C7", padding: 4, borderRadius: 4 }}><b>Available Surplus:</b> {INR_L(r.monthlySurplus)}</div>
+                  <div style={{ background: "#FEF3C7", padding: 4, borderRadius: 4 }}><b>Monthly Net Savings:</b> {INR_L(r.monthlySurplus)}</div>
                   <div style={{ color: "#94A3B8" }}>↓ Systematic SIP Target (-{INR_L(Math.round(r.totalAnnual / 12))})</div>
                   <div style={{ background: "#ECFDF5", padding: 4, borderRadius: 4, color: "#065F46" }}><b>Unallocated Buffer:</b> {INR_L(Math.max(0, r.monthlySurplus - Math.round(r.totalAnnual / 12)))}</div>
                 </div>
@@ -1296,7 +1296,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             <div style={{ background: "#F8FAFC", border: "1px solid #E5E7EB", borderRadius: 10, padding: 12 }}>
               <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 4 }}>FINANCIAL OBSERVATION & ADVISORY</div>
               <p style={{ fontSize: 10.5, color: "#1B2035", margin: 0, lineHeight: 1.45 }}>
-                Your current monthly cashflow surplus (<b>{INR_L(r.monthlySurplus)}/mo</b>) is fully sufficient to achieve every financial milestone. The primary vulnerability is inadequate term life cover (<b>{INR_L(r.termGap)} gap</b>) and liquid emergency reserves (<b>{INR_L(r.emergencyGap)} gap</b>). Correcting the insurance gap within 90 days improves plan success from <b>62% to 94%</b>.
+                Your current net monthly savings (<b>{INR_L(r.monthlySurplus)}/mo</b>) is fully sufficient to achieve every financial milestone. The primary vulnerability is inadequate term life cover (<b>{INR_L(r.termGap)} gap</b>) and liquid emergency reserves (<b>{INR_L(r.emergencyGap)} gap</b>). Correcting the insurance gap within 90 days improves plan success from <b>62% to 94%</b>.
               </p>
             </div>
           </div>
@@ -1354,7 +1354,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             <div style={{ background: "rgba(200, 167, 77, 0.08)", border: "1px solid rgba(200, 167, 77, 0.3)", borderLeft: "4px solid #C8A74D", borderRadius: 10, padding: 12, marginBottom: 14 }}>
               <div style={{ fontSize: 10, fontWeight: 800, color: "#C8A74D", textTransform: "uppercase", marginBottom: 4 }}>CONSULTANT ADVISORY RECOMMENDATION</div>
               <p style={{ fontSize: 10.5, color: "#1B2035", margin: 0, lineHeight: 1.45 }}>
-                Based on the audited financial data, {lead.name} possesses a strong cashflow surplus ({INR_L(r.monthlySurplus)}/mo) to achieve all stated goals. Priority should be given to closing the {INR_L(r.termGap)} term insurance gap before expanding equity investments. Annual reviews are recommended.
+                Based on the audited financial data, {lead.name} possesses strong net monthly savings ({INR_L(r.monthlySurplus)}/mo) to achieve all stated goals. Priority should be given to closing the {INR_L(r.termGap)} term insurance gap before expanding equity investments. Annual reviews are recommended.
               </p>
             </div>
 

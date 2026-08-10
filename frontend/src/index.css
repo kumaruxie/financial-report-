@@ -316,22 +316,8 @@ body {
   color: var(--accent-gold) !important;
 }
 
-/* Translucent Cinematic Building Background Layer */
 .ff-hero-building-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 100vh;
-  min-height: 100vh;
-  background-image: linear-gradient(rgba(7, 8, 12, 0.55), rgba(7, 8, 12, 0.85)), url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=2000&q=80');
-  background-size: cover;
-  background-position: center bottom;
-  opacity: 0.55;
-  filter: brightness(0.45) contrast(0.9) saturate(0.8);
-  pointer-events: none;
-  z-index: 1;
+  display: none !important;
 }
 
 /* Premium Dark-Matching 56px Inputs & Clean Labels */

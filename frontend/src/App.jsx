@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import HeaderNav from "./components/Shared/HeaderNav";
-import ProgressBar from "./components/Shared/ProgressBar";
 import LandingHero from "./components/Client/LandingHero";
 import StepBasics from "./components/Client/WizardForm/StepBasics";
 import StepFinancials from "./components/Client/WizardForm/StepFinancials";
@@ -25,7 +24,7 @@ function MainContent() {
   const [legalModalTab, setLegalModalTab] = useState(null); // null | 'privacy' | 'terms' | 'contact'
   const [wizardStep, setWizardStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [processingStatus, setProcessingStatus] = useState("Evaluating Cashflow Surplus...");
+  const [processingStatus, setProcessingStatus] = useState("Evaluating Monthly Cashflow...");
 
   const [basics, setBasics] = useState({ name: "", email: "", mobile: "" });
   const [financials, setFinancials] = useState({ age: "", income: "", expenses: "", savings: "" });
@@ -90,7 +89,7 @@ function MainContent() {
 
   const handleWizardSubmit = async () => {
     setIsProcessing(true);
-    setProcessingStatus("Evaluating Cashflow Surplus...");
+    setProcessingStatus("Evaluating Monthly Cashflow...");
 
     const saved = await saveLeadSubmission(currentPayload);
     setSubmittedLead(saved);
@@ -201,10 +200,7 @@ function MainContent() {
             )}
           </div>
 
-          {/* Stepper Track & Progress Bar */}
-          {wizardStep < 5 && !isProcessing && (
-            <ProgressBar currentStep={wizardStep} />
-          )}
+
 
           {/* Compact Privacy & Security Info Card */}
           {wizardStep < 5 && !isProcessing && (

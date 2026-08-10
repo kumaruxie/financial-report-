@@ -79,8 +79,7 @@ export default function LandingHero({ onStartWizard, onOpenLegal }) {
           backgroundColor: "#07080C"
         }}
       >
-        {/* Layer 1: Translucent Building Background Layer */}
-        <div className="ff-hero-building-bg" />
+
 
         {/* Layer 2: Golden Radial Backdrop Glow Behind CTA */}
         <div
@@ -260,41 +259,7 @@ export default function LandingHero({ onStartWizard, onOpenLegal }) {
           </h2>
         </div>
 
-        {/* GOAL CATEGORY TABS */}
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 40 }}>
-          {inflationCategories.map((cat) => {
-            const IconComponent = cat.icon;
-            const isSelected = selectedGoalType === cat.id;
 
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedGoalType(cat.id)}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: "11px 22px",
-                  borderRadius: 12,
-                  background: isSelected ? "rgba(201, 154, 75, 0.15)" : "rgba(255, 255, 255, 0.04)",
-                  border: `1px solid ${isSelected ? "var(--accent-gold)" : "var(--border-subtle)"}`,
-                  color: isSelected ? "var(--accent-gold)" : "var(--text-fog)",
-                  fontSize: 14,
-                  fontWeight: isSelected ? 600 : 500,
-                  cursor: "pointer",
-                  transition: "all 0.25s ease",
-                  boxShadow: isSelected ? "0 0 20px rgba(201, 154, 75, 0.2)" : "none"
-                }}
-              >
-                <IconComponent size={16} color={isSelected ? "var(--accent-gold)" : "var(--text-fog)"} />
-                <span>{cat.label}</span>
-                <span className="ff-badge ff-badge-gold" style={{ fontSize: 10.5, padding: "2px 6px" }}>
-                  {cat.rate}% Infl.
-                </span>
-              </button>
-            );
-          })}
-        </div>
 
         {/* RECHARTS AREA CHART FOR ESCALATION TIMELINE */}
         <div

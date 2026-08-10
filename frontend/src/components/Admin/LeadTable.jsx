@@ -158,7 +158,7 @@ export default function LeadTable({ leads, onSelectLead }) {
               <th style={{ padding: "16px 20px" }}>Client Name</th>
               <th style={{ padding: "16px 20px" }}>Contact & City</th>
               <th style={{ padding: "16px 20px" }}>Assigned Consultant</th>
-              <th style={{ padding: "16px 20px" }}>Monthly Surplus</th>
+              <th style={{ padding: "16px 20px" }}>Net Monthly Savings</th>
               <th style={{ padding: "16px 20px" }}>Health Score</th>
               <th style={{ padding: "16px 20px" }}>Risk Status</th>
               <th style={{ padding: "16px 20px", textAlign: "right" }}>Action</th>

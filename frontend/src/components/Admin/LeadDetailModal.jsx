@@ -91,7 +91,7 @@ export default function LeadDetailModal({ lead, onClose }) {
                 </div>
 
                 <div style={{ background: "var(--bg-surface)", border: "1px solid var(--border-gold)", padding: "16px 20px", borderRadius: 14 }}>
-                  <div style={{ fontSize: 11, color: "var(--accent-gold)", textTransform: "uppercase", fontWeight: 600 }}>Net Monthly Surplus</div>
+                  <div style={{ fontSize: 11, color: "var(--accent-gold)", textTransform: "uppercase", fontWeight: 600 }}>Net Monthly Savings</div>
                   <div style={{ fontSize: 20, fontWeight: 700, color: "var(--accent-gold)", fontFamily: "var(--font-mono)", marginTop: 4 }}>{INR_L(r.monthlySurplus)}/mo</div>
                 </div>
 
@@ -203,7 +203,7 @@ export default function LeadDetailModal({ lead, onClose }) {
                   <div style={{ background: "rgba(255, 255, 255, 0.03)", padding: 16, borderRadius: 12, border: "1px solid var(--border-subtle)" }}>
                     <div style={{ fontSize: 12, color: "var(--accent-gold)", fontWeight: 700 }}>3. Retirement & Goal Systematic SIP</div>
                     <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-main)", margin: "4px 0" }}>Guaranteed Plan + Equity SIP ({INR(r.totalAnnual / 12)}/mo)</div>
-                    <div style={{ fontSize: 12, color: "var(--text-fog)" }}>Fully funded by client monthly surplus ({INR_L(r.monthlySurplus)})</div>
+                    <div style={{ fontSize: 12, color: "var(--text-fog)" }}>Fully funded by client monthly savings ({INR_L(r.monthlySurplus)})</div>
                   </div>
                 </div>
               </div>
