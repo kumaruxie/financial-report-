@@ -37,10 +37,7 @@ export const TYPE_DEFAULTS = {
   house:     { years: 5, cost: 4000000 },
 };
 
-export const DEFAULT_GOALS = [
-  { id: "g_def_1", type: "education", childClass: 5, ugCost: 1000000, pgPlanned: "no", pgCost: "" },
-  { id: "g_def_2", type: "marriage", childAge: 5, cost: 1500000 }
-];
+export const DEFAULT_GOALS = [];
 
 export const INR = (n) => "₹" + Math.round(Number(n) || 0).toLocaleString("en-IN");
 
@@ -154,7 +151,7 @@ export function goalTimeframeLabel(row) {
 
 export function buildGoalRows(goals) {
   const rows = [];
-  const list = Array.isArray(goals) && goals.length > 0 ? goals : DEFAULT_GOALS;
+  const list = Array.isArray(goals) ? goals : [];
   
   list.forEach((g) => {
     if (g.type === "education") {

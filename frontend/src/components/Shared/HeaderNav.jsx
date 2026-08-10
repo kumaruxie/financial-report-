@@ -2,17 +2,19 @@ import React from "react";
 import { ArrowRight, ShieldCheck } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
-export default function HeaderNav({ activeTab, setActiveTab }) {
+export default function HeaderNav({ activeTab, setActiveTab, onResetWizard }) {
   const { portalMode, setPortalMode } = useAuth();
 
   const handleGoHome = () => {
     setPortalMode("client");
+    if (onResetWizard) onResetWizard();
     setActiveTab("landing");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleStartForm = () => {
     setPortalMode("client");
+    if (onResetWizard) onResetWizard();
     setActiveTab("wizard");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -47,8 +49,8 @@ export default function HeaderNav({ activeTab, setActiveTab }) {
               className="ff-btn-gold header-button"
               onClick={handleStartForm}
             >
-              <span className="ff-btn-text-full">Assess Your Financial Health</span>
-              <span className="ff-btn-text-mobile">Assess Health</span>
+              <span className="ff-btn-text-full">Get Your Financial Fitness Report</span>
+              <span className="ff-btn-text-mobile">Fitness Report</span>
               <ArrowRight size={15} style={{ flexShrink: 0 }} />
             </button>
           )}

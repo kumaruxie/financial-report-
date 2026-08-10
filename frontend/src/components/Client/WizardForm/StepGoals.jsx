@@ -118,36 +118,65 @@ export default function StepGoals({ goals, setGoals }) {
 
             {/* EDUCATION FIELDS */}
             {goal.type === "education" && (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                <div className="ff-input-group">
-                  <label className="ff-input-label-uppercase">Child's Class</label>
-                  <select
-                    className="ff-input-56px"
-                    style={{ background: "#151824", color: "var(--text-main)", cursor: "pointer", appearance: "auto" }}
-                    value={goal.childClass || 5}
-                    onChange={(e) => updateGoal(goal.id, { childClass: e.target.value })}
-                  >
-                    {/* Restrict to Class 1 through Class 7 to ensure at least a 5-year gap before Class 12 */}
-                    {Array.from({ length: 7 }, (_, i) => i + 1).map((c) => (
-                      <option key={c} value={c} style={{ background: "#151824", color: "#FFFFFF" }}>
-                        Class {c} ({12 - c} yrs to college)
-                      </option>
-                    ))}
-                  </select>
-                  <span style={{ fontSize: 11, color: "var(--accent-gold)", marginTop: 4, display: "block" }}>
-                    Minimum 5-year timeline required for proper college investment planning.
-                  </span>
+              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                  <div className="ff-input-group">
+                    <label className="ff-input-label-uppercase">Select Child</label>
+                    <select
+                      className="ff-input-56px"
+                      style={{ background: "#151824", color: "var(--text-main)", cursor: "pointer", appearance: "auto" }}
+                      value={goal.childSelection || "Child 1"}
+                      onChange={(e) => updateGoal(goal.id, { childSelection: e.target.value })}
+                    >
+                      <option value="Child 1" style={{ background: "#151824", color: "#FFFFFF" }}>Child 1</option>
+                      <option value="Another Child" style={{ background: "#151824", color: "#FFFFFF" }}>Another Child (Child 2)</option>
+                      <option value="Child 3" style={{ background: "#151824", color: "#FFFFFF" }}>Child 3</option>
+                    </select>
+                  </div>
+
+                  <div className="ff-input-group">
+                    <label className="ff-input-label-uppercase">Child's Name</label>
+                    <input
+                      type="text"
+                      className="ff-input-56px"
+                      placeholder="e.g. Aarav / Ananya"
+                      value={goal.childName || ""}
+                      onChange={(e) => updateGoal(goal.id, { childName: e.target.value })}
+                    />
+                  </div>
                 </div>
 
-                <div className="ff-input-group">
-                  <label className="ff-input-label-uppercase">College Cost Today (₹)</label>
-                  <input
-                    type="text"
-                    className="ff-input-56px"
-                    placeholder="e.g. ₹10,00,000"
-                    value={formatRupeeInput(goal.ugCost)}
-                    onChange={(e) => updateGoal(goal.id, { ugCost: e.target.value.replace(/[^0-9]/g, "") })}
-                  />
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                  <div className="ff-input-group">
+                    <label className="ff-input-label-uppercase">Child's Current Class</label>
+                    <select
+                      className="ff-input-56px"
+                      style={{ background: "#151824", color: "var(--text-main)", cursor: "pointer", appearance: "auto" }}
+                      value={goal.childClass || 5}
+                      onChange={(e) => updateGoal(goal.id, { childClass: e.target.value })}
+                    >
+                      {/* Restrict to Class 1 through Class 7 to ensure at least a 5-year gap before Class 12 */}
+                      {Array.from({ length: 7 }, (_, i) => i + 1).map((c) => (
+                        <option key={c} value={c} style={{ background: "#151824", color: "#FFFFFF" }}>
+                          Class {c} ({12 - c} yrs to college)
+                        </option>
+                      ))}
+                    </select>
+                    <span style={{ fontSize: 11, color: "var(--accent-gold)", marginTop: 4, display: "block" }}>
+                      Minimum 5-year timeline required for proper college investment planning.
+                    </span>
+                  </div>
+
+                  <div className="ff-input-group">
+                    <label className="ff-input-label-uppercase">College Cost Today (₹)</label>
+                    <input
+                      type="text"
+                      className="ff-input-56px"
+                      placeholder="e.g. ₹10,00,000"
+                      value={formatRupeeInput(goal.ugCost)}
+                      onChange={(e) => updateGoal(goal.id, { ugCost: e.target.value.replace(/[^0-9]/g, "") })}
+                    />
+                  </div>
                 </div>
               </div>
             )}

@@ -118,7 +118,7 @@ export default function LandingHero({ onStartWizard, onOpenLegal }) {
               lineHeight: 1.05,
               fontWeight: 600,
               color: "var(--text-main)",
-              marginBottom: 20,
+              marginBottom: 34,
               fontFamily: "var(--font-serif)",
               letterSpacing: "-0.02em",
               textShadow: "0 4px 24px rgba(0, 0, 0, 0.9)"
@@ -131,13 +131,14 @@ export default function LandingHero({ onStartWizard, onOpenLegal }) {
           {/* Tightened 2-Line Subtitle Paragraph */}
           <p
             style={{
-              fontSize: 16.5,
+              fontSize: 19,
+              fontWeight: 500,
               color: "var(--text-ivory)",
-              maxWidth: 680,
-              margin: "0 auto 36px",
+              maxWidth: 720,
+              margin: "0 auto 42px",
               lineHeight: 1.55,
               textShadow: "0 2px 10px rgba(0, 0, 0, 0.8)",
-              opacity: 0.92
+              opacity: 0.95
             }}
           >
             Answer a few questions to uncover your financial gaps across cash flow, protection, retirement, and investments.
@@ -148,12 +149,12 @@ export default function LandingHero({ onStartWizard, onOpenLegal }) {
             className="ff-btn-gold"
             onClick={scrollToAssessment}
             style={{
-              fontSize: 15.5,
-              fontWeight: 600,
+              fontSize: 16,
+              fontWeight: 800,
               padding: "15px 34px",
               borderRadius: 10,
               cursor: "pointer",
-              marginBottom: 56,
+              marginBottom: 72,
               boxShadow: "0 0 60px rgba(201, 154, 75, 0.18), 0 18px 40px rgba(0, 0, 0, 0.4)",
               display: "inline-flex",
               alignItems: "center",
@@ -161,11 +162,11 @@ export default function LandingHero({ onStartWizard, onOpenLegal }) {
               transition: "all 0.3s ease"
             }}
           >
-            Get My Finance Fitness Report <ArrowRight size={18} />
+            Get Your Financial Fitness Report <ArrowRight size={18} />
           </button>
 
           {/* GOAL TIMELINE GLOWING TRAJECTORY TRACK */}
-          <div style={{ width: "100%", maxWidth: 800, position: "relative", marginTop: 10 }}>
+          <div style={{ width: "100%", maxWidth: 800, position: "relative", marginTop: 28 }}>
             {/* Glowing Trajectory Track Line */}
             <div
               style={{
@@ -247,19 +248,14 @@ export default function LandingHero({ onStartWizard, onOpenLegal }) {
       {/* =========================================================
          SECTION 2 — INFLATION & COST OF TIME ESCALATION VISUALIZER
          ========================================================= */}
-      <section style={{ padding: "100px 24px 80px", maxWidth: 1140, margin: "0 auto", textAlign: "center" }}>
+      <section style={{ padding: "44px 24px 80px", maxWidth: 1140, margin: "0 auto", textAlign: "center" }}>
 
-        {/* Section Eyebrow & Title */}
-        <div style={{ marginBottom: 40 }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--accent-gold)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 10 }}>
-            Goal Funding Trajectory
-          </div>
+        {/* Section Title */}
+        <div style={{ marginBottom: 64 }}>
           <h2 style={{ fontSize: "clamp(32px, 3.8vw, 44px)", fontWeight: 600, color: "var(--text-main)", fontFamily: "var(--font-serif)" }}>
             Compounding Growth & Goal Escalation
           </h2>
         </div>
-
-
 
         {/* RECHARTS AREA CHART FOR ESCALATION TIMELINE */}
         <div
@@ -273,17 +269,14 @@ export default function LandingHero({ onStartWizard, onOpenLegal }) {
             marginBottom: 32
           }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 16 }}>
             <div style={{ textAlign: "left" }}>
-              <div style={{ fontSize: 18, fontWeight: 600, color: "var(--text-main)", fontFamily: "var(--font-serif)" }}>
-                {currentCategory.label} Escalation Curve ({currentCategory.rate}% Inflation)
-              </div>
-              <div style={{ fontSize: 13, color: "var(--text-fog)", marginTop: 2 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-main)", letterSpacing: "-0.01em" }}>
                 Compounding growth trajectory over a 20-year milestone horizon.
               </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <span style={{ fontSize: 12, color: "var(--text-fog)" }}>Adjust Base Cost:</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginLeft: "auto" }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-fog)" }}>Adjust Base Cost:</span>
               <button
                 className="ff-btn-ghost"
                 onClick={() => setBaseCost(1000000)}

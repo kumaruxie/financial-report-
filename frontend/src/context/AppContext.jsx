@@ -37,10 +37,7 @@ const INITIAL_LEADS = [
     assignedAdminId: "admin_aditya",
     assignedAdminName: "Aditya Sharma",
     submittedAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-    goals: [
-      { id: "g1", type: "education", childClass: 5, ugCost: 1000000, pgPlanned: "no", pgCost: "" },
-      { id: "g2", type: "marriage", childAge: 5, cost: 1500000 }
-    ]
+    goals: []
   },
   {
     id: "lead_demo_2",
@@ -163,20 +160,20 @@ export function AppProvider({ children }) {
 
     const newLead = {
       id: rawReport._id || rawReport.id || "lead_" + Date.now(),
-      name: fin.name || leadData.name || "Jagat Singh",
-      email: fin.email || leadData.email || "jagat@example.com",
-      mobile: fin.mobile || leadData.mobile || "9876543210",
-      age: String(fin.age || leadData.age || "43"),
-      income: String(fin.income || leadData.income || "100000"),
-      expenses: String(fin.expenses || leadData.expenses || "20000"),
-      savings: String(fin.savings || leadData.savings || "35000"),
-      city: fin.city || leadData.city || "Gurgaon",
-      retirementAge: String(prot.retirementAge || leadData.retirementAge || "60"),
-      termInsurance: prot.termInsurance || leadData.termInsurance || "no",
-      termAmount: String(prot.termAmount || leadData.termAmount || "0"),
-      healthInsurance: prot.healthInsurance || leadData.healthInsurance || "no",
-      healthAmount: String(prot.healthAmount || leadData.healthAmount || "0"),
-      goals: rawReport.goals || leadData.goals || [],
+      name: leadData.name || fin.name || "Client User",
+      email: leadData.email || fin.email || "",
+      mobile: leadData.mobile || fin.mobile || "",
+      age: String(leadData.age || fin.age || "30"),
+      income: String(leadData.income || fin.income || "0"),
+      expenses: String(leadData.expenses || fin.expenses || "0"),
+      savings: String(leadData.savings || fin.savings || "0"),
+      city: leadData.city || fin.city || "",
+      retirementAge: String(leadData.retirementAge || prot.retirementAge || "60"),
+      termInsurance: leadData.termInsurance || prot.termInsurance || "no",
+      termAmount: String(leadData.termAmount || prot.termAmount || "0"),
+      healthInsurance: leadData.healthInsurance || prot.healthInsurance || "no",
+      healthAmount: String(leadData.healthAmount || prot.healthAmount || "0"),
+      goals: Array.isArray(leadData.goals) ? leadData.goals : [],
       pdfUrl: res.pdfUrl || rawReport.pdfUrl,
       assignedAdminId,
       assignedAdminName,

@@ -61,20 +61,20 @@ function MainContent() {
   const handleProtectionChange = (field, value) => setProtection((prev) => ({ ...prev, [field]: value }));
 
   const currentPayload = {
-    name: basics.name || "Jagat Singh",
-    email: basics.email || "jagat@example.com",
-    mobile: basics.mobile || "9876543210",
-    age: financials.age || "43",
-    income: financials.income || "100000",
-    expenses: financials.expenses || "20000",
-    savings: financials.savings || "35000",
-    city: protection.city || "Gurgaon",
+    name: basics.name || "",
+    email: basics.email || "",
+    mobile: basics.mobile || "",
+    age: financials.age || "",
+    income: financials.income || "0",
+    expenses: financials.expenses || "0",
+    savings: financials.savings || "0",
+    city: protection.city || "",
     retirementAge: protection.retirementAge || "60",
     termInsurance: protection.termInsurance || "no",
     termAmount: protection.termAmount || "0",
     healthInsurance: protection.healthInsurance || "no",
     healthAmount: protection.healthAmount || "0",
-    goals
+    goals: Array.isArray(goals) ? goals : []
   };
 
   const liveReport = computeReport(currentPayload);
@@ -116,7 +116,7 @@ function MainContent() {
   if (portalMode === "admin" || activeTab === "admin") {
     return (
       <div className="ff-app-container">
-        <HeaderNav activeTab={activeTab} setActiveTab={setActiveTab} />
+        <HeaderNav activeTab={activeTab} setActiveTab={setActiveTab} onResetWizard={resetWizard} />
         <AdminPortal />
         <footer className="ff-footer">
           &copy; {new Date().getFullYear()} Your Wealth Compass. All rights reserved by apkacoach.com.
@@ -127,13 +127,13 @@ function MainContent() {
 
   return (
     <div className="ff-app-container">
-      <HeaderNav activeTab={activeTab} setActiveTab={setActiveTab} />
+      <HeaderNav activeTab={activeTab} setActiveTab={setActiveTab} onResetWizard={resetWizard} />
 
       {activeTab === "landing" && (
         <LandingHero
           onStartWizard={() => {
+            resetWizard();
             setActiveTab("wizard");
-            setWizardStep(1);
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
           onOpenLegal={(tab) => setLegalModalTab(tab)}
@@ -143,16 +143,13 @@ function MainContent() {
       {activeTab === "dashboard" && (
         <Dashboard
           onStartWizard={() => {
+            resetWizard();
             setActiveTab("wizard");
-            setWizardStep(1);
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
         />
       )}
 
-      {/* =========================================================
-         DEDICATED ASSESSMENT FORM PAGE (STANDALONE CLEAN VIEW)
-         ========================================================= */}
       {/* =========================================================
          DEDICATED ASSESSMENT FORM & FULL-SCREEN REPORT VIEW
          ========================================================= */}
@@ -172,26 +169,18 @@ function MainContent() {
             <button
               className="ff-btn-ghost"
               onClick={() => {
-                if (wizardStep === 5) setWizardStep(4);
-                else setActiveTab("landing");
+                resetWizard();
               }}
               style={{ fontSize: 13.5, color: "var(--text-fog)", display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8 }}
             >
-              <ChevronLeft size={16} /> {wizardStep === 5 ? "Back to Edit Goals" : "Back to Overview"}
+              <ChevronLeft size={16} /> Back to Overview
             </button>
 
             {wizardStep === 5 && (
               <div style={{ display: "flex", gap: 12 }}>
                 <button
                   className="ff-btn-wizard-ghost"
-                  onClick={() => window.print()}
-                  style={{ height: 40, padding: "0 16px", fontSize: 13, display: "inline-flex", alignItems: "center", gap: 6 }}
-                >
-                  <Activity size={15} /> Print / Save PDF
-                </button>
-                <button
-                  className="ff-btn-wizard-ghost"
-                  onClick={() => setWizardStep(1)}
+                  onClick={() => resetWizard()}
                   style={{ height: 40, padding: "0 16px", fontSize: 13 }}
                 >
                   Edit Inputs
@@ -206,20 +195,19 @@ function MainContent() {
           {wizardStep < 5 && !isProcessing && (
             <div
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
+                display: "block",
+                textAlign: "center",
                 padding: "10px 16px",
                 borderRadius: 10,
                 background: "rgba(95, 168, 160, 0.08)",
                 border: "1px solid rgba(95, 168, 160, 0.2)",
                 marginBottom: 32,
                 fontSize: 13,
+                fontWeight: 600,
                 color: "var(--accent-teal)"
               }}
             >
-              <span>ℹ</span>
-              <span>Please provide accurate information to get a precise financial report.</span>
+              <span>Please provide accurate information to get an accurate financial report.</span>
             </div>
           )}
 

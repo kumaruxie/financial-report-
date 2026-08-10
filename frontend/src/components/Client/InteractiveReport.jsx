@@ -160,11 +160,10 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
               {lead.name ? lead.name.toUpperCase() : "CLIENT"}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-              <span className="ff-badge ff-badge-gold" style={{ fontSize: 11, padding: "4px 10px" }}>Financial Health Audit</span>
               <span style={{ fontSize: 12, color: "var(--text-fog)" }}>Generated on {genDate}</span>
               <span style={{ fontSize: 12, color: "var(--text-fog)" }}>&bull; Age {lead.age || "—"} ({lead.city || "Gurgaon"})</span>
             </div>
-            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "var(--text-main)", letterSpacing: "-0.01em" }}>Financial Health & Wealth Planning Report</h2>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "var(--text-main)", letterSpacing: "-0.01em" }}>Financial Fitness Report</h2>
           </div>
 
           <button
@@ -288,7 +287,7 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
       )}
 
       {/* Cost of Waiting (Inflation Impact) */}
-      {r.costExample && (
+      {r.costExample && r.rows.length > 0 && (
         <>
           <div className="rpt-section-title">
             <TrendingUp size={18} color="var(--accent-teal)" /> Inflation Impact Analysis (Cost of Waiting)
@@ -344,48 +343,52 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
       </div>
 
       {/* Goals at a Glance */}
-      <div className="rpt-section-title">
-        <Layers size={18} color="var(--accent-teal)" /> Milestone Goals Allocation
-      </div>
-      <div className="rpt-goal-grid">
-        {r.rows.map((row) => {
-          const IconComp = row.Icon || GOAL_META[row.type]?.Icon || GraduationCap;
-          return (
-            <div className={`rpt-goal-card ${row.bucket === "short" ? "term-short" : "term-long"}`} key={row.id}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, fontWeight: 600, fontSize: 16, color: "var(--text-main)", marginBottom: 4 }}>
-                <IconComp size={18} color="var(--accent-gold)" />
-                <span>{row.label}</span>
-              </div>
-              <div style={{ fontSize: 12.5, color: "var(--text-fog)", marginBottom: 12 }}>{row.sub}</div>
-              <span className={`ff-badge ${row.bucket === "short" ? "ff-badge-ok" : "ff-badge-gold"}`} style={{ marginBottom: 14 }}>
-                {goalTimeframeLabel(row)}
-              </span>
-              <div style={{ display: "flex", gap: 20, margin: "14px 0" }}>
-                <div>
-                  <div style={{ fontSize: 11, color: "var(--text-fog)", textTransform: "uppercase" }}>Today</div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-main)", fontFamily: "var(--font-mono)" }}>{INR_L(row.cost)}</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 11, color: "var(--text-fog)", textTransform: "uppercase" }}>Future Target</div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: "var(--accent-gold)", fontFamily: "var(--font-mono)" }}>{INR_L(row.fv)}</div>
-                </div>
-              </div>
-              <div style={{ fontSize: 13, background: "rgba(255, 255, 255, 0.03)", padding: "10px 14px", borderRadius: 8, display: "flex", justifyContent: "space-between", border: "1px solid var(--border-subtle)" }}>
-                <span style={{ color: "var(--text-fog)" }}>Required Investment</span>
-                <span style={{ fontWeight: 700, color: "var(--text-main)", fontFamily: "var(--font-mono)" }}>{INR(row.annual)}/yr</span>
-              </div>
-              {isConsultant && (
-                <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px dashed var(--border-subtle)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span className={`ff-badge ${row.bucket === "short" ? "ff-badge-ok" : "ff-badge-gap"}`}>
-                    {row.bucket === "short" ? "Recommend: RD/FD/SIP" : "Recommend: Guaranteed Plan"}
-                    {row.bucket !== "short" && Number(age) < PPF_AGE_LIMIT ? " + PPF" : ""}
+      {r.rows.length > 0 && (
+        <>
+          <div className="rpt-section-title">
+            <Layers size={18} color="var(--accent-teal)" /> Milestone Goals Allocation
+          </div>
+          <div className="rpt-goal-grid">
+            {r.rows.map((row) => {
+              const IconComp = row.Icon || GOAL_META[row.type]?.Icon || GraduationCap;
+              return (
+                <div className={`rpt-goal-card ${row.bucket === "short" ? "term-short" : "term-long"}`} key={row.id}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, fontWeight: 600, fontSize: 16, color: "var(--text-main)", marginBottom: 4 }}>
+                    <IconComp size={18} color="var(--accent-gold)" />
+                    <span>{row.label}</span>
+                  </div>
+                  <div style={{ fontSize: 12.5, color: "var(--text-fog)", marginBottom: 12 }}>{row.sub}</div>
+                  <span className={`ff-badge ${row.bucket === "short" ? "ff-badge-ok" : "ff-badge-gold"}`} style={{ marginBottom: 14 }}>
+                    {goalTimeframeLabel(row)}
                   </span>
+                  <div style={{ display: "flex", gap: 20, margin: "14px 0" }}>
+                    <div>
+                      <div style={{ fontSize: 11, color: "var(--text-fog)", textTransform: "uppercase" }}>Today</div>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-main)", fontFamily: "var(--font-mono)" }}>{INR_L(row.cost)}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: "var(--text-fog)", textTransform: "uppercase" }}>Future Target</div>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: "var(--accent-gold)", fontFamily: "var(--font-mono)" }}>{INR_L(row.fv)}</div>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 13, background: "rgba(255, 255, 255, 0.03)", padding: "10px 14px", borderRadius: 8, display: "flex", justifyContent: "space-between", border: "1px solid var(--border-subtle)" }}>
+                    <span style={{ color: "var(--text-fog)" }}>Required Investment</span>
+                    <span style={{ fontWeight: 700, color: "var(--text-main)", fontFamily: "var(--font-mono)" }}>{INR(row.annual)}/yr</span>
+                  </div>
+                  {isConsultant && (
+                    <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px dashed var(--border-subtle)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span className={`ff-badge ${row.bucket === "short" ? "ff-badge-ok" : "ff-badge-gap"}`}>
+                        {row.bucket === "short" ? "Recommend: RD/FD/SIP" : "Recommend: Guaranteed Plan"}
+                        {row.bucket !== "short" && Number(age) < PPF_AGE_LIMIT ? " + PPF" : ""}
+                      </span>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+              );
+            })}
+          </div>
+        </>
+      )}
 
       {/* Post Retirement SWP Simulation */}
       <div className="rpt-section-title">
@@ -643,19 +646,6 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
         </div>
       )}
 
-      {/* Assumptions & Disclaimer */}
-      <div className="rpt-assumptions">
-        <div><span>{SHORT_TERM_RETURN}%</span>Short-term return (≤4y10m)</div>
-        <div><span>{GUARANTEED_RETURN}%</span>Guaranteed return (5y+)</div>
-        <div><span>{SWP_RETURN}%</span>Post-retirement SWP return</div>
-        <div><span>{EDU_INFLATION}%</span>Education inflation</div>
-        <div><span>{MARRIAGE_INFLATION}%</span>Marriage inflation</div>
-        <div><span>{RETIREMENT_INFLATION}%</span>Retirement inflation</div>
-      </div>
-
-      <div style={{ fontSize: 11.5, color: "var(--text-fog)", textAlign: "center", padding: "16px 0 24px", lineHeight: 1.6, borderTop: "1px solid var(--border-subtle)", marginTop: 24 }}>
-        This report is for informational diagnostic purposes. Figures are computed using standard industry actuarial formulas and specified inflation/return assumptions. Insurance products are subject matter of solicitation.
-      </div>
       {showPdfDossier && <EnterprisePdfDossier lead={lead} onClose={() => setShowPdfDossier(false)} />}
     </div>
   );
