@@ -20,12 +20,10 @@ router.post("/verify-pass", (req, res) => {
 router.get("/leads", async (req, res) => {
   try {
     let leads = [];
-    if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
-      try {
-        leads = await Lead.find().sort({ createdAt: -1 }).lean();
-      } catch (dbErr) {
-        console.error("Lead fetch error:", dbErr.message);
-      }
+    try {
+      leads = await Lead.find().sort({ createdAt: -1 }).lean();
+    } catch (dbErr) {
+      console.error("Lead fetch error:", dbErr.message);
     }
 
     const mapped = leads.map((l) => ({
@@ -60,9 +58,7 @@ router.get("/leads", async (req, res) => {
 router.delete("/leads/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
-      await Lead.findByIdAndDelete(id).catch(() => {});
-    }
+    await Lead.findByIdAndDelete(id).catch(() => {});
     await AuditLog.create({
       type: "Lead Management",
       user: "Admin",
@@ -81,12 +77,10 @@ router.delete("/leads/:id", async (req, res) => {
 router.get("/enquiries", async (req, res) => {
   try {
     let enquiries = [];
-    if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
-      try {
-        enquiries = await Enquiry.find().sort({ createdAt: -1 }).lean();
-      } catch (dbErr) {
-        console.error("Enquiry fetch error:", dbErr.message);
-      }
+    try {
+      enquiries = await Enquiry.find().sort({ createdAt: -1 }).lean();
+    } catch (dbErr) {
+      console.error("Enquiry fetch error:", dbErr.message);
     }
 
     const mapped = enquiries.map((e) => ({
@@ -109,9 +103,7 @@ router.get("/enquiries", async (req, res) => {
 router.delete("/enquiries/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
-      await Enquiry.findByIdAndDelete(id).catch(() => {});
-    }
+    await Enquiry.findByIdAndDelete(id).catch(() => {});
     res.json({ success: true, message: "Enquiry deleted successfully" });
   } catch (err) {
     console.error("Delete enquiry error:", err);
@@ -123,12 +115,10 @@ router.delete("/enquiries/:id", async (req, res) => {
 router.get("/logs", async (req, res) => {
   try {
     let logs = [];
-    if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
-      try {
-        logs = await AuditLog.find().sort({ createdAt: -1 }).lean();
-      } catch (dbErr) {
-        console.error("Audit log fetch error:", dbErr.message);
-      }
+    try {
+      logs = await AuditLog.find().sort({ createdAt: -1 }).lean();
+    } catch (dbErr) {
+      console.error("Audit log fetch error:", dbErr.message);
     }
 
     const mapped = logs.map((l) => ({
