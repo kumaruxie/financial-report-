@@ -32,8 +32,9 @@ app.get("/api/v1/health", (req, res) => {
   res.json({ status: "ok", uptime: process.uptime() });
 });
 
-// --- Start server & Connect to MongoDB if MONGO_URI or MONGODB_URI exists ---
-const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
+// --- Start server & Connect to MongoDB ---
+const DEFAULT_MONGO_URI = "mongodb+srv://kumaruxie_db_user:MMDK3ZWcSJ7UOSI5@clusterfinrep.ekp9nzy.mongodb.net/financial_report?retryWrites=true&w=majority";
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || DEFAULT_MONGO_URI;
 
 const startServer = () => {
   app.listen(PORT, () => {
