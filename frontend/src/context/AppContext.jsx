@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { submitReportApi, getLeadsApi, getAuditLogsApi, deleteLeadApi } from "../services/api";
+import { submitReportApi, getLeadsApi, getAuditLogsApi, deleteLeadApi, submitEnquiryApi, getEnquiriesApi, deleteEnquiryApi } from "../services/api";
 
 const AppContext = createContext(null);
 
@@ -39,15 +39,14 @@ export function AppProvider({ children }) {
         try {
           localStorage.setItem(STORAGE_LEADS_KEY, JSON.stringify(backendLeads));
         } catch (e) {}
-      } else {
-        const localSaved = localStorage.getItem(STORAGE_LEADS_KEY);
-        if (localSaved) {
-          const parsed = JSON.parse(localSaved);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setLeads(parsed);
-            setActiveLead(parsed[0]);
-          }
-        }
+      }
+
+      const backendEnquiries = await getEnquiriesApi();
+      if (backendEnquiries && Array.isArray(backendEnquiries) && backendEnquiries.length > 0) {
+        setContactEnquiries(backendEnquiries);
+        try {
+          localStorage.setItem(STORAGE_ENQUIRIES_KEY, JSON.stringify(backendEnquiries));
+        } catch (e) {}
       }
 
       const backendLogs = await getAuditLogsApi();
@@ -70,14 +69,17 @@ export function AppProvider({ children }) {
     setAuditLogs((prev) => [newLog, ...prev]);
   };
 
-  const saveContactEnquiry = (enquiryData) => {
+  const saveContactEnquiry = async (enquiryData) => {
+    const res = await submitEnquiryApi(enquiryData);
+    const rawEnq = res.enquiry || {};
+
     const newEnquiry = {
-      id: "enq_" + Date.now(),
+      id: rawEnq._id || rawEnq.id || "enq_" + Date.now(),
       name: enquiryData.name || "Client User",
       email: enquiryData.email || "",
       topic: enquiryData.topic || "General Enquiry",
       message: enquiryData.message || "",
-      submittedAt: new Date().toISOString()
+      submittedAt: rawEnq.createdAt || new Date().toISOString()
     };
 
     setContactEnquiries((prev) => {
@@ -92,9 +94,10 @@ export function AppProvider({ children }) {
     return newEnquiry;
   };
 
-  const deleteContactEnquiry = (enquiryId) => {
+  const deleteContactEnquiry = async (enquiryId) => {
+    await deleteEnquiryApi(enquiryId);
     setContactEnquiries((prev) => {
-      const updated = prev.filter((e) => e.id !== enquiryId);
+      const updated = prev.filter((e) => e.id !== enquiryId && e._id !== enquiryId);
       try {
         localStorage.setItem(STORAGE_ENQUIRIES_KEY, JSON.stringify(updated));
       } catch (e) {}

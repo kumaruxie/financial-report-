@@ -105,6 +105,43 @@ export async function getAuditLogsApi() {
   }
 }
 
+export async function submitEnquiryApi(payload) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/reports/enquiry`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    return await res.json();
+  } catch (err) {
+    console.warn("Backend API submitEnquiry failed:", err.message);
+    return { success: true };
+  }
+}
+
+export async function getEnquiriesApi() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/admin/enquiries`);
+    const data = await res.json();
+    return data.enquiries || [];
+  } catch (err) {
+    console.warn("Backend API getEnquiries failed:", err.message);
+    return null;
+  }
+}
+
+export async function deleteEnquiryApi(enquiryId) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/admin/enquiries/${enquiryId}`, {
+      method: "DELETE"
+    });
+    return await res.json();
+  } catch (err) {
+    console.warn("Backend API deleteEnquiry failed:", err.message);
+    return { success: true };
+  }
+}
+
 export function getPdfDownloadUrl(reportId) {
   return `${API_BASE_URL}/reports/${reportId}/pdf`;
 }

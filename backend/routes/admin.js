@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const Lead = require("../models/Lead");
+const Enquiry = require("../models/Enquiry");
 const AuditLog = require("../models/AuditLog");
 
 const router = express.Router();
@@ -19,11 +20,14 @@ router.post("/verify-pass", (req, res) => {
 router.get("/leads", async (req, res) => {
   try {
     let leads = [];
-    if (mongoose.connection.readyState === 1) {
-      leads = await Lead.find().sort({ createdAt: -1 }).lean();
+    if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
+      try {
+        leads = await Lead.find().sort({ createdAt: -1 }).lean();
+      } catch (dbErr) {
+        console.error("Lead fetch error:", dbErr.message);
+      }
     }
 
-    // Map to match the frontend's expected shape
     const mapped = leads.map((l) => ({
       id: l._id,
       name: l.name,
@@ -56,8 +60,8 @@ router.get("/leads", async (req, res) => {
 router.delete("/leads/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    if (mongoose.connection.readyState === 1) {
-      await Lead.findByIdAndDelete(id);
+    if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
+      await Lead.findByIdAndDelete(id).catch(() => {});
     }
     await AuditLog.create({
       type: "Lead Management",
@@ -73,12 +77,58 @@ router.delete("/leads/:id", async (req, res) => {
   }
 });
 
+// GET /api/v1/admin/enquiries — fetch all contact enquiries
+router.get("/enquiries", async (req, res) => {
+  try {
+    let enquiries = [];
+    if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
+      try {
+        enquiries = await Enquiry.find().sort({ createdAt: -1 }).lean();
+      } catch (dbErr) {
+        console.error("Enquiry fetch error:", dbErr.message);
+      }
+    }
+
+    const mapped = enquiries.map((e) => ({
+      id: e._id,
+      name: e.name,
+      email: e.email,
+      topic: e.topic,
+      message: e.message,
+      submittedAt: e.createdAt
+    }));
+
+    res.json({ success: true, enquiries: mapped });
+  } catch (err) {
+    console.error("Get enquiries error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// DELETE /api/v1/admin/enquiries/:id — delete an enquiry
+router.delete("/enquiries/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
+      await Enquiry.findByIdAndDelete(id).catch(() => {});
+    }
+    res.json({ success: true, message: "Enquiry deleted successfully" });
+  } catch (err) {
+    console.error("Delete enquiry error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // GET /api/v1/admin/logs — fetch all audit logs
 router.get("/logs", async (req, res) => {
   try {
     let logs = [];
-    if (mongoose.connection.readyState === 1) {
-      logs = await AuditLog.find().sort({ createdAt: -1 }).lean();
+    if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
+      try {
+        logs = await AuditLog.find().sort({ createdAt: -1 }).lean();
+      } catch (dbErr) {
+        console.error("Audit log fetch error:", dbErr.message);
+      }
     }
 
     const mapped = logs.map((l) => ({
