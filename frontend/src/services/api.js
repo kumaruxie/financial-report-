@@ -3,7 +3,7 @@ const getApiBaseUrl = () => {
     return import.meta.env.VITE_API_URL;
   }
   if (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
-    return "https://financial-report-ac7m.onrender.com/api/v1";
+    return "https://financial-report-aq7m.onrender.com/api/v1";
   }
   return "http://localhost:5000/api/v1";
 };
