@@ -32,8 +32,8 @@ app.get("/api/v1/health", (req, res) => {
   res.json({ status: "ok", uptime: process.uptime() });
 });
 
-// --- Start server & Connect to MongoDB if MONGO_URI exists ---
-const MONGO_URI = process.env.MONGO_URI;
+// --- Start server & Connect to MongoDB if MONGO_URI or MONGODB_URI exists ---
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
 
 const startServer = () => {
   app.listen(PORT, () => {
