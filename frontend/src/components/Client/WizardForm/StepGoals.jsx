@@ -119,7 +119,7 @@ export default function StepGoals({ goals, setGoals }) {
             {/* EDUCATION FIELDS */}
             {goal.type === "education" && (
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <div className="ff-grid-2col">
                   <div className="ff-input-group">
                     <label className="ff-input-label-uppercase">Select Child</label>
                     <select
@@ -146,7 +146,7 @@ export default function StepGoals({ goals, setGoals }) {
                   </div>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <div className="ff-grid-2col">
                   <div className="ff-input-group">
                     <label className="ff-input-label-uppercase">Child's Current Class</label>
                     <select
@@ -183,7 +183,7 @@ export default function StepGoals({ goals, setGoals }) {
 
             {/* MARRIAGE FIELDS */}
             {goal.type === "marriage" && (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <div className="ff-grid-2col">
                 <div className="ff-input-group">
                   <label className="ff-input-label-uppercase">Child's Age</label>
                   <input
@@ -210,7 +210,7 @@ export default function StepGoals({ goals, setGoals }) {
 
             {/* HOUSE FIELDS */}
             {goal.type === "house" && (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <div className="ff-grid-2col">
                 <div className="ff-input-group">
                   <label className="ff-input-label-uppercase">Years to Goal</label>
                   <input

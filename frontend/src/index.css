@@ -887,9 +887,47 @@ body {
   }
 }
 
+.ff-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
 
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
+  .ff-grid-2col {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
   .ff-wizard-wrapper {
-    padding: 85px 16px 40px !important;
+    padding: 70px 12px 40px !important;
+  }
+  .rpt-cow {
+    flex-direction: column !important;
+  }
+  .rpt-cow-arrow {
+    padding: 10px 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-top: 1px solid var(--border-subtle) !important;
+    border-bottom: 1px solid var(--border-subtle) !important;
+  }
+  .ffr-info-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+  .rpt-score-card {
+    padding: 20px 16px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  .rpt-banner {
+    padding: 18px 16px !important;
+  }
+  .rpt-summary-charts {
+    grid-template-columns: 1fr !important;
+  }
+  .ffr-risk-card {
+    flex-direction: column !important;
+    gap: 10px !important;
   }
 }
