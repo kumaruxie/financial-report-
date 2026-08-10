@@ -114,8 +114,8 @@ export default function LandingHero({ onStartWizard, onOpenLegal }) {
           {/* Headline Positioned Cleanly in Sky Region */}
           <h1
             style={{
-              fontSize: "clamp(42px, 5.5vw, 68px)",
-              lineHeight: 1.05,
+              fontSize: "clamp(32px, 5.5vw, 68px)",
+              lineHeight: 1.12,
               fontWeight: 600,
               color: "var(--text-main)",
               marginBottom: 34,
@@ -124,7 +124,7 @@ export default function LandingHero({ onStartWizard, onOpenLegal }) {
               textShadow: "0 4px 24px rgba(0, 0, 0, 0.9)"
             }}
           >
-            Every goal has a date. <br />
+            Every goal has a date. <br className="ff-desktop-br" />
             <span className="ff-serif-gold">Let's fund it on time.</span>
           </h1>
 
@@ -248,7 +248,7 @@ export default function LandingHero({ onStartWizard, onOpenLegal }) {
       {/* =========================================================
          SECTION 2 — INFLATION & COST OF TIME ESCALATION VISUALIZER
          ========================================================= */}
-      <section style={{ padding: "44px 24px 80px", maxWidth: 1140, margin: "0 auto", textAlign: "center" }}>
+      <section className="ff-section-2" style={{ padding: "44px 24px 80px", maxWidth: 1140, margin: "0 auto", textAlign: "center" }}>
 
         {/* Section Title */}
         <div style={{ marginBottom: 64 }}>
@@ -259,7 +259,7 @@ export default function LandingHero({ onStartWizard, onOpenLegal }) {
 
         {/* RECHARTS AREA CHART FOR ESCALATION TIMELINE */}
         <div
-          className="ff-card-glass"
+          className="ff-card-glass ff-chart-card"
           style={{
             borderRadius: 20,
             padding: "32px 36px",
@@ -269,13 +269,13 @@ export default function LandingHero({ onStartWizard, onOpenLegal }) {
             marginBottom: 32
           }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 16 }}>
+          <div className="ff-chart-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 16 }}>
             <div style={{ textAlign: "left" }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-main)", letterSpacing: "-0.01em" }}>
                 Compounding growth trajectory over a 20-year milestone horizon.
               </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginLeft: "auto" }}>
+            <div className="ff-chart-controls" style={{ display: "flex", alignItems: "center", gap: 10, marginLeft: "auto" }}>
               <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-fog)" }}>Adjust Base Cost:</span>
               <button
                 className="ff-btn-ghost"
@@ -315,20 +315,7 @@ export default function LandingHero({ onStartWizard, onOpenLegal }) {
         </div>
 
         {/* COST OF DELAY WARNING BOX */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 16,
-            padding: "16px 24px",
-            borderRadius: 12,
-            background: "rgba(217, 119, 87, 0.08)",
-            border: "1px solid rgba(217, 119, 87, 0.25)",
-            textAlign: "left",
-            fontSize: 14,
-            color: "var(--text-main)"
-          }}
-        >
+        <div className="ff-delay-warning">
           <AlertTriangle size={22} color="var(--alert-coral)" style={{ flexShrink: 0 }} />
           <div>
             <b style={{ color: "var(--alert-coral)" }}>Cost of Waiting Warning:</b> Delaying your savings strategy by 5 years increases your required monthly SIP contribution by ~48% to achieve the exact same milestone target.
@@ -340,9 +327,9 @@ export default function LandingHero({ onStartWizard, onOpenLegal }) {
       {/* =========================================================
          SECTION 3 — ASSESSMENT CTA CARD
          ========================================================= */}
-      <section style={{ padding: "40px 24px 100px", maxWidth: 1140, margin: "0 auto" }}>
-        <div style={{ padding: "40px 48px", borderRadius: 20, border: "1px solid var(--border-gold)", background: "linear-gradient(135deg, rgba(20, 24, 36, 0.95) 0%, rgba(13, 15, 24, 0.98) 100%)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 32, boxShadow: "var(--shadow-layered)" }}>
-          <div style={{ textAlign: "left" }}>
+      <section className="ff-cta-section">
+        <div className="ff-cta-card-inner">
+          <div>
             <h3 style={{ fontSize: 24, fontWeight: 600, color: "var(--text-main)", marginBottom: 6, fontFamily: "var(--font-serif)" }}>
               Ready to run your personalized diagnostic?
             </h3>
@@ -350,7 +337,7 @@ export default function LandingHero({ onStartWizard, onOpenLegal }) {
               Takes only 4 minutes &bull; 100% confidential &bull; Institutional grade report
             </p>
           </div>
-          <button className="ff-btn-gold" onClick={scrollToAssessment} style={{ padding: "16px 36px", fontSize: 15, whiteSpace: "nowrap", borderRadius: 10 }}>
+          <button className="ff-btn-gold ff-cta-btn" onClick={scrollToAssessment}>
             Start Assessment <ArrowRight size={18} />
           </button>
         </div>
@@ -359,7 +346,7 @@ export default function LandingHero({ onStartWizard, onOpenLegal }) {
       {/* =========================================================
          SECTION 4 — MINIMAL FOOTER
          ========================================================= */}
-      <footer style={{ borderTop: "1px solid var(--border-subtle)", padding: "40px 24px", textAlign: "center", fontSize: 13, color: "var(--text-fog)", backgroundColor: "#07080C" }}>
+      <footer className="ff-landing-footer">
         <div style={{ maxWidth: 1140, margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
           <div style={{ fontSize: 20, fontWeight: 700, fontFamily: "var(--font-serif)", color: "var(--text-main)" }}>
             Your<span style={{ color: "var(--accent-gold)" }}>Wealth</span>Compass
