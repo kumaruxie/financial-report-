@@ -1095,7 +1095,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
               </div>
             </div>
 
-            <h2 className="epdf-h2" style={{ color: "#1B2035", fontSize: 22, margin: "0 0 4px" }}>Financial Report</h2>
+            <h2 className="epdf-h2" style={{ color: "#1B2035", fontSize: 22, margin: "0 0 4px" }}>Final Report</h2>
             <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 14px" }}>
               Multi-scenario wealth projections, sensitivity stress tests, and decision analytics.
             </p>

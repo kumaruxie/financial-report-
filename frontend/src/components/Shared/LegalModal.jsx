@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { X, ShieldCheck, FileText, Mail, Send, CheckCircle2, Compass, PiggyBank, GraduationCap, Shield, TrendingUp, HelpCircle } from "lucide-react";
+import { useApp } from "../../context/AppContext";
 
 export default function LegalModal({ activeTab: initialTab = "privacy", onClose }) {
+  const { saveLeadSubmission, saveContactEnquiry } = useApp();
   const [activeTab, setActiveTab] = useState(initialTab); // 'privacy' | 'terms' | 'contact'
   const [contactSubmitted, setContactSubmitted] = useState(false);
   const [contactForm, setContactForm] = useState({
@@ -22,9 +24,51 @@ export default function LegalModal({ activeTab: initialTab = "privacy", onClose 
     { id: "General Enquiry / Other", label: "General Enquiry", desc: "Custom question or support", icon: HelpCircle }
   ];
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
     setContactSubmitted(true);
+
+    const enquiryPayload = {
+      name: contactForm.name || "Advisory Client",
+      email: contactForm.email || "",
+      topic: contactForm.topic || "General Enquiry",
+      message: contactForm.message || ""
+    };
+
+    const contactPayload = {
+      name: contactForm.name || "Contact Enquiry User",
+      email: contactForm.email || "",
+      mobile: `Enquiry: ${contactForm.topic}`,
+      city: "Contact Form Enquiry",
+      age: "—",
+      income: "0",
+      expenses: "0",
+      savings: "0",
+      retirementAge: "60",
+      termInsurance: "no",
+      termAmount: "0",
+      healthInsurance: "no",
+      healthAmount: "0",
+      goals: [
+        {
+          type: "Contact Inquiry",
+          topic: contactForm.topic,
+          message: contactForm.message
+        }
+      ]
+    };
+
+    try {
+      if (saveContactEnquiry) {
+        saveContactEnquiry(enquiryPayload);
+      }
+      if (saveLeadSubmission) {
+        await saveLeadSubmission(contactPayload);
+      }
+    } catch (err) {
+      console.error("Failed to save contact enquiry submission:", err);
+    }
+
     setTimeout(() => {
       setContactSubmitted(false);
       setContactForm({ name: "", email: "", topic: "Comprehensive Financial Planning", message: "" });
@@ -116,7 +160,7 @@ export default function LegalModal({ activeTab: initialTab = "privacy", onClose 
 
         {/* MODAL BODY CONTENT */}
         <div style={{ padding: "28px 32px", overflowY: "auto", flex: 1, fontSize: 14, lineHeight: 1.7, color: "var(--text-fog)" }}>
-          
+
           {/* TAB 1: PRIVACY POLICY */}
           {activeTab === "privacy" && (
             <div>
@@ -254,7 +298,7 @@ export default function LegalModal({ activeTab: initialTab = "privacy", onClose 
               {/* Advisory Consultation Request Form */}
               <div style={{ background: "var(--bg-surface)", border: "1px solid var(--border-subtle)", padding: 24, borderRadius: 16 }}>
                 <h4 style={{ fontSize: 16, color: "var(--text-main)", margin: "0 0 16px" }}>Advisory / Consultation Enquiry</h4>
-                
+
                 {contactSubmitted ? (
                   <div style={{ padding: 24, textAlign: "center", background: "rgba(95, 168, 160, 0.12)", border: "1px solid var(--accent-teal)", borderRadius: 12, color: "var(--accent-teal)" }}>
                     <CheckCircle2 size={32} style={{ margin: "0 auto 8px" }} />

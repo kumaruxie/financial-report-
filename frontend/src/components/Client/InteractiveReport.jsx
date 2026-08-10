@@ -395,7 +395,7 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
         <PiggyBank size={18} color="var(--accent-teal)" /> Retirement Corpus & Post-Retirement Withdrawal (Actuarial SWP Model)
       </div>
       <div className="ff-card-glass" style={{ padding: 24, borderRadius: 16, marginBottom: 28, background: "var(--bg-surface)", border: "1px solid var(--border-subtle)" }}>
-        
+
         {/* KPI Metrics Panel */}
         <div className="ffr-info-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", marginBottom: 20 }}>
           <div className="ffr-info-item"><div className="l">Current Expense</div><div className="v">{INR_L(lead.expenses)}/mo</div></div>

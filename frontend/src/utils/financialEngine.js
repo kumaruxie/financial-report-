@@ -10,14 +10,14 @@ export const MARRIAGE_AGE = 26.5;      // midpoint of the 25–28 "good marriage
 export const UG_DURATION = 3.5;        // midpoint of 3–4 years
 export const LIFE_EXPECTANCY = 85;     // standard planning assumption for corpus longevity
 export const SHORT_TERM_RETURN = 8;    // blended RD/FD/SIP, short-term goals
-export const SHORT_TERM_MAX_YEARS = 4 + 10/12; // up to 4 yrs 10 months = short-term; 5 yrs+ = long-term
+export const SHORT_TERM_MAX_YEARS = 4 + 10 / 12; // up to 4 yrs 10 months = short-term; 5 yrs+ = long-term
 export const GUARANTEED_RETURN = 6;    // guaranteed-return insurance plan, goals >5 years
 export const SWP_RETURN = 8;           // 8% post-retirement withdrawal-phase return
 export const EMERGENCY_MONTHS = 9;     // months of expenses held as an emergency buffer
 export const PPF_AGE_LIMIT = 35;       // PPF suggested as an additional long-term option below this age
 
 export const METROS = [
-  "delhi", "mumbai", "bangalore", "bengaluru", "chennai", "kolkata", 
+  "delhi", "mumbai", "bangalore", "bengaluru", "chennai", "kolkata",
   "hyderabad", "pune", "ahmedabad", "gurgaon", "gurugram", "noida"
 ];
 
@@ -25,16 +25,16 @@ export const clamp = (n) => Math.max(0, Math.min(100, Math.round(n)));
 
 export const GOAL_META = {
   education: { label: "Child's Higher Education", Icon: GraduationCap },
-  marriage:  { label: "Child's Marriage",         Icon: Heart },
-  house:     { label: "Dream House",               Icon: Home },
+  marriage: { label: "Child's Marriage", Icon: Heart },
+  house: { label: "Dream House", Icon: Home },
 };
 
 export const GOAL_TYPES = GOAL_META;
 
 export const TYPE_DEFAULTS = {
   education: { childClass: 8, ugCost: 800000, pgPlanned: "no", pgCost: "" },
-  marriage:  { childAge: 5, cost: 1500000 },
-  house:     { years: 5, cost: 4000000 },
+  marriage: { childAge: 5, cost: 1500000 },
+  house: { years: 5, cost: 4000000 },
 };
 
 export const DEFAULT_GOALS = [];
@@ -152,7 +152,7 @@ export function goalTimeframeLabel(row) {
 export function buildGoalRows(goals) {
   const rows = [];
   const list = Array.isArray(goals) ? goals : [];
-  
+
   list.forEach((g) => {
     if (g.type === "education") {
       const yearsTo12th = Math.max(0, 12 - (Number(g.childClass) || 12));

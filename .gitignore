@@ -1,7 +1,7 @@
 node_modules
 .DS_Store
-dist
-dist-ssr
-*.local
+*.log
 .env
-.env.*
+frontend/node_modules
+frontend/dist
+backend/node_modules

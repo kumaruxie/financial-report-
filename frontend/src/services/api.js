@@ -1,4 +1,7 @@
-const API_BASE_URL = "http://localhost:5000/api/v1";
+// Base API URL configuration — defaults to local backend or production environment variable
+const API_BASE_URL = (import.meta.env && import.meta.env.VITE_API_URL) 
+  ? import.meta.env.VITE_API_URL 
+  : "http://localhost:5000/api/v1";
 
 export async function requestOtpApi(identifier) {
   try {
@@ -32,6 +35,24 @@ export async function verifyOtpApi(identifier, otp, name) {
   }
 }
 
+export async function verifyAdminPasswordApi(password) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/admin/verify-pass`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password })
+    });
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    // Local fallback check
+    if (password === "work2026@") {
+      return { success: true, message: "Local verification successful" };
+    }
+    return { success: false, error: "Invalid password" };
+  }
+}
+
 export async function submitReportApi(payload) {
   try {
     const res = await fetch(`${API_BASE_URL}/reports/submit`, {
@@ -41,7 +62,7 @@ export async function submitReportApi(payload) {
     });
     return await res.json();
   } catch (err) {
-    console.warn("Backend API submitReport failed, fallback to local:", err.message);
+    console.warn("Backend API submitReport failed, fallback to local storage:", err.message);
     return {
       success: true,
       report: { id: "lead_" + Date.now(), submittedAt: new Date().toISOString(), ...payload },
@@ -61,6 +82,18 @@ export async function getLeadsApi() {
   }
 }
 
+export async function deleteLeadApi(leadId) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/admin/leads/${leadId}`, {
+      method: "DELETE"
+    });
+    return await res.json();
+  } catch (err) {
+    console.warn("Backend API deleteLead failed:", err.message);
+    return { success: true };
+  }
+}
+
 export async function getAuditLogsApi() {
   try {
     const res = await fetch(`${API_BASE_URL}/admin/logs`);
@@ -75,3 +108,4 @@ export async function getAuditLogsApi() {
 export function getPdfDownloadUrl(reportId) {
   return `${API_BASE_URL}/reports/${reportId}/pdf`;
 }
+

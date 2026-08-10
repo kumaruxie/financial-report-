@@ -1,63 +1,57 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { submitReportApi, getLeadsApi, getAuditLogsApi } from "../services/api";
+import { submitReportApi, getLeadsApi, getAuditLogsApi, deleteLeadApi } from "../services/api";
 
 const AppContext = createContext(null);
 
 const STORAGE_LEADS_KEY = "ff_leads_db";
 const STORAGE_LOGS_KEY = "ff_audit_logs_db";
-
-export const ADMIN_LIST = [
-  { id: "admin_aditya", name: "Aditya Sharma", email: "aditya@wealthcompass.com", badge: "Senior Wealth Consultant" },
-  { id: "admin_vikram", name: "Vikram Mehta", email: "vikram@wealthcompass.com", badge: "Insurance & Risk Specialist" },
-  { id: "admin_neha",   name: "Neha Gupta",   email: "neha@wealthcompass.com", badge: "Retirement & Portfolio Strategist" }
-];
-
-const INITIAL_LOGS = [];
-
-const INITIAL_LEADS = [];
+const STORAGE_ENQUIRIES_KEY = "ff_contact_enquiries_db";
 
 export function AppProvider({ children }) {
   const [leads, setLeads] = useState(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_LEADS_KEY);
-      return saved ? JSON.parse(saved) : INITIAL_LEADS;
+      const localSaved = localStorage.getItem(STORAGE_LEADS_KEY);
+      return localSaved ? JSON.parse(localSaved) : [];
     } catch {
-      return INITIAL_LEADS;
+      return [];
     }
   });
 
-  const [auditLogs, setAuditLogs] = useState(() => {
+  const [contactEnquiries, setContactEnquiries] = useState(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_LOGS_KEY);
-      return saved ? JSON.parse(saved) : INITIAL_LOGS;
+      const localSaved = localStorage.getItem(STORAGE_ENQUIRIES_KEY);
+      return localSaved ? JSON.parse(localSaved) : [];
     } catch {
-      return INITIAL_LOGS;
+      return [];
     }
   });
 
-  const [activeLead, setActiveLead] = useState(leads[0] || null);
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [activeLead, setActiveLead] = useState(null);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_LEADS_KEY, JSON.stringify(leads));
-    } catch (e) {}
-  }, [leads]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_LOGS_KEY, JSON.stringify(auditLogs));
-    } catch (e) {}
-  }, [auditLogs]);
-
+  // On mount: fetch real data from backend to sync
   useEffect(() => {
     async function syncBackendData() {
       const backendLeads = await getLeadsApi();
-      if (backendLeads && backendLeads.length > 0) {
+      if (backendLeads && Array.isArray(backendLeads) && backendLeads.length > 0) {
         setLeads(backendLeads);
         setActiveLead(backendLeads[0]);
+        try {
+          localStorage.setItem(STORAGE_LEADS_KEY, JSON.stringify(backendLeads));
+        } catch (e) {}
+      } else {
+        const localSaved = localStorage.getItem(STORAGE_LEADS_KEY);
+        if (localSaved) {
+          const parsed = JSON.parse(localSaved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setLeads(parsed);
+            setActiveLead(parsed[0]);
+          }
+        }
       }
+
       const backendLogs = await getAuditLogsApi();
-      if (backendLogs && backendLogs.length > 0) {
+      if (backendLogs && Array.isArray(backendLogs) && backendLogs.length > 0) {
         setAuditLogs(backendLogs);
       }
     }
@@ -76,43 +70,88 @@ export function AppProvider({ children }) {
     setAuditLogs((prev) => [newLog, ...prev]);
   };
 
+  const saveContactEnquiry = (enquiryData) => {
+    const newEnquiry = {
+      id: "enq_" + Date.now(),
+      name: enquiryData.name || "Client User",
+      email: enquiryData.email || "",
+      topic: enquiryData.topic || "General Enquiry",
+      message: enquiryData.message || "",
+      submittedAt: new Date().toISOString()
+    };
+
+    setContactEnquiries((prev) => {
+      const updated = [newEnquiry, ...prev];
+      try {
+        localStorage.setItem(STORAGE_ENQUIRIES_KEY, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    addAuditLog("Advisory Enquiry", newEnquiry.email || newEnquiry.name, "Success", `Contact enquiry: ${newEnquiry.topic}`);
+    return newEnquiry;
+  };
+
+  const deleteContactEnquiry = (enquiryId) => {
+    setContactEnquiries((prev) => {
+      const updated = prev.filter((e) => e.id !== enquiryId);
+      try {
+        localStorage.setItem(STORAGE_ENQUIRIES_KEY, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+    addAuditLog("Enquiry Management", "Admin", "Success", `Contact enquiry deleted: ${enquiryId}`);
+  };
+
   const saveLeadSubmission = async (leadData) => {
     const res = await submitReportApi(leadData);
     const rawReport = res.report || {};
-    const fin = rawReport.financials || {};
-    const prot = rawReport.protection || {};
-
-    // Randomly assign lead to one of the available admins
-    const randomAdmin = ADMIN_LIST[Math.floor(Math.random() * ADMIN_LIST.length)];
-    const assignedAdminId = rawReport.assignedAdminId || randomAdmin.id;
-    const assignedAdminName = rawReport.assignedAdminName || randomAdmin.name;
 
     const newLead = {
       id: rawReport._id || rawReport.id || "lead_" + Date.now(),
-      name: leadData.name || fin.name || "Client User",
-      email: leadData.email || fin.email || "",
-      mobile: leadData.mobile || fin.mobile || "",
-      age: String(leadData.age || fin.age || "30"),
-      income: String(leadData.income || fin.income || "0"),
-      expenses: String(leadData.expenses || fin.expenses || "0"),
-      savings: String(leadData.savings || fin.savings || "0"),
-      city: leadData.city || fin.city || "",
-      retirementAge: String(leadData.retirementAge || prot.retirementAge || "60"),
-      termInsurance: leadData.termInsurance || prot.termInsurance || "no",
-      termAmount: String(leadData.termAmount || prot.termAmount || "0"),
-      healthInsurance: leadData.healthInsurance || prot.healthInsurance || "no",
-      healthAmount: String(leadData.healthAmount || prot.healthAmount || "0"),
+      name: leadData.name || "Client User",
+      email: leadData.email || "",
+      mobile: leadData.mobile || "",
+      age: String(leadData.age || ""),
+      income: String(leadData.income || "0"),
+      expenses: String(leadData.expenses || "0"),
+      savings: String(leadData.savings || "0"),
+      city: leadData.city || "",
+      retirementAge: String(leadData.retirementAge || "60"),
+      termInsurance: leadData.termInsurance || "no",
+      termAmount: String(leadData.termAmount || "0"),
+      healthInsurance: leadData.healthInsurance || "no",
+      healthAmount: String(leadData.healthAmount || "0"),
       goals: Array.isArray(leadData.goals) ? leadData.goals : [],
       pdfUrl: res.pdfUrl || rawReport.pdfUrl,
-      assignedAdminId,
-      assignedAdminName,
       submittedAt: rawReport.createdAt || new Date().toISOString()
     };
 
-    setLeads((prev) => [newLead, ...prev]);
+    setLeads((prev) => {
+      const updated = [newLead, ...prev];
+      try {
+        localStorage.setItem(STORAGE_LEADS_KEY, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
     setActiveLead(newLead);
-    addAuditLog("Report Generation", newLead.email, "Success", `Lead submitted & assigned to ${assignedAdminName}`);
+    addAuditLog("Report Generation", newLead.email, "Success", `Lead submitted: ${newLead.name}`);
     return newLead;
+  };
+
+  const deleteLead = async (leadId) => {
+    await deleteLeadApi(leadId);
+    setLeads((prev) => {
+      const updated = prev.filter((l) => l.id !== leadId && l._id !== leadId);
+      try {
+        localStorage.setItem(STORAGE_LEADS_KEY, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+    if (activeLead && (activeLead.id === leadId || activeLead._id === leadId)) {
+      setActiveLead(null);
+    }
+    addAuditLog("Lead Management", "Admin", "Success", `Lead deleted: ${leadId}`);
   };
 
   return (
@@ -121,9 +160,13 @@ export function AppProvider({ children }) {
         leads,
         activeLead,
         setActiveLead,
+        contactEnquiries,
+        saveContactEnquiry,
+        deleteContactEnquiry,
         auditLogs,
         addAuditLog,
-        saveLeadSubmission
+        saveLeadSubmission,
+        deleteLead
       }}
     >
       {children}

@@ -3,13 +3,21 @@ import { Shield, Filter, Search, CheckCircle2, AlertCircle, Clock } from "lucide
 import { useApp } from "../../context/AppContext";
 
 export default function SystemLogsTable() {
-  const { auditLogs } = useApp();
+  const { auditLogs = [] } = useApp();
   const [filterType, setFilterType] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const eventTypes = Array.from(new Set(auditLogs.map((l) => l.type)));
+  const safeLogs = Array.isArray(auditLogs) ? auditLogs : [];
+  const eventTypes = Array.from(new Set(safeLogs.map((l) => l && l.type).filter(Boolean)));
 
-  const filteredLogs = auditLogs.filter((log) => {
+  const parseTime = (val) => {
+    if (!val) return "—";
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? "—" : d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  };
+
+  const filteredLogs = safeLogs.filter((log) => {
+    if (!log) return false;
     const textMatch =
       (log.user || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (log.details || "").toLowerCase().includes(searchTerm.toLowerCase());
@@ -78,7 +86,7 @@ export default function SystemLogsTable() {
               filteredLogs.map((log) => (
                 <tr key={log.id}>
                   <td style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--navy-600)" }}>
-                    {new Date(log.timestamp).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                    {parseTime(log.timestamp)}
                   </td>
                   <td>
                     <span className="ff-badge ff-badge-info" style={{ fontSize: 11 }}>

@@ -48,10 +48,19 @@ export default function HeaderNav({ activeTab, setActiveTab, onResetWizard }) {
             <button
               className="ff-btn-gold header-button"
               onClick={handleStartForm}
+              style={{
+                borderRadius: 14,
+                padding: "10px 22px",
+                fontSize: 14,
+                fontWeight: 700,
+                background: "var(--accent-gold)",
+                color: "#07080C",
+                boxShadow: "0 0 30px rgba(201, 154, 75, 0.25)"
+              }}
             >
-              <span className="ff-btn-text-full">Get Your Financial Fitness Report</span>
-              <span className="ff-btn-text-mobile">Fitness Report</span>
-              <ArrowRight size={15} style={{ flexShrink: 0 }} />
+              <span className="ff-btn-text-full">Assess Your Financial Health</span>
+              <span className="ff-btn-text-mobile">Assess Health</span>
+              <ArrowRight size={16} style={{ flexShrink: 0 }} />
             </button>
           )}
         </div>

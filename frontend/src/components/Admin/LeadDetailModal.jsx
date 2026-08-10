@@ -20,7 +20,7 @@ export default function LeadDetailModal({ lead, onClose }) {
   return (
     <div className="ff-modal-overlay" style={{ background: "rgba(5, 6, 10, 0.85)", backdropFilter: "blur(12px)", zIndex: 9999 }}>
       <div className="ff-modal-card" style={{ maxWidth: 1320, width: "95vw", maxHeight: "94vh", display: "flex", flexDirection: "column", background: "#0D0E15", border: "1px solid var(--border-gold)", borderRadius: 20 }}>
-        
+
         {/* MODAL HEADER */}
         <div style={{ padding: "20px 28px", background: "linear-gradient(135deg, rgba(20, 24, 38, 0.98) 0%, rgba(13, 15, 24, 0.99) 100%)", borderBottom: "1px solid var(--border-subtle)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
@@ -75,7 +75,7 @@ export default function LeadDetailModal({ lead, onClose }) {
 
         {/* MODAL BODY */}
         <div style={{ padding: 28, overflowY: "auto", flex: 1, textAlign: "left" }}>
-          
+
           {activeView === "brief" ? (
             <div>
               {/* CLIENT FINANCIAL CAPACITY BRIEF BAR */}

@@ -1,18 +1,28 @@
 import React, { useState } from "react";
-import { Search, Filter, AlertTriangle, CheckCircle2, Eye, MapPin, Phone, RefreshCw, Download, ArrowUpDown, UserCheck } from "lucide-react";
+import { Search, Filter, AlertTriangle, CheckCircle2, Eye, MapPin, Phone, Download, ArrowUpDown, UserCheck, Trash2 } from "lucide-react";
+import { useApp } from "../../context/AppContext";
 import { computeReport, INR, INR_L } from "../../utils/financialEngine";
 
-export default function LeadTable({ leads, onSelectLead }) {
+export default function LeadTable({ leads = [], onSelectLead }) {
+  const { deleteLead } = useApp();
   const [searchTerm, setSearchTerm] = useState("");
   const [riskFilter, setRiskFilter] = useState("all"); // 'all' | 'high_risk' | 'moderate' | 'healthy'
   const [cityFilter, setCityFilter] = useState("all");
   const [sortOption, setSortOption] = useState("newest"); // 'newest' | 'oldest' | 'score_high' | 'score_low'
 
-  const cities = Array.from(new Set(leads.map((l) => l.city).filter(Boolean)));
+  const safeLeads = Array.isArray(leads) ? leads : [];
+  const cities = Array.from(new Set(safeLeads.map((l) => l && l.city).filter(Boolean)));
+
+  const getTime = (val) => {
+    if (!val) return 0;
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? 0 : d.getTime();
+  };
 
   // Filter & Sort Logic
-  const filteredLeads = leads
+  const filteredLeads = safeLeads
     .filter((lead) => {
+      if (!lead) return false;
       const report = computeReport(lead);
       const textMatch =
         (lead.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -26,7 +36,7 @@ export default function LeadTable({ leads, onSelectLead }) {
       }
 
       const score = report?.scores?.overallScore || 0;
-      const isHighRisk = score < 40 || report?.termGap > 0 || report?.healthGap > 0;
+      const isHighRisk = score < 40 || (report?.termGap || 0) > 0 || (report?.healthGap || 0) > 0;
       const isModerate = score >= 40 && score < 70 && !isHighRisk;
       const isHealthy = score >= 70 && !isHighRisk;
 
@@ -42,8 +52,8 @@ export default function LeadTable({ leads, onSelectLead }) {
       const scoreA = rA?.scores?.overallScore || 0;
       const scoreB = rB?.scores?.overallScore || 0;
 
-      if (sortOption === "newest") return new Date(b.submittedAt || b.updatedAt) - new Date(a.submittedAt || a.updatedAt);
-      if (sortOption === "oldest") return new Date(a.submittedAt || a.updatedAt) - new Date(b.submittedAt || b.updatedAt);
+      if (sortOption === "newest") return getTime(b.submittedAt || b.updatedAt) - getTime(a.submittedAt || a.updatedAt);
+      if (sortOption === "oldest") return getTime(a.submittedAt || a.updatedAt) - getTime(b.submittedAt || b.updatedAt);
       if (sortOption === "score_high") return scoreB - scoreA;
       if (sortOption === "score_low") return scoreA - scoreB;
       return 0;
@@ -83,24 +93,23 @@ export default function LeadTable({ leads, onSelectLead }) {
   return (
     <div className="ff-card-glass" style={{ borderRadius: 20, padding: 32, border: "1px solid var(--border-medium)", background: "var(--bg-surface)" }}>
       
-      {/* NOTION-STYLE TOOLBAR */}
+      {/* TOOLBAR */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28, flexWrap: "wrap", gap: 16 }}>
-        {/* Search Input (52px Glass Input) */}
+        {/* Search Input */}
         <div style={{ position: "relative", flex: 1, minWidth: 280, maxWidth: 420 }}>
           <Search size={18} color="var(--text-fog)" style={{ position: "absolute", left: 16, top: 17 }} />
           <input
             type="text"
             className="ff-input-56px"
             style={{ paddingLeft: 46, height: 52, fontSize: 14, borderRadius: 12 }}
-            placeholder="Search clients by name, city, phone..."
+            placeholder="Search clients by name, email, phone..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
-        {/* Filter Controls Toolbar */}
+        {/* Filter Controls */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          {/* Risk Filter Select */}
           <select
             className="ff-input-56px"
             style={{ height: 52, padding: "0 16px", fontSize: 13.5, width: "auto", borderRadius: 12, cursor: "pointer" }}
@@ -113,7 +122,6 @@ export default function LeadTable({ leads, onSelectLead }) {
             <option value="healthy">🟢 Healthy Status</option>
           </select>
 
-          {/* City Filter Select */}
           <select
             className="ff-input-56px"
             style={{ height: 52, padding: "0 16px", fontSize: 13.5, width: "auto", borderRadius: 12, cursor: "pointer" }}
@@ -126,7 +134,6 @@ export default function LeadTable({ leads, onSelectLead }) {
             ))}
           </select>
 
-          {/* Sort Select */}
           <select
             className="ff-input-56px"
             style={{ height: 52, padding: "0 16px", fontSize: 13.5, width: "auto", borderRadius: 12, cursor: "pointer" }}
@@ -139,7 +146,6 @@ export default function LeadTable({ leads, onSelectLead }) {
             <option value="score_low">Score: Low to High</option>
           </select>
 
-          {/* Export Action Button */}
           <button
             className="ff-btn-secondary"
             onClick={exportCSV}
@@ -150,14 +156,13 @@ export default function LeadTable({ leads, onSelectLead }) {
         </div>
       </div>
 
-      {/* INSTITUTIONAL CLIENT TABLE */}
+      {/* CLIENT TABLE */}
       <div className="ff-table-wrapper" style={{ overflowX: "auto" }}>
         <table className="ff-table" style={{ width: "100%", borderCollapse: "separate", borderSpacing: 0 }}>
           <thead>
             <tr style={{ borderBottom: "1px solid var(--border-subtle)" }}>
               <th style={{ padding: "16px 20px" }}>Client Name</th>
               <th style={{ padding: "16px 20px" }}>Contact & City</th>
-              <th style={{ padding: "16px 20px" }}>Assigned Consultant</th>
               <th style={{ padding: "16px 20px" }}>Net Monthly Savings</th>
               <th style={{ padding: "16px 20px" }}>Health Score</th>
               <th style={{ padding: "16px 20px" }}>Risk Status</th>
@@ -167,13 +172,13 @@ export default function LeadTable({ leads, onSelectLead }) {
           <tbody>
             {filteredLeads.length === 0 ? (
               <tr>
-                <td colSpan={7} style={{ textAlign: "center", padding: "60px 24px" }}>
+                <td colSpan={6} style={{ textAlign: "center", padding: "60px 24px" }}>
                   <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(255, 255, 255, 0.04)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px", color: "var(--text-fog)" }}>
                     <UserCheck size={24} />
                   </div>
-                  <h4 style={{ fontSize: 18, color: "var(--text-main)", marginBottom: 4, fontFamily: "var(--font-serif)" }}>No Assigned Leads Found</h4>
+                  <h4 style={{ fontSize: 18, color: "var(--text-main)", marginBottom: 4, fontFamily: "var(--font-serif)" }}>No Leads Found</h4>
                   <p style={{ fontSize: 14, color: "var(--text-fog)", margin: 0 }}>
-                    No client submissions matched your active admin profile or filter criteria.
+                    No form submissions yet. Leads will appear here when users submit the financial assessment form.
                   </p>
                 </td>
               </tr>
@@ -186,35 +191,29 @@ export default function LeadTable({ leads, onSelectLead }) {
 
                 const dateStr = new Date(lead.submittedAt || lead.updatedAt || Date.now()).toLocaleDateString("en-IN", {
                   day: "numeric",
-                  month: "short"
+                  month: "short",
+                  year: "numeric"
                 });
 
                 return (
                   <tr key={lead.id} className="ff-crm-row">
-                    {/* Client Name & Created Date */}
+                    {/* Client Name & Date */}
                     <td style={{ padding: "18px 20px", verticalAlign: "middle" }}>
                       <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-main)" }}>
                         {lead.name}
                       </div>
                       <div style={{ fontSize: 12, color: "var(--text-fog)", marginTop: 2 }}>
-                        Created {dateStr}
+                        Submitted {dateStr}
                       </div>
                     </td>
 
-                    {/* Contact Phone & City Icons */}
+                    {/* Contact & City */}
                     <td style={{ padding: "18px 20px", verticalAlign: "middle" }}>
                       <div style={{ fontSize: 13.5, color: "var(--text-main)", display: "flex", alignItems: "center", gap: 6, fontWeight: 500 }}>
-                        <span style={{ color: "var(--text-fog)", fontSize: 12 }}>☎</span> {lead.mobile}
+                        <span style={{ color: "var(--text-fog)", fontSize: 12 }}>☎</span> {lead.mobile || "—"}
                       </div>
                       <div style={{ fontSize: 12.5, color: "var(--text-fog)", display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
-                        <span style={{ fontSize: 12 }}>📍</span> {lead.city || "Metro"} &bull; Age {lead.age || "—"}
-                      </div>
-                    </td>
-
-                    {/* Assigned Consultant */}
-                    <td style={{ padding: "18px 20px", verticalAlign: "middle" }}>
-                      <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--accent-gold)", display: "flex", alignItems: "center", gap: 6 }}>
-                        <UserCheck size={14} /> {lead.assignedAdminName || "Aditya Sharma"}
+                        <span style={{ fontSize: 12 }}>📍</span> {lead.city || "—"} &bull; Age {lead.age || "—"}
                       </div>
                     </td>
 
@@ -235,7 +234,7 @@ export default function LeadTable({ leads, onSelectLead }) {
                       </div>
                     </td>
 
-                    {/* Color-Coded Risk Badge */}
+                    {/* Risk Badge */}
                     <td style={{ padding: "18px 20px", verticalAlign: "middle" }}>
                       {isHighRisk ? (
                         <span className="ff-badge ff-badge-gap" style={{ fontSize: 12, padding: "6px 12px" }}>
@@ -252,24 +251,48 @@ export default function LeadTable({ leads, onSelectLead }) {
                       )}
                     </td>
 
-                    {/* Action Ghost Button */}
+                    {/* Action Button */}
                     <td style={{ padding: "18px 20px", verticalAlign: "middle", textAlign: "right" }}>
-                      <button
-                        className="ff-btn-ghost ff-view-report-btn"
-                        onClick={() => onSelectLead(lead)}
-                        style={{
-                          padding: "9px 18px",
-                          fontSize: 13.5,
-                          borderRadius: 10,
-                          border: "1px solid var(--border-subtle)",
-                          color: "var(--text-main)",
-                          fontWeight: 600,
-                          cursor: "pointer",
-                          transition: "all 0.25s ease"
-                        }}
-                      >
-                        View Report &rarr;
-                      </button>
+                      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 8 }}>
+                        <button
+                          className="ff-btn-ghost ff-view-report-btn"
+                          onClick={() => onSelectLead(lead)}
+                          style={{
+                            padding: "9px 18px",
+                            fontSize: 13.5,
+                            borderRadius: 10,
+                            border: "1px solid var(--border-subtle)",
+                            color: "var(--text-main)",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            transition: "all 0.25s ease"
+                          }}
+                        >
+                          View Report &rarr;
+                        </button>
+                        <button
+                          title="Delete Lead"
+                          onClick={() => {
+                            if (window.confirm(`Are you sure you want to delete lead for "${lead.name}"?`)) {
+                              deleteLead(lead.id || lead._id);
+                            }
+                          }}
+                          style={{
+                            padding: "9px 12px",
+                            borderRadius: 10,
+                            border: "1px solid rgba(239, 68, 68, 0.3)",
+                            background: "rgba(239, 68, 68, 0.1)",
+                            color: "#EF4444",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            transition: "all 0.2s ease"
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
