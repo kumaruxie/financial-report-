@@ -3,16 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <script type="text/javascript">
-      // SPA redirect fallback for GitHub Pages
-      var pathSegmentsToKeep = 1;
-      var l = window.location;
-      l.replace(
-        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
-        l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
-        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-        l.hash
-      );
+      // SPA Fallback for Vercel & static hosting
+      var path = window.location.pathname.toLowerCase();
+      if (path.includes("/adm") || path.includes("/admin") || path.includes("/frm")) {
+        window.location.href = "/?adm";
+      } else {
+        window.location.href = "/";
+      }
     </script>
   </head>
   <body>
