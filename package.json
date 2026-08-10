@@ -1,16 +1,15 @@
 {
-  "name": "financial-report-root",
+  "name": "wealth-compass-root",
   "version": "1.0.0",
-  "description": "Financial Report Root Package",
   "main": "backend/server.js",
   "scripts": {
     "start": "node backend/server.js",
-    "build": "cd backend && npm install"
+    "build": "npm install && cd backend && npm install"
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "mongoose": "^8.12.0"
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "mongoose": "^8.5.1"
   }
 }
