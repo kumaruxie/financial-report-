@@ -12,80 +12,9 @@ export const ADMIN_LIST = [
   { id: "admin_neha",   name: "Neha Gupta",   email: "neha@wealthcompass.com", badge: "Retirement & Portfolio Strategist" }
 ];
 
-const INITIAL_LOGS = [
-  { id: "log-1", timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(), type: "Lead Submission", user: "priya@gmail.com", status: "Success", details: "Assigned randomly to Aditya Sharma" },
-  { id: "log-2", timestamp: new Date(Date.now() - 1000 * 60 * 40).toISOString(), type: "Lead Submission", user: "jagat@example.com", status: "Success", details: "Assigned randomly to Vikram Mehta" },
-  { id: "log-3", timestamp: new Date(Date.now() - 1000 * 60 * 35).toISOString(), type: "PDF Generation", user: "jagat@example.com", status: "Success", details: "Financial Report PDF compiled" }
-];
+const INITIAL_LOGS = [];
 
-const INITIAL_LEADS = [
-  {
-    id: "lead_demo_1",
-    name: "Jagat Singh",
-    email: "jagat.singh@example.com",
-    mobile: "9876543210",
-    age: "43",
-    income: "100000",
-    expenses: "20000",
-    savings: "35000",
-    termInsurance: "no",
-    termAmount: "0",
-    healthInsurance: "no",
-    healthAmount: "0",
-    city: "Gurgaon",
-    retirementAge: "60",
-    assignedAdminId: "admin_aditya",
-    assignedAdminName: "Aditya Sharma",
-    submittedAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-    goals: []
-  },
-  {
-    id: "lead_demo_2",
-    name: "Priya Sharma",
-    email: "priya.sharma@example.com",
-    mobile: "9811223344",
-    age: "34",
-    income: "150000",
-    expenses: "70000",
-    savings: "500000",
-    termInsurance: "yes",
-    termAmount: "10000000",
-    healthInsurance: "yes",
-    healthAmount: "500000",
-    city: "Mumbai",
-    retirementAge: "60",
-    assignedAdminId: "admin_vikram",
-    assignedAdminName: "Vikram Mehta",
-    submittedAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-    goals: [
-      { id: "g1", type: "education", childClass: 5, ugCost: 1500000, pgCost: 800000 },
-      { id: "g2", type: "marriage", childAge: 8, cost: 2000000 }
-    ]
-  },
-  {
-    id: "lead_demo_3",
-    name: "Rahul Verma",
-    email: "rahul.v@example.com",
-    mobile: "9988776655",
-    age: "38",
-    income: "200000",
-    expenses: "90000",
-    savings: "1200000",
-    termInsurance: "yes",
-    termAmount: "5000000",
-    healthInsurance: "no",
-    healthAmount: "0",
-    city: "Delhi",
-    retirementAge: "60",
-    assignedAdminId: "admin_neha",
-    assignedAdminName: "Neha Gupta",
-    submittedAt: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
-    goals: [
-      { id: "g1", type: "house", years: 6, cost: 6000000 },
-      { id: "g2", type: "education", childClass: 3, ugCost: 1200000 }
-    ]
-  }
-];
+const INITIAL_LEADS = [];
 
 export function AppProvider({ children }) {
   const [leads, setLeads] = useState(() => {
