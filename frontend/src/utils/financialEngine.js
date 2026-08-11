@@ -1,19 +1,19 @@
 import { GraduationCap, Heart, Home, Plane, Shield, PiggyBank, HeartPulse, AlertTriangle } from "lucide-react";
 
 /* ---------------- constants & assumptions ---------------- */
-export const EDU_INFLATION = 8;        // 6.5–8% band requested, education at the upper end
-export const MARRIAGE_INFLATION = 7;   // mid-band
-export const RETIREMENT_INFLATION = 7;   // 7% inflation assumption
-export const HOUSE_INFLATION = 7;
-export const TRAVEL_INFLATION = 6;
+export const EDU_INFLATION = 6;        // 6.0% p.a. college tuition fee inflation
+export const MARRIAGE_INFLATION = 6;   // 6.0% p.a. wedding expense inflation
+export const RETIREMENT_INFLATION = 6; // 6.0% p.a. post-retirement expense inflation
+export const HOUSE_INFLATION = 6;      // 6.0% p.a. real estate / general inflation
+export const TRAVEL_INFLATION = 6;     // 6.0% p.a. travel inflation
 export const MARRIAGE_AGE = 26.5;      // midpoint of the 25–28 "good marriage age" band
 export const UG_DURATION = 3.5;        // midpoint of 3–4 years
-export const LIFE_EXPECTANCY = 85;     // standard planning assumption for corpus longevity
-export const SHORT_TERM_RETURN = 8;    // blended RD/FD/investment, short-term goals
+export const LIFE_EXPECTANCY = 85;     // 85 years standard actuarial planning horizon
+export const SHORT_TERM_RETURN = 8;    // 8.0% p.a. short-term return (≤ 4 yrs 10 mo)
 export const SHORT_TERM_MAX_YEARS = 4 + 10 / 12; // up to 4 yrs 10 months = short-term; 5 yrs+ = long-term
-export const GUARANTEED_RETURN = 6;    // guaranteed-return insurance plan, goals >5 years
-export const SWP_RETURN = 8;           // 8% post-retirement withdrawal-phase return
-export const EMERGENCY_MONTHS = 9;     // months of expenses held as an emergency buffer
+export const GUARANTEED_RETURN = 8;    // 8.0% p.a. guaranteed long-term return (> 5 yrs)
+export const SWP_RETURN = 8;           // 8.0% p.a. post-retirement growth return
+export const EMERGENCY_MONTHS = 6;     // 6 months liquid buffer equal to 6 months of living expenses
 export const PPF_AGE_LIMIT = 35;       // PPF suggested as an additional long-term option below this age
 
 export const METROS = [

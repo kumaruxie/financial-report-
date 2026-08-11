@@ -562,7 +562,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
                 <div>&bull; Expenses consume only <b>{((Number(lead.expenses) / Math.max(1, Number(lead.income))) * 100).toFixed(0)}%</b> of annual income, reflecting strong financial discipline.</div>
                 <div>&bull; Annual net savings of <b>{INR_L(r.annualSurplus)}</b> is sufficient to fund long-term goals without compromising lifestyle.</div>
                 <div>&bull; Remaining buffer of <b>{INR_L(Math.max(0, r.annualSurplus - r.totalAnnual))}</b> can be deployed into wealth acceleration.</div>
-                <div>&bull; Emergency reserve should be strengthened from {((Number(lead.savings) / Math.max(1, Number(lead.expenses)))).toFixed(1)} months to <b>9 months ({INR_L(r.emergencyTarget)})</b>.</div>
+                <div>&bull; Emergency reserve should be strengthened from {((Number(lead.savings) / Math.max(1, Number(lead.expenses)))).toFixed(1)} months to <b>6 months ({INR_L(r.emergencyTarget)})</b>.</div>
               </div>
             </div>
           </div>
@@ -895,7 +895,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <PiggyBank size={18} color={r.emergencyGap > 0 ? "#C05656" : "#3E9F6E"} />
-                    <span style={{ fontSize: 13, fontWeight: 800, color: "#1B2035" }}>Emergency Reserve Buffer (9 Months Expenses)</span>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: "#1B2035" }}>Emergency Reserve Buffer (6 Months Expenses)</span>
                   </div>
                   <span style={{ background: r.emergencyGap > 0 ? "#FEF2F2" : "#ECFDF5", color: r.emergencyGap > 0 ? "#C05656" : "#3E9F6E", border: `1px solid ${r.emergencyGap > 0 ? "#FCA5A5" : "#A7F3D0"}`, padding: "3px 10px", borderRadius: 12, fontSize: 10, fontWeight: 800 }}>
                     {r.emergencyGap > 0 ? `Buffer Gap ${INR_L(r.emergencyGap)}` : "Fully Funded"}

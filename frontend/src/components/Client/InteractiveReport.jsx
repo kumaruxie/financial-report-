@@ -70,7 +70,7 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
     highPriority.push(`Upgrade Health Insurance floater by ${INR_L(r.healthGap)} for ${lead.city || "your city"} medical baseline.`);
   }
   if (r.emergencyGap > 0) {
-    mediumPriority.push(`Build ${INR_L(r.emergencyGap)} in liquid emergency funds to reach 9 months buffer (${INR_L(r.emergencyTarget)}).`);
+    mediumPriority.push(`Build ${INR_L(r.emergencyGap)} in liquid emergency funds to reach 6 months buffer (${INR_L(r.emergencyTarget)}).`);
   }
   if (r.totalAnnual > r.annualSurplus) {
     mediumPriority.push(`Annual goal investment (${INR_L(r.totalAnnual)}) exceeds annual net savings (${INR_L(r.annualSurplus)}) by ${INR_L(r.totalAnnual - r.annualSurplus)}. Phase short-term investments first.`);
@@ -473,7 +473,7 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
       <div className="ff-card-glass" style={{ padding: 24, borderRadius: 16, marginBottom: 28, background: "var(--bg-surface)", border: "1px solid var(--border-subtle)" }}>
 
         {/* KPI Metrics Panel */}
-        <div className="ffr-info-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", marginBottom: 20 }}>
+        <div className="ffr-info-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", marginBottom: 0 }}>
           <div className="ffr-info-item"><div className="l">Current Expense</div><div className="v">{INR_L(lead.expenses)}/mo</div></div>
           <div className="ffr-info-item"><div className="l">At Retirement ({RETIREMENT_INFLATION}% infl.)</div><div className="v gold">{INR_L(r.retirement.annualExpenseAtRetirement / 12)}/mo</div></div>
           <div className="ffr-info-item" style={{ background: "rgba(95, 168, 160, 0.12)", borderColor: "var(--accent-teal)" }}>
@@ -486,92 +486,6 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
             <div className="l" style={{ color: "var(--accent-gold)" }}>Age 85 Closing Corpus</div>
             <div className="v" style={{ color: "var(--accent-gold)" }}>{INR_L(r.swpKpi?.finalClosingCorpus)}</div>
           </div>
-        </div>
-
-        <div style={{ fontSize: 13, color: "var(--text-fog)", marginBottom: 20 }}>
-          Simulating post-retirement corpus longevity from age {lead.retirementAge || 60} to age 85 ({SWP_RETURN}% growth return vs {RETIREMENT_INFLATION}% inflation).
-        </div>
-
-        {/* Synchronized 2-Chart Layout */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20, marginBottom: 24 }}>
-          {/* Left Chart: Corpus Trajectory */}
-          <div style={{ background: "rgba(255,255,255,0.02)", padding: 16, borderRadius: 12, border: "1px solid var(--border-subtle)" }}>
-            <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-main)", marginBottom: 12 }}>Corpus Trajectory (Closing Balance)</div>
-            <div style={{ height: 200, width: "100%" }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={r.swpChartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.12)" vertical={false} />
-                  <XAxis dataKey="age" tick={{ fontSize: 11, fill: '#CBD5E1' }} axisLine={{ stroke: 'rgba(255,255,255,0.2)' }} tickLine={false} />
-                  <YAxis
-                    tick={{ fontSize: 11, fill: '#CBD5E1' }}
-                    axisLine={false}
-                    tickLine={false}
-                    tickFormatter={(v) => {
-                      if (v >= 10000000) return `₹${(v / 10000000).toFixed(1)} Cr`;
-                      if (v >= 100000) return `₹${Math.round(v / 100000)} L`;
-                      return `₹${v}`;
-                    }}
-                  />
-                  <Tooltip formatter={(v) => INR_L(v)} contentStyle={{ background: '#0D0E15', borderRadius: 8, border: '1px solid var(--border-gold)', color: '#FFFFFF', fontSize: 12 }} itemStyle={{ color: '#FFFFFF' }} labelStyle={{ color: '#CBD5E1', fontWeight: 700 }} />
-                  <Area type="monotone" dataKey="closing" stroke="var(--accent-teal)" fill="rgba(95, 168, 160, 0.25)" strokeWidth={2} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Right Chart: Inflation-Adjusted Withdrawal Escalation */}
-          <div style={{ background: "rgba(255,255,255,0.02)", padding: 16, borderRadius: 12, border: "1px solid var(--border-subtle)" }}>
-            <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text-main)", marginBottom: 12 }}>Annual Withdrawal Escalation ({RETIREMENT_INFLATION}% infl.)</div>
-            <div style={{ height: 200, width: "100%" }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={r.swpTable}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.12)" vertical={false} />
-                  <XAxis dataKey="age" tick={{ fontSize: 11, fill: '#CBD5E1' }} axisLine={{ stroke: 'rgba(255,255,255,0.2)' }} tickLine={false} />
-                  <YAxis
-                    tick={{ fontSize: 11, fill: '#CBD5E1' }}
-                    axisLine={false}
-                    tickLine={false}
-                    tickFormatter={(v) => `₹${(v / 100000).toFixed(1)} L`}
-                  />
-                  <Tooltip formatter={(v) => INR_L(v)} contentStyle={{ background: '#0D0E15', borderRadius: 8, border: '1px solid var(--border-gold)', color: '#FFFFFF', fontSize: 12 }} itemStyle={{ color: '#FFFFFF' }} labelStyle={{ color: '#CBD5E1', fontWeight: 700 }} />
-                  <Bar dataKey="withdrawal" fill="var(--accent-gold)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-
-        {/* 6-Column Actuarial Breakdown Table */}
-        <div className="ff-table-wrapper" style={{ overflowX: "auto" }}>
-          <table className="ff-table" style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-            <thead>
-              <tr style={{ background: "rgba(255, 255, 255, 0.04)", borderBottom: "1px solid var(--border-subtle)", textTransform: "uppercase", fontSize: 11, color: "var(--text-fog)" }}>
-                <th style={{ padding: "10px 14px", textAlign: "left" }}>Age</th>
-                <th style={{ padding: "10px 14px", textAlign: "right" }}>Opening Corpus</th>
-                <th style={{ padding: "10px 14px", textAlign: "right" }}>Return ({SWP_RETURN}%)</th>
-                <th style={{ padding: "10px 14px", textAlign: "right" }}>Withdrawal ({RETIREMENT_INFLATION}%)</th>
-                <th style={{ padding: "10px 14px", textAlign: "right" }}>Net Change</th>
-                <th style={{ padding: "10px 14px", textAlign: "right" }}>Closing Corpus</th>
-              </tr>
-            </thead>
-            <tbody>
-              {r.swpTable.map((row) => {
-                const isNetPositive = row.netChange >= 0;
-                return (
-                  <tr key={row.age} style={{ borderBottom: "1px solid var(--border-subtle)" }}>
-                    <td style={{ padding: "10px 14px", fontWeight: 600 }}>Age {row.age}</td>
-                    <td style={{ padding: "10px 14px", textAlign: "right", fontFamily: "var(--font-mono)" }}>{INR_L(row.opening)}</td>
-                    <td style={{ padding: "10px 14px", textAlign: "right", color: "var(--accent-teal)", fontFamily: "var(--font-mono)" }}>+{INR_L(row.returnAmount)}</td>
-                    <td style={{ padding: "10px 14px", textAlign: "right", color: "#F87171", fontFamily: "var(--font-mono)" }}>-{INR_L(row.withdrawal)}</td>
-                    <td style={{ padding: "10px 14px", textAlign: "right", color: isNetPositive ? "var(--accent-teal)" : "#F87171", fontWeight: 600, fontFamily: "var(--font-mono)" }}>
-                      {isNetPositive ? `+${INR_L(row.netChange)}` : INR_L(row.netChange)}
-                    </td>
-                    <td style={{ padding: "10px 14px", textAlign: "right", color: "var(--accent-gold)", fontWeight: 700, fontFamily: "var(--font-mono)" }}>{INR_L(row.closing)}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
         </div>
       </div>
 

@@ -26,7 +26,6 @@ export default function LeadDetailModal({ lead, onClose }) {
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
               <span className="ff-badge ff-badge-gold" style={{ fontSize: 11, padding: "3px 8px" }}>Advisory Call Dossier</span>
-              <span style={{ fontSize: 12, color: "var(--text-fog)" }}>Assigned to <b style={{ color: "var(--accent-gold)" }}>{lead.assignedAdminName || "Aditya Sharma"}</b></span>
             </div>
             <h3 style={{ fontSize: 22, fontWeight: 700, color: "var(--text-main)", margin: 0, fontFamily: "var(--font-serif)" }}>
               {lead.name} &bull; Client Advisory Brief & Gap Assessment
@@ -155,12 +154,12 @@ export default function LeadDetailModal({ lead, onClose }) {
                     </span>
                     <span style={{ fontSize: 11, color: "var(--text-fog)" }}>Emergency Liquidity</span>
                   </div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-main)" }}>9-Month Emergency Reserve</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-main)" }}>6-Month Emergency Reserve</div>
                   <div style={{ fontSize: 24, fontWeight: 800, fontFamily: "var(--font-mono)", color: "var(--accent-teal)", margin: "8px 0 4px" }}>
-                    {r.emergencyGap > 0 ? `${INR_L(r.emergencyGap)} Shortfall` : "9 Months Buffer Active"}
+                    {r.emergencyGap > 0 ? `${INR_L(r.emergencyGap)} Shortfall` : "6 Months Buffer Active"}
                   </div>
                   <p style={{ fontSize: 12.5, color: "var(--text-fog)", margin: 0, lineHeight: 1.5 }}>
-                    Target emergency reserve (9 mo living expenses): <b>{INR_L(r.emergencyTarget)}</b>. Liquid savings held: <b>{INR_L(lead.savings)}</b>.
+                    Target emergency reserve (6 mo living expenses): <b>{INR_L(r.emergencyTarget)}</b>. Liquid savings held: <b>{INR_L(lead.savings)}</b>.
                   </p>
                 </div>
 
@@ -217,7 +216,7 @@ export default function LeadDetailModal({ lead, onClose }) {
         {/* MODAL FOOTER */}
         <div style={{ padding: "18px 28px", background: "rgba(13, 15, 24, 0.98)", borderTop: "1px solid var(--border-subtle)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ fontSize: 12.5, color: "var(--text-fog)" }}>
-            Assigned Adviser: <b style={{ color: "var(--text-main)" }}>{lead.assignedAdminName || "Aditya Sharma"}</b> &bull; Generated {genDate}
+            Generated on {genDate}
           </div>
 
           <div style={{ display: "flex", gap: 12 }}>
