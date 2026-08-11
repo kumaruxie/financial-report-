@@ -318,7 +318,7 @@ export default function LandingHero({ onStartWizard, onOpenLegal }) {
         <div className="ff-delay-warning">
           <AlertTriangle size={22} color="var(--alert-coral)" style={{ flexShrink: 0 }} />
           <div>
-            <b style={{ color: "var(--alert-coral)" }}>Cost of Waiting Warning:</b> Delaying your savings strategy by 5 years increases your required monthly SIP contribution by ~48% to achieve the exact same milestone target.
+            <b style={{ color: "var(--alert-coral)" }}>Cost of Waiting Warning:</b> Delaying your savings strategy by 5 years increases your required monthly investment contribution by ~48% to achieve the exact same milestone target.
           </div>
         </div>
 

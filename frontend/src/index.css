@@ -1053,3 +1053,14 @@ html, body, #root, .ff-app-container {
     font-size: 18.5px !important;
   }
 }
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes progressPulse {
+  0% { opacity: 0.5; transform: scaleX(0.2); transform-origin: left; }
+  50% { opacity: 1; transform: scaleX(0.85); transform-origin: left; }
+  100% { opacity: 0.5; transform: scaleX(1); transform-origin: left; }
+}

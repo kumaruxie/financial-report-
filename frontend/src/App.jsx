@@ -23,12 +23,13 @@ function MainContent() {
   const [activeTab, setActiveTab] = useState("landing");
   const [legalModalTab, setLegalModalTab] = useState(null); // null | 'privacy' | 'terms' | 'contact'
   const [wizardStep, setWizardStep] = useState(1);
+  const [stepError, setStepError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStatus, setProcessingStatus] = useState("Evaluating Monthly Cashflow...");
 
   const [basics, setBasics] = useState({ name: "", email: "", mobile: "" });
   const [financials, setFinancials] = useState({ age: "", income: "", expenses: "", savings: "" });
-  const [protection, setProtection] = useState({ termInsurance: "no", termAmount: "", healthInsurance: "no", healthAmount: "", city: "", retirementAge: "60" });
+  const [protection, setProtection] = useState({ termInsurance: "", termAmount: "", healthInsurance: "", healthAmount: "", city: "", retirementAge: "" });
   const [goals, setGoals] = useState([]);
 
   const [submittedLead, setSubmittedLead] = useState(null);
@@ -56,9 +57,18 @@ function MainContent() {
     }
   }, [setPortalMode]);
 
-  const handleBasicsChange = (field, value) => setBasics((prev) => ({ ...prev, [field]: value }));
-  const handleFinancialsChange = (field, value) => setFinancials((prev) => ({ ...prev, [field]: value }));
-  const handleProtectionChange = (field, value) => setProtection((prev) => ({ ...prev, [field]: value }));
+  const handleBasicsChange = (field, value) => {
+    setStepError("");
+    setBasics((prev) => ({ ...prev, [field]: value }));
+  };
+  const handleFinancialsChange = (field, value) => {
+    setStepError("");
+    setFinancials((prev) => ({ ...prev, [field]: value }));
+  };
+  const handleProtectionChange = (field, value) => {
+    setStepError("");
+    setProtection((prev) => ({ ...prev, [field]: value }));
+  };
 
   const currentPayload = {
     name: basics.name || "",
@@ -79,7 +89,50 @@ function MainContent() {
 
   const liveReport = computeReport(currentPayload);
 
+  const validateCurrentStep = () => {
+    setStepError("");
+    if (wizardStep === 1) {
+      if (!basics.name || !basics.name.trim()) {
+        setStepError("Please enter your Full Name to proceed.");
+        return false;
+      }
+      if (!basics.email || !basics.email.trim() || !basics.email.includes("@")) {
+        setStepError("Please enter a valid Email Address to proceed.");
+        return false;
+      }
+      if (!basics.mobile || !basics.mobile.trim() || basics.mobile.trim().length < 10) {
+        setStepError("Please enter a 10-digit Mobile Number to proceed.");
+        return false;
+      }
+    } else if (wizardStep === 2) {
+      if (!financials.age || Number(financials.age) <= 0) {
+        setStepError("Please enter your Current Age to proceed.");
+        return false;
+      }
+      if (!financials.income || Number(financials.income) <= 0) {
+        setStepError("Please enter your Monthly Income to proceed.");
+        return false;
+      }
+      if (financials.expenses === "" || financials.expenses === null || Number(financials.expenses) < 0) {
+        setStepError("Please enter your Monthly Expenses to proceed.");
+        return false;
+      }
+      if (financials.savings === "" || financials.savings === null) {
+        setStepError("Please enter your Current Liquid Savings (enter 0 if none).");
+        return false;
+      }
+    } else if (wizardStep === 3) {
+      if (!protection.city || !protection.city.trim()) {
+        setStepError("Please select or enter your City / Location to proceed.");
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleNextStep = () => {
+    if (!validateCurrentStep()) return;
+    setStepError("");
     if (wizardStep < 4) {
       setWizardStep((prev) => prev + 1);
     } else {
@@ -237,20 +290,6 @@ function MainContent() {
               <>
                 {wizardStep < 5 ? (
                   <div>
-                    {/* Progressive Disclosure Header Banner */}
-                    {wizardStep > 2 && (
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 16px", borderRadius: 10, background: "rgba(201, 154, 75, 0.08)", border: "1px solid var(--border-gold)", marginBottom: 28 }}>
-                        <span style={{ fontSize: 12, color: "var(--text-fog)", textTransform: "uppercase", fontWeight: 700 }}>
-                          {wizardStep === 3 && "Protection Audit Baseline"}
-                          {wizardStep === 4 && "Retirement Horizon Target"}
-                        </span>
-                        <span style={{ fontSize: 14, fontWeight: 700, fontFamily: "var(--font-mono)", color: "var(--accent-gold)" }}>
-                          {wizardStep === 3 && (protection.termInsurance === "yes" ? INR_L(protection.termAmount) : "Gap Flagged")}
-                          {wizardStep === 4 && (goals.length > 0 ? `${goals.length} Goals Configured` : "Standard Horizon")}
-                        </span>
-                      </div>
-                    )}
-
                     {/* Step Form Inputs */}
                     {wizardStep === 1 && <StepBasics data={basics} onChange={handleBasicsChange} onNext={handleNextStep} />}
                     {wizardStep === 2 && <StepFinancials data={financials} onChange={handleFinancialsChange} onNext={handleNextStep} />}
@@ -258,10 +297,30 @@ function MainContent() {
                     {wizardStep === 4 && <StepGoals goals={goals} setGoals={setGoals} onSubmit={handleNextStep} />}
 
                     {/* Action Bar */}
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 40, paddingTop: 24, borderTop: "1px solid var(--border-subtle)" }}>
+                    {stepError && (
+                      <div style={{
+                        background: "rgba(239, 68, 68, 0.12)",
+                        border: "1px solid rgba(239, 68, 68, 0.35)",
+                        color: "#F87171",
+                        padding: "12px 18px",
+                        borderRadius: 12,
+                        fontSize: 14,
+                        fontWeight: 600,
+                        marginTop: 24,
+                        marginBottom: 8,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10
+                      }}>
+                        <ShieldAlert size={18} color="#F87171" style={{ flexShrink: 0 }} /> {stepError}
+                      </div>
+                    )}
+
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 24, paddingTop: 20, borderTop: "1px solid var(--border-subtle)" }}>
                       <button
                         className="ff-btn-wizard-ghost"
                         onClick={() => {
+                          setStepError("");
                           if (wizardStep > 1) setWizardStep(wizardStep - 1);
                           else setActiveTab("landing");
                         }}
@@ -273,7 +332,7 @@ function MainContent() {
                       {wizardStep < 4 ? (
                         <button
                           className="ff-btn-wizard-primary"
-                          onClick={() => setWizardStep(wizardStep + 1)}
+                          onClick={handleNextStep}
                           style={{ height: 52, borderRadius: 14, padding: "0 32px", fontSize: 15 }}
                         >
                           Continue <ChevronRight size={16} />
@@ -281,7 +340,7 @@ function MainContent() {
                       ) : (
                         <button
                           className="ff-btn-wizard-primary"
-                          onClick={handleWizardSubmit}
+                          onClick={handleNextStep}
                           style={{ height: 52, borderRadius: 14, padding: "0 32px", fontSize: 15, background: "var(--accent-gold)" }}
                         >
                           Generate Diagnostic Report <ArrowRight size={16} />

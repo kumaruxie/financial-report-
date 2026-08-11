@@ -20,59 +20,67 @@ export default function LegalModal({ activeTab: initialTab = "privacy", onClose 
     { id: "Retirement & Pension Strategy", label: "Retirement Planning", desc: "Target corpus & SWP strategy", icon: PiggyBank },
     { id: "Child Education & Marriage Funding", label: "Goal Planning", desc: "College & marriage escalation", icon: GraduationCap },
     { id: "Life & Health Protection Audit", label: "Insurance Review", desc: "Term gap & health cover", icon: Shield },
-    { id: "Investment & Portfolio Review", label: "Investment Planning", desc: "SIP & portfolio optimization", icon: TrendingUp },
+    { id: "Investment & Portfolio Review", label: "Investment Planning", desc: "Investment & portfolio optimization", icon: TrendingUp },
     { id: "General Enquiry / Other", label: "General Enquiry", desc: "Custom question or support", icon: HelpCircle }
   ];
 
+  const [isSubmittingContact, setIsSubmittingContact] = useState(false);
+  const [submissionStatusText, setSubmissionStatusText] = useState("Connecting to Advisory Desk...");
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    setContactSubmitted(true);
+    setIsSubmittingContact(true);
+    setSubmissionStatusText("Connecting to Advisory Desk...");
 
-    const enquiryPayload = {
-      name: contactForm.name || "Advisory Client",
-      email: contactForm.email || "",
-      topic: contactForm.topic || "General Enquiry",
-      message: contactForm.message || ""
-    };
+    setTimeout(() => setSubmissionStatusText("Securing Dedicated Wealth Advisor..."), 600);
+    setTimeout(() => setSubmissionStatusText("Encrypting Transmission..."), 1200);
 
-    const contactPayload = {
-      name: contactForm.name || "Contact Enquiry User",
-      email: contactForm.email || "",
-      mobile: `Enquiry: ${contactForm.topic}`,
-      city: "Contact Form Enquiry",
-      age: "—",
-      income: "0",
-      expenses: "0",
-      savings: "0",
-      retirementAge: "60",
-      termInsurance: "no",
-      termAmount: "0",
-      healthInsurance: "no",
-      healthAmount: "0",
-      goals: [
-        {
-          type: "Contact Inquiry",
-          topic: contactForm.topic,
-          message: contactForm.message
-        }
-      ]
-    };
+    setTimeout(async () => {
+      const enquiryPayload = {
+        name: contactForm.name || "Advisory Client",
+        email: contactForm.email || "",
+        topic: contactForm.topic || "General Enquiry",
+        message: contactForm.message || ""
+      };
 
-    try {
-      if (saveContactEnquiry) {
-        saveContactEnquiry(enquiryPayload);
+      const contactPayload = {
+        name: contactForm.name || "Contact Enquiry User",
+        email: contactForm.email || "",
+        mobile: `Enquiry: ${contactForm.topic}`,
+        city: "Contact Form Enquiry",
+        age: "—",
+        income: "0",
+        expenses: "0",
+        savings: "0",
+        retirementAge: "60",
+        termInsurance: "no",
+        termAmount: "0",
+        healthInsurance: "no",
+        healthAmount: "0",
+        goals: [
+          {
+            type: "Contact Inquiry",
+            topic: contactForm.topic,
+            message: contactForm.message
+          }
+        ]
+      };
+
+      try {
+        if (saveContactEnquiry) saveContactEnquiry(enquiryPayload);
+        if (saveLeadSubmission) await saveLeadSubmission(contactPayload);
+      } catch (err) {
+        console.error("Failed to save contact enquiry submission:", err);
       }
-      if (saveLeadSubmission) {
-        await saveLeadSubmission(contactPayload);
-      }
-    } catch (err) {
-      console.error("Failed to save contact enquiry submission:", err);
-    }
 
-    setTimeout(() => {
-      setContactSubmitted(false);
-      setContactForm({ name: "", email: "", topic: "Comprehensive Financial Planning", message: "" });
-    }, 4000);
+      setIsSubmittingContact(false);
+      setContactSubmitted(true);
+
+      setTimeout(() => {
+        setContactSubmitted(false);
+        setContactForm({ name: "", email: "", topic: "Comprehensive Financial Planning", message: "" });
+      }, 5000);
+    }, 1800);
   };
 
   return (
@@ -219,7 +227,7 @@ export default function LegalModal({ activeTab: initialTab = "privacy", onClose 
 
               <h4 style={{ color: "var(--text-main)", margin: "20px 0 8px", fontSize: 16 }}>Contact Us</h4>
               <p>For privacy-related questions or requests, contact us at:</p>
-              <p style={{ color: "var(--accent-gold)", fontWeight: 700 }}>Email: support@apkacoach.com</p>
+              <p style={{ color: "var(--accent-gold)", fontWeight: 700 }}>Email: hello@apkacoach.com</p>
             </div>
           )}
 
@@ -268,7 +276,7 @@ export default function LegalModal({ activeTab: initialTab = "privacy", onClose 
 
               <h4 style={{ color: "var(--text-main)", margin: "20px 0 8px", fontSize: 16 }}>7. Contact</h4>
               <p>For questions regarding these Terms, contact us at:</p>
-              <p style={{ color: "var(--accent-gold)", fontWeight: 700 }}>Email: support@apkacoach.com</p>
+              <p style={{ color: "var(--accent-gold)", fontWeight: 700 }}>Email: hello@apkacoach.com</p>
             </div>
           )}
 
@@ -291,7 +299,7 @@ export default function LegalModal({ activeTab: initialTab = "privacy", onClose 
                   Support & Consultation Email
                 </div>
                 <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text-main)", display: "flex", alignItems: "center", gap: 8 }}>
-                  <Mail size={18} color="var(--accent-gold)" /> support@apkacoach.com
+                  <Mail size={18} color="var(--accent-gold)" /> hello@apkacoach.com
                 </div>
               </div>
 
@@ -299,7 +307,25 @@ export default function LegalModal({ activeTab: initialTab = "privacy", onClose 
               <div style={{ background: "var(--bg-surface)", border: "1px solid var(--border-subtle)", padding: 24, borderRadius: 16 }}>
                 <h4 style={{ fontSize: 16, color: "var(--text-main)", margin: "0 0 16px" }}>Advisory / Consultation Enquiry</h4>
 
-                {contactSubmitted ? (
+                {isSubmittingContact ? (
+                  <div style={{ padding: "36px 24px", textAlign: "center", background: "rgba(201, 154, 75, 0.08)", border: "1px solid var(--accent-gold)", borderRadius: 14 }}>
+                    <div style={{
+                      width: 44,
+                      height: 44,
+                      border: "3px solid rgba(201, 154, 75, 0.2)",
+                      borderTopColor: "var(--accent-gold)",
+                      borderRadius: "50%",
+                      animation: "spin 0.8s linear infinite",
+                      margin: "0 auto 16px"
+                    }} />
+                    <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-main)", marginBottom: 4 }}>
+                      Sending Advisory Enquiry
+                    </div>
+                    <div style={{ fontSize: 13, color: "var(--accent-gold)", fontWeight: 600 }}>
+                      {submissionStatusText}
+                    </div>
+                  </div>
+                ) : contactSubmitted ? (
                   <div style={{ padding: 24, textAlign: "center", background: "rgba(95, 168, 160, 0.12)", border: "1px solid var(--accent-teal)", borderRadius: 12, color: "var(--accent-teal)" }}>
                     <CheckCircle2 size={32} style={{ margin: "0 auto 8px" }} />
                     <div style={{ fontSize: 16, fontWeight: 700 }}>Enquiry Submitted Successfully</div>

@@ -15,24 +15,23 @@ import {
 import EnterprisePdfDossier from "./EnterprisePdfDossier";
 
 /* Circular score gauge matching site theme */
-function CircleGauge({ value, label, size = 84, color }) {
-  const stroke = 7;
+function CircleGauge({ value, label, color, size = 80, stroke = 7 }) {
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const offset = c - (clamp(value) / 100) * c;
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
       <div style={{ position: "relative", width: size, height: size, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <svg width={size} height={size} style={{ transform: "rotate(-90deg)", position: "absolute", top: 0, left: 0 }}>
-          <circle cx={size / 2} cy={size / 2} r={r} stroke="var(--border-subtle)" strokeWidth={stroke} fill="none" />
+          <circle cx={size / 2} cy={size / 2} r={r} stroke="rgba(255, 255, 255, 0.08)" strokeWidth={stroke} fill="none" />
           <circle cx={size / 2} cy={size / 2} r={r} stroke={color} strokeWidth={stroke} fill="none"
-            strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round" style={{ transition: "stroke-dashoffset 0.8s ease-in-out" }} />
+            strokeDasharray={c} strokeDashoffset={offset} strokeLinecap="round" style={{ transition: "stroke-dashoffset 0.8s ease-in-out", filter: `drop-shadow(0 0 6px ${color})` }} />
         </svg>
-        <div style={{ fontFamily: "var(--font-mono)", fontSize: 18, color: "#FFFFFF", fontWeight: 700, zIndex: 2 }}>
+        <div style={{ fontFamily: "var(--font-mono)", fontSize: 19, color: "#FFFFFF", fontWeight: 800, zIndex: 2, textAlign: "center" }}>
           {clamp(value)}
         </div>
       </div>
-      <div style={{ fontSize: 12, color: "#CBD5E1", textAlign: "center", maxWidth: 110, lineHeight: 1.25, fontWeight: 600 }}>{label}</div>
+      <div style={{ fontSize: 12.5, color: "#CBD5E1", textAlign: "center", maxWidth: 110, lineHeight: 1.25, fontWeight: 700 }}>{label}</div>
     </div>
   );
 }
@@ -45,6 +44,10 @@ function scoreColor(v) {
 
 export default function InteractiveReport({ lead, audience = "client", onOpenPdf, onEditReport }) {
   const [showPdfDossier, setShowPdfDossier] = useState(false);
+  const [pdfErrorModal, setPdfErrorModal] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [pdfLoadingText, setPdfLoadingText] = useState("Structuring 10-Page Financial Dossier...");
+
   if (!lead) return null;
   const r = computeReport(lead);
   if (!r) return null;
@@ -52,6 +55,8 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
   const isConsultant = audience === "consultant";
   const age = Number(lead.age) || 0;
   const genDate = new Date(lead.updatedAt || lead.submittedAt || Date.now()).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
+
+  const hasData = Number(lead.income) > 0 || Number(lead.expenses) > 0 || Number(lead.savings) > 0 || (Array.isArray(lead.goals) && lead.goals.length > 0);
 
   // Priority recommendations logic
   const highPriority = [];
@@ -68,7 +73,7 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
     mediumPriority.push(`Build ${INR_L(r.emergencyGap)} in liquid emergency funds to reach 9 months buffer (${INR_L(r.emergencyTarget)}).`);
   }
   if (r.totalAnnual > r.annualSurplus) {
-    mediumPriority.push(`Annual goal investment (${INR_L(r.totalAnnual)}) exceeds annual net savings (${INR_L(r.annualSurplus)}) by ${INR_L(r.totalAnnual - r.annualSurplus)}. Phase short-term sips first.`);
+    mediumPriority.push(`Annual goal investment (${INR_L(r.totalAnnual)}) exceeds annual net savings (${INR_L(r.annualSurplus)}) by ${INR_L(r.totalAnnual - r.annualSurplus)}. Phase short-term investments first.`);
   } else {
     lowPriority.push(`Annual net savings (${INR_L(r.annualSurplus)}) covers all goals (${INR_L(r.totalAnnual)}) with ${INR_L(r.annualSurplus - r.totalAnnual)} remaining buffer.`);
   }
@@ -161,7 +166,11 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
               <span style={{ fontSize: 12, color: "var(--text-fog)" }}>Generated on {genDate}</span>
-              <span style={{ fontSize: 12, color: "var(--text-fog)" }}>&bull; Age {lead.age || "—"} ({lead.city || "Gurgaon"})</span>
+              {(lead.age || lead.city) && (
+                <span style={{ fontSize: 12, color: "var(--text-fog)" }}>
+                  &bull; {lead.age ? `Age ${lead.age}` : ""}{lead.age && lead.city ? " • " : ""}{lead.city ? lead.city : ""}
+                </span>
+              )}
             </div>
             <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "var(--text-main)", letterSpacing: "-0.01em" }}>Financial Fitness Report</h2>
           </div>
@@ -169,8 +178,22 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
           <button
             className="ff-btn-gold"
             onClick={() => {
-              if (onOpenPdf) onOpenPdf();
-              else setShowPdfDossier(true);
+              if (!hasData) {
+                setPdfErrorModal(true);
+                return;
+              }
+              setIsGeneratingPdf(true);
+              setPdfLoadingText("Structuring 10-Page Financial Dossier...");
+
+              setTimeout(() => setPdfLoadingText("Compounding Actuarial SWP Longevity..."), 500);
+              setTimeout(() => setPdfLoadingText("Applying Executive Layout Engine..."), 1000);
+              setTimeout(() => setPdfLoadingText("Rendering High-Resolution Dossier..."), 1400);
+
+              setTimeout(() => {
+                setIsGeneratingPdf(false);
+                if (onOpenPdf) onOpenPdf();
+                else setShowPdfDossier(true);
+              }, 1800);
             }}
             style={{
               padding: "12px 22px",
@@ -189,6 +212,59 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
           </button>
         </div>
       </div>
+
+      {/* MICRO-ANIMATION PDF GENERATION LOADING OVERLAY */}
+      {isGeneratingPdf && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(7, 8, 12, 0.88)", backdropFilter: "blur(12px)", zIndex: 99999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div style={{ background: "#141824", border: "1px solid var(--border-gold)", borderRadius: 20, padding: "36px 32px", maxWidth: 460, width: "100%", textAlign: "center", color: "#FFF", boxShadow: "0 24px 60px rgba(0,0,0,0.7)" }}>
+            <div style={{
+              width: 52,
+              height: 52,
+              border: "3px solid rgba(201, 154, 75, 0.2)",
+              borderTopColor: "var(--accent-gold)",
+              borderRadius: "50%",
+              animation: "spin 0.8s linear infinite",
+              margin: "0 auto 20px"
+            }} />
+            <h3 style={{ fontSize: 20, fontWeight: 800, color: "var(--text-main)", margin: "0 0 8px", fontFamily: "var(--font-serif)" }}>
+              Generating Report PDF
+            </h3>
+            <div style={{ fontSize: 13.5, color: "var(--accent-gold)", fontWeight: 600, minHeight: 24 }}>
+              {pdfLoadingText}
+            </div>
+            <div style={{ width: "100%", height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 2, marginTop: 20, overflow: "hidden" }}>
+              <div style={{ width: "100%", height: "100%", background: "linear-gradient(90deg, #C8A74D 0%, #3E9F6E 100%)", animation: "progressPulse 1.8s ease-in-out infinite" }} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ERROR POPUP MODAL WHEN FORM DATA IS EMPTY */}
+      {pdfErrorModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(7, 8, 12, 0.85)", backdropFilter: "blur(10px)", zIndex: 99999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div style={{ background: "#141824", border: "1px solid var(--border-gold)", borderRadius: 16, padding: "32px 28px", maxWidth: 440, width: "100%", textAlign: "center", color: "#FFF", boxShadow: "0 24px 60px rgba(0,0,0,0.6)" }}>
+            <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(239, 68, 68, 0.15)", border: "1px solid rgba(239, 68, 68, 0.3)", color: "#F87171", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <AlertTriangle size={28} />
+            </div>
+            <h3 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 10px", color: "var(--text-main)", fontFamily: "var(--font-serif)" }}>
+              Form Data Required
+            </h3>
+            <p style={{ fontSize: 13.5, color: "var(--text-fog)", lineHeight: 1.6, margin: "0 0 24px" }}>
+              No financial data has been entered in the form, so a PDF report cannot be generated. Please fill in your details (age, income, expenses, and goals) in the evaluation form first.
+            </p>
+            <button
+              onClick={() => {
+                setPdfErrorModal(false);
+                if (typeof onEditReport === "function") onEditReport();
+              }}
+              className="ff-btn-gold"
+              style={{ width: "100%", height: 48, borderRadius: 12, fontWeight: 700, fontSize: 14.5, cursor: "pointer" }}
+            >
+              Complete Evaluation Form
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Quick Profile Metrics Grid */}
       <div className="ffr-info-grid">
@@ -378,7 +454,7 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
                   {isConsultant && (
                     <div style={{ marginTop: 10, paddingTop: 8, borderTop: "1px dashed var(--border-subtle)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span className={`ff-badge ${row.bucket === "short" ? "ff-badge-ok" : "ff-badge-gap"}`}>
-                        {row.bucket === "short" ? "Recommend: RD/FD/SIP" : "Recommend: Guaranteed Plan"}
+                        {row.bucket === "short" ? "Recommend: Short-Term Investment" : "Recommend: Guaranteed Plan"}
                         {row.bucket !== "short" && Number(age) < PPF_AGE_LIMIT ? " + PPF" : ""}
                       </span>
                     </div>

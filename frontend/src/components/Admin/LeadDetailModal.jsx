@@ -201,8 +201,8 @@ export default function LeadDetailModal({ lead, onClose }) {
                   </div>
 
                   <div style={{ background: "rgba(255, 255, 255, 0.03)", padding: 16, borderRadius: 12, border: "1px solid var(--border-subtle)" }}>
-                    <div style={{ fontSize: 12, color: "var(--accent-gold)", fontWeight: 700 }}>3. Retirement & Goal Systematic SIP</div>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-main)", margin: "4px 0" }}>Guaranteed Plan + Equity SIP ({INR(r.totalAnnual / 12)}/mo)</div>
+                    <div style={{ fontSize: 12, color: "var(--accent-gold)", fontWeight: 700 }}>3. Retirement & Goal Systematic Investment</div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-main)", margin: "4px 0" }}>Guaranteed Plan + Equity Investment ({INR(r.totalAnnual / 12)}/mo)</div>
                     <div style={{ fontSize: 12, color: "var(--text-fog)" }}>Fully funded by client monthly savings ({INR_L(r.monthlySurplus)})</div>
                   </div>
                 </div>

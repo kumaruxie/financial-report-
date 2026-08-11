@@ -5,17 +5,44 @@ import { computeReport, INR, INR_L, EDU_INFLATION, MARRIAGE_INFLATION, RETIREMEN
 export default function EnterprisePdfDossier({ lead, onClose }) {
   if (!lead) return null;
   const r = computeReport(lead);
+  if (!r) return null;
+
+  const hasInputs = Number(lead.income) > 0 || Number(lead.expenses) > 0 || Number(lead.savings) > 0 || (Array.isArray(lead.goals) && lead.goals.length > 0);
 
   const reportId = lead._id || lead.id || `YWC-2026-${Math.floor(1000 + Math.random() * 9000)}`;
   const dateStr = new Date(lead.submittedAt || Date.now()).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
 
+  const [isPrinting, setIsPrinting] = React.useState(false);
+  const [printStatusText, setPrintStatusText] = React.useState("Preparing Document Layout...");
+
   const handlePrint = () => {
-    window.print();
+    setIsPrinting(true);
+    setPrintStatusText("Preparing Document Layout...");
+    setTimeout(() => setPrintStatusText("Formatting High-Res Vector Pages..."), 400);
+    setTimeout(() => setPrintStatusText("Launching System Print Interface..."), 800);
+    setTimeout(() => {
+      setIsPrinting(false);
+      window.print();
+    }, 1200);
   };
 
-  const getDots = (p) => "■".repeat(p) + "□".repeat(10 - p);
-
   const scoreColor = (s) => (s >= 70 ? "#10B981" : s >= 40 ? "#C99A4B" : "#F87171");
+
+  if (!hasInputs) {
+    return (
+      <div className="epdf-modal-overlay">
+        <div style={{ maxWidth: 500, background: "#0F172A", border: "1px solid rgba(255, 255, 255, 0.15)", borderRadius: 16, padding: 32, textAlign: "center", color: "#FFF", marginTop: 100 }}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: "#C8A74D", marginBottom: 12 }}>No Financial Data Entered</div>
+          <p style={{ fontSize: 14, color: "#94A3B8", lineHeight: 1.6, marginBottom: 24 }}>
+            Please complete the evaluation wizard (enter income, expenses, age, and goals) to generate your customized 10-page Financial Fitness Dossier.
+          </p>
+          <button onClick={onClose} style={{ background: "#C8A74D", color: "#07080C", border: "none", borderRadius: 8, padding: "12px 24px", fontWeight: 700, cursor: "pointer" }}>
+            Return to Wizard Form
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="epdf-modal-overlay">
@@ -239,6 +266,24 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
         </div>
       </div>
 
+      {isPrinting && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.92)", backdropFilter: "blur(8px)", zIndex: 999999, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: "#1E293B", border: "1px solid #C8A74D", borderRadius: 16, padding: "28px 36px", textAlign: "center", color: "#FFF" }}>
+            <div style={{
+              width: 40,
+              height: 40,
+              border: "3px solid rgba(200, 167, 77, 0.2)",
+              borderTopColor: "#C8A74D",
+              borderRadius: "50%",
+              animation: "spin 0.8s linear infinite",
+              margin: "0 auto 14px"
+            }} />
+            <div style={{ fontSize: 16, fontWeight: 700, color: "#FFF" }}>Preparing Print Engine</div>
+            <div style={{ fontSize: 13, color: "#C8A74D", fontWeight: 600, marginTop: 4 }}>{printStatusText}</div>
+          </div>
+        </div>
+      )}
+
       {/* DECOUPLED 10-PAGE A4 PDF DOCUMENT */}
       <div className="epdf-document">
 
@@ -249,9 +294,14 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
 
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 12 }}>
-              <div className="epdf-brand" style={{ fontSize: 20, color: "#1B2035" }}>Your <span style={{ color: "#C8A74D" }}>Wealth Compass</span></div>
-              <div style={{ fontSize: 11, color: "#6B7280", fontWeight: 700, fontFamily: "'JetBrains Mono', monospace" }}>
-                Report ID: {reportId}
+              <div className="epdf-brand" style={{ fontSize: 20, color: "#1B2035" }}>Your <span style={{ color: "#C8A74D" }}>Wealth</span> Compass</div>
+              <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                <div style={{ fontSize: 11, color: "#6B7280", fontWeight: 700, fontFamily: "'JetBrains Mono', monospace" }}>
+                  Report ID: {reportId}
+                </div>
+                <div style={{ fontSize: 10, color: "#C8A74D", fontWeight: 800, background: "#FFFBEB", border: "1px solid #FCD34D", padding: "2px 8px", borderRadius: 4 }}>
+                  Page 1 of 10
+                </div>
               </div>
             </div>
 
@@ -272,8 +322,10 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             {/* Prepared For Box */}
             <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10, padding: "18px 22px", marginBottom: 24, boxShadow: "0 4px 12px rgba(0,0,0,0.03)" }}>
               <div style={{ fontSize: 9.5, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, letterSpacing: "0.1em" }}>PREPARED EXCLUSIVELY FOR</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: "#1B2035", marginTop: 4 }}>{lead.name ? lead.name.toUpperCase() : "CLIENT"}</div>
-              <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>Age {lead.age || 43} &bull; {lead.city || "Gurgaon"}</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: "#1B2035", marginTop: 4 }}>{lead.name ? lead.name.toUpperCase() : "CLIENT PROFILE"}</div>
+              <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>
+                {lead.age ? `Age ${lead.age}` : "Age Unspecified"}{lead.city ? ` • ${lead.city}` : ""}
+              </div>
             </div>
 
             {/* Score Callout Card */}
@@ -311,17 +363,11 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             </div>
           </div>
 
-          {/* Metadata Grid & Footer */}
+          {/* Metadata Grid */}
           <div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, borderTop: "1px solid #E5E7EB", paddingTop: 14, marginBottom: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, borderTop: "1px solid #E5E7EB", paddingTop: 14 }}>
               <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>GENERATED ON</div><div style={{ fontSize: 11.5, fontWeight: 700, color: "#1B2035" }}>{dateStr}</div></div>
-              <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>REPORT ID</div><div style={{ fontSize: 11.5, fontWeight: 700, color: "#1B2035", fontFamily: "monospace" }}>{reportId}</div></div>
               <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>PREPARED BY</div><div style={{ fontSize: 11.5, fontWeight: 700, color: "#1B2035" }}>apkacoach.com</div></div>
-            </div>
-
-            <div className="epdf-footer" style={{ borderTop: "1px solid #E5E7EB", paddingTop: 10, fontSize: 9.5, color: "#6B7280", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>Prepared using apkacoach.com</div>
-              <div>Generated on {dateStr}</div>
             </div>
           </div>
         </div>
@@ -332,9 +378,12 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             <div className="epdf-header" style={{ borderColor: "#E5E7EB", display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 10, marginBottom: 16 }}>
               <div>
                 <div className="epdf-brand" style={{ color: "#1B2035", fontSize: 15, fontWeight: 800, margin: 0 }}>
-                  Your <span style={{ color: "#C8A74D" }}>Wealth Compass</span>
+                  Your <span style={{ color: "#C8A74D" }}>Wealth</span> Compass
                 </div>
                 <div style={{ fontSize: 9.5, color: "#6B7280", marginTop: 1 }}>Financial Fitness Report</div>
+              </div>
+              <div style={{ fontSize: 10, color: "#C8A74D", fontWeight: 800, background: "#FFFBEB", border: "1px solid #FCD34D", padding: "2px 8px", borderRadius: 4 }}>
+                Page 2 of 10
               </div>
             </div>
 
@@ -347,7 +396,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
                 <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>Monthly Income</div><div style={{ fontSize: 14, fontWeight: 700, color: "#1B2035" }}>{INR_L(lead.income)}</div></div>
                 <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>Monthly Net Savings</div><div style={{ fontSize: 14, fontWeight: 700, color: "#C8A74D" }}>{INR_L(r.monthlySurplus)}</div></div>
                 <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>Current Savings</div><div style={{ fontSize: 14, fontWeight: 700, color: "#1B2035" }}>{INR_L(lead.savings)}</div></div>
-                <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>Current Age</div><div style={{ fontSize: 14, fontWeight: 700, color: "#1B2035" }}>{lead.age || 43} yrs</div></div>
+                <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>Current Age</div><div style={{ fontSize: 14, fontWeight: 700, color: "#1B2035" }}>{lead.age ? `${lead.age} yrs` : "—"}</div></div>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, paddingTop: 10, borderTop: "1px dashed #E5E7EB" }}>
                 <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>Retirement Target</div><div style={{ fontSize: 14, fontWeight: 700, color: "#1B2035" }}>{lead.retirementAge || 60} yrs</div></div>
@@ -392,10 +441,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             </div>
           </div>
 
-          <div className="epdf-footer" style={{ borderTop: "1px solid #E5E7EB", paddingTop: 10, fontSize: 9.5, color: "#6B7280", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>Prepared using apkacoach.com</div>
-            <div>Generated on {dateStr}</div>
-          </div>
+          <div className="epdf-footer" style={{ display: "none" }}></div>
         </div>
 
         {/* ================= PAGE 3: FINANCIAL HEALTH & CASHFLOW ANALYSIS ================= */}
@@ -404,9 +450,12 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             <div className="epdf-header" style={{ borderColor: "#E5E7EB", display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 10, marginBottom: 16 }}>
               <div>
                 <div className="epdf-brand" style={{ color: "#1B2035", fontSize: 15, fontWeight: 800, margin: 0 }}>
-                  Your <span style={{ color: "#C8A74D" }}>Wealth Compass</span>
+                  Your <span style={{ color: "#C8A74D" }}>Wealth</span> Compass
                 </div>
                 <div style={{ fontSize: 9.5, color: "#6B7280", marginTop: 1 }}>Financial Fitness Report</div>
+              </div>
+              <div style={{ fontSize: 10, color: "#C8A74D", fontWeight: 800, background: "#FFFBEB", border: "1px solid #FCD34D", padding: "2px 8px", borderRadius: 4 }}>
+                Page 3 of 10
               </div>
             </div>
 
@@ -518,10 +567,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             </div>
           </div>
 
-          <div className="epdf-footer" style={{ borderTop: "1px solid #E5E7EB", paddingTop: 10, fontSize: 9.5, color: "#6B7280", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>Prepared using apkacoach.com</div>
-            <div>Generated on {dateStr}</div>
-          </div>
+          <div className="epdf-footer" style={{ display: "none" }}></div>
         </div>
 
         {/* ================= PAGE 4: GOAL PLANNING & INFLATION IMPACT ================= */}
@@ -530,9 +576,12 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             <div className="epdf-header" style={{ borderColor: "#E5E7EB", display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 10, marginBottom: 16 }}>
               <div>
                 <div className="epdf-brand" style={{ color: "#1B2035", fontSize: 15, fontWeight: 800, margin: 0 }}>
-                  Your <span style={{ color: "#C8A74D" }}>Wealth Compass</span>
+                  Your <span style={{ color: "#C8A74D" }}>Wealth</span> Compass
                 </div>
                 <div style={{ fontSize: 9.5, color: "#6B7280", marginTop: 1 }}>Financial Fitness Report</div>
+              </div>
+              <div style={{ fontSize: 10, color: "#C8A74D", fontWeight: 800, background: "#FFFBEB", border: "1px solid #FCD34D", padding: "2px 8px", borderRadius: 4 }}>
+                Page 4 of 10
               </div>
             </div>
 
@@ -633,10 +682,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             )}
           </div>
 
-          <div className="epdf-footer" style={{ borderTop: "1px solid #E5E7EB", paddingTop: 10, fontSize: 9.5, color: "#6B7280", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>Prepared using apkacoach.com</div>
-            <div>Generated on {dateStr}</div>
-          </div>
+          <div className="epdf-footer" style={{ display: "none" }}></div>
         </div>
 
         {/* ================= PAGE 5: RETIREMENT BLUEPRINT & SWP SIMULATION ================= */}
@@ -645,9 +691,12 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             <div className="epdf-header" style={{ borderColor: "#E5E7EB", display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 10, marginBottom: 16 }}>
               <div>
                 <div className="epdf-brand" style={{ color: "#1B2035", fontSize: 15, fontWeight: 800, margin: 0 }}>
-                  Your <span style={{ color: "#C8A74D" }}>Wealth Compass</span>
+                  Your <span style={{ color: "#C8A74D" }}>Wealth</span> Compass
                 </div>
                 <div style={{ fontSize: 9.5, color: "#6B7280", marginTop: 1 }}>Financial Fitness Report</div>
+              </div>
+              <div style={{ fontSize: 10, color: "#C8A74D", fontWeight: 800, background: "#FFFBEB", border: "1px solid #FCD34D", padding: "2px 8px", borderRadius: 4 }}>
+                Page 5 of 10
               </div>
             </div>
 
@@ -758,10 +807,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             </div>
           </div>
 
-          <div className="epdf-footer" style={{ borderTop: "1px solid #E5E7EB", paddingTop: 10, fontSize: 9.5, color: "#6B7280", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>Prepared using apkacoach.com</div>
-            <div>Generated on {dateStr}</div>
-          </div>
+          <div className="epdf-footer" style={{ display: "none" }}></div>
         </div>
 
         {/* ================= PAGE 6: RISK PROTECTION & INSURANCE AUDIT ================= */}
@@ -770,9 +816,12 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             <div className="epdf-header" style={{ borderColor: "#E5E7EB", display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 10, marginBottom: 16 }}>
               <div>
                 <div className="epdf-brand" style={{ color: "#1B2035", fontSize: 15, fontWeight: 800, margin: 0 }}>
-                  Your <span style={{ color: "#C8A74D" }}>Wealth Compass</span>
+                  Your <span style={{ color: "#C8A74D" }}>Wealth</span> Compass
                 </div>
                 <div style={{ fontSize: 9.5, color: "#6B7280", marginTop: 1 }}>Financial Fitness Report</div>
+              </div>
+              <div style={{ fontSize: 10, color: "#C8A74D", fontWeight: 800, background: "#FFFBEB", border: "1px solid #FCD34D", padding: "2px 8px", borderRadius: 4 }}>
+                Page 6 of 10
               </div>
             </div>
 
@@ -887,11 +936,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             </div>
           </div>
 
-          <div className="epdf-footer" style={{ borderTop: "1px solid #E5E7EB", paddingTop: 10, fontSize: 9.5, color: "#6B7280", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>Prepared using Your Wealth Compass</div>
-            <div>Generated on {dateStr}</div>
-            <div>Page 6 of 10</div>
-          </div>
+          <div className="epdf-footer" style={{ display: "none" }}></div>
         </div>
 
         {/* ================= PAGE 7: FINANCIAL ACTION ROADMAP (90-DAY PLAN) ================= */}
@@ -900,111 +945,82 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             <div className="epdf-header" style={{ borderColor: "#E5E7EB", display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 10, marginBottom: 16 }}>
               <div>
                 <div className="epdf-brand" style={{ color: "#1B2035", fontSize: 15, fontWeight: 800, margin: 0 }}>
-                  Your <span style={{ color: "#C8A74D" }}>Wealth Compass</span>
+                  Your <span style={{ color: "#C8A74D" }}>Wealth</span> Compass
                 </div>
                 <div style={{ fontSize: 9.5, color: "#6B7280", marginTop: 1 }}>Financial Fitness Report</div>
               </div>
+              <div style={{ fontSize: 10, color: "#C8A74D", fontWeight: 800, background: "#FFFBEB", border: "1px solid #FCD34D", padding: "2px 8px", borderRadius: 4 }}>
+                Page 7 of 10
+              </div>
             </div>
 
-            <h2 className="epdf-h2" style={{ color: "#1B2035", fontSize: 22, margin: "0 0 4px" }}>Financial Action Roadmap (90-Day Execution Plan)</h2>
-            <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 14px" }}>
-              Prioritized step-by-step execution timeline for risk protection, emergency reserves, and systematic goal investments.
+            <h2 className="epdf-h2" style={{ color: "#1B2035", fontSize: 22, margin: "0 0 4px" }}>Financial Action Roadmap</h2>
+            <p style={{ fontSize: 12, color: "#6B7280", margin: "0 0 16px" }}>
+              Prioritized execution roadmap for risk protection, emergency reserves, and systematic goal investments.
             </p>
 
-            {/* TOP HERO: 3 KPI CARDS */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 14 }}>
-              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 12 }}>
-                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>OVERALL COMPLETION</div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: "#1B2035", marginTop: 2 }}>32% Baseline</div>
-              </div>
-              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 12 }}>
-                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>CRITICAL TASKS</div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: "#C05656", marginTop: 2 }}>2 Priority Items</div>
-              </div>
-              <div style={{ background: "#FFFFFF", border: "1px solid #3E9F6E", borderRadius: 8, padding: 12 }}>
-                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>RECOMMENDED ACTIONS</div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: "#3E9F6E", marginTop: 2 }}>7 Action Steps</div>
-              </div>
-            </div>
-
-            {/* ROW 2: PRIORITY EXECUTION FLOW (LEFT 60%) + PRIORITY MATRIX (RIGHT 40%) */}
-            <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: 12, marginBottom: 14 }}>
-              {/* Left: Priority Execution Flow */}
-              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10, padding: 12 }}>
-                <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 8 }}>PRIORITY EXECUTION FLOW</div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 10.5 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 10px", background: "#FEF2F2", borderRadius: 4, border: "1px solid #FCA5A5" }}>
-                    <span><b>Priority 1:</b> Increase Term Insurance ({INR_L(r.termGap)})</span>
-                    <span style={{ color: "#C05656", fontWeight: 700 }}>Critical</span>
+            {/* PRIORITY EXECUTION FLOW */}
+            <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10, padding: 14, marginBottom: 16 }}>
+              <div style={{ fontSize: 11, textTransform: "uppercase", color: "#1B2035", fontWeight: 800, marginBottom: 10 }}>PRIORITY EXECUTION FLOW</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 11 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", background: "#FEF2F2", borderRadius: 6, border: "1px solid #FCA5A5" }}>
+                  <div>
+                    <b>Priority 1 — Increase Term Insurance</b>
+                    <div style={{ fontSize: 10, color: "#991B1B", marginTop: 2 }}>Increase term life cover to the required protection level ({INR_L(r.termGap)} gap).</div>
                   </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 10px", background: "#FFFBEB", borderRadius: 4, border: "1px solid #FCD34D" }}>
-                    <span><b>Priority 2:</b> Health Insurance Buffer ({INR_L(r.healthTarget)})</span>
-                    <span style={{ color: "#C8A74D", fontWeight: 700 }}>Medium</span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 10px", background: "#ECFDF5", borderRadius: 4, border: "1px solid #A7F3D0" }}>
-                    <span><b>Priority 3:</b> Retirement Foundation ({INR_L(Math.round(r.retirement.annual / 12))}/mo)</span>
-                    <span style={{ color: "#065F46", fontWeight: 700 }}>High</span>
-                  </div>
+                  <span style={{ color: "#C05656", fontWeight: 800, fontSize: 10, background: "#FFF", padding: "2px 8px", borderRadius: 4 }}>CRITICAL</span>
                 </div>
-              </div>
 
-              {/* Right: Priority Matrix (2x2) */}
-              <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 10, padding: 12 }}>
-                <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 8 }}>PRIORITY IMPACT MATRIX</div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 10 }}>
-                  <div style={{ background: "#FEF2F2", border: "1px solid #FCA5A5", padding: 8, borderRadius: 6 }}>
-                    <div style={{ fontWeight: 800, color: "#991B1B", fontSize: 9 }}>HIGH IMPACT / URGENT</div>
-                    <div style={{ marginTop: 4, color: "#1B2035" }}>&bull; Term Insurance Top-Up<br />&bull; Retirement Investment</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", background: "#FFFBEB", borderRadius: 6, border: "1px solid #FCD34D" }}>
+                  <div>
+                    <b>Priority 2 — Health Insurance / Emergency Fund</b>
+                    <div style={{ fontSize: 10, color: "#92400E", marginTop: 2 }}>Establish health insurance floater ({INR_L(r.healthTarget)}) and liquid emergency buffer ({INR_L(r.emergencyGap)}).</div>
                   </div>
-                  <div style={{ background: "#ECFDF5", border: "1px solid #A7F3D0", padding: 8, borderRadius: 6 }}>
-                    <div style={{ fontWeight: 800, color: "#065F46", fontSize: 9 }}>HIGH IMPACT / SCHEDULED</div>
-                    <div style={{ marginTop: 4, color: "#1B2035" }}>&bull; Milestone Goal Investments</div>
+                  <span style={{ color: "#C8A74D", fontWeight: 800, fontSize: 10, background: "#FFF", padding: "2px 8px", borderRadius: 4 }}>MEDIUM</span>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", background: "#ECFDF5", borderRadius: 6, border: "1px solid #A7F3D0" }}>
+                  <div>
+                    <b>Priority 3 — Retirement / Goal Investment</b>
+                    <div style={{ fontSize: 10, color: "#065F46", marginTop: 2 }}>Allocate remaining monthly investment capacity towards retirement ({INR_L(Math.round(r.retirement.annual / 12))}/mo) and milestone goals.</div>
                   </div>
-                  <div style={{ background: "#FFFBEB", border: "1px solid #FCD34D", padding: 8, borderRadius: 6, gridColumn: "span 2" }}>
-                    <div style={{ fontWeight: 800, color: "#92400E", fontSize: 9 }}>LOW URGENCY / FOUNDATIONAL</div>
-                    <div style={{ marginTop: 2, color: "#1B2035" }}>&bull; Emergency Reserve Buffer &bull; Health Policy Review</div>
-                  </div>
+                  <span style={{ color: "#065F46", fontWeight: 800, fontSize: 10, background: "#FFF", padding: "2px 8px", borderRadius: 4 }}>HIGH</span>
                 </div>
               </div>
             </div>
 
-            {/* ROW 3: DETAILED ACTION CARDS */}
+            {/* DEDICATED ACTION STEP CARDS */}
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 8 }}>DETAILED ACTION STEP CARDS</div>
+              <div style={{ fontSize: 11, textTransform: "uppercase", color: "#1B2035", fontWeight: 800, marginBottom: 10 }}>DEDICATED ACTION CARDS</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
                 {/* Priority 1 Card */}
-                <div style={{ background: "#FFFFFF", border: "1px solid #C05656", borderRadius: 8, padding: 10 }}>
+                <div style={{ background: "#FFFFFF", border: "1px solid #C05656", borderRadius: 8, padding: 12 }}>
                   <div style={{ fontSize: 9, fontWeight: 800, color: "#C05656", textTransform: "uppercase" }}>PRIORITY 1 &bull; IMMEDIATE</div>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: "#1B2035", margin: "2px 0" }}>Increase Term Insurance</div>
-                  <div style={{ fontSize: 10, color: "#6B7280" }}>Current: <b>{INR_L(r.currentTerm)}</b></div>
-                  <div style={{ fontSize: 10, color: "#6B7280" }}>Target: <b>{INR_L(r.recommendedCover)}</b></div>
-                  <div style={{ fontSize: 10.5, fontWeight: 700, color: "#C05656", marginTop: 4 }}>Top-Up Gap: {INR_L(r.termGap)}</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: "#1B2035", margin: "4px 0" }}>Increase Term Insurance</div>
+                  <div style={{ fontSize: 10.5, color: "#6B7280" }}>Current: <b>{INR_L(r.currentTerm)}</b></div>
+                  <div style={{ fontSize: 10.5, color: "#6B7280" }}>Target: <b>{INR_L(r.recommendedCover)}</b></div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#C05656", marginTop: 6 }}>Top-Up Gap: {INR_L(r.termGap)}</div>
                 </div>
 
                 {/* Priority 2 Card */}
-                <div style={{ background: "#FFFFFF", border: "1px solid #C8A74D", borderRadius: 8, padding: 10 }}>
+                <div style={{ background: "#FFFFFF", border: "1px solid #C8A74D", borderRadius: 8, padding: 12 }}>
                   <div style={{ fontSize: 9, fontWeight: 800, color: "#C8A74D", textTransform: "uppercase" }}>PRIORITY 2 &bull; SHORT TERM</div>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: "#1B2035", margin: "2px 0" }}>Health Insurance Buffer</div>
-                  <div style={{ fontSize: 10, color: "#6B7280" }}>Target Cover: <b>{INR_L(r.healthTarget)}</b></div>
-                  <div style={{ fontSize: 10, color: "#6B7280" }}>Emergency Reserve: <b>{INR_L(r.emergencyTarget)}</b></div>
-                  <div style={{ fontSize: 10.5, fontWeight: 700, color: "#C8A74D", marginTop: 4 }}>Buffer Gap: {INR_L(r.emergencyGap)}</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: "#1B2035", margin: "4px 0" }}>Health & Emergency</div>
+                  <div style={{ fontSize: 10.5, color: "#6B7280" }}>Target Cover: <b>{INR_L(r.healthTarget)}</b></div>
+                  <div style={{ fontSize: 10.5, color: "#6B7280" }}>Emergency Reserve: <b>{INR_L(r.emergencyTarget)}</b></div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#C8A74D", marginTop: 6 }}>Buffer Gap: {INR_L(r.emergencyGap)}</div>
                 </div>
 
                 {/* Priority 3 Card */}
-                <div style={{ background: "#FFFFFF", border: "1px solid #3E9F6E", borderRadius: 8, padding: 10 }}>
+                <div style={{ background: "#FFFFFF", border: "1px solid #3E9F6E", borderRadius: 8, padding: 12 }}>
                   <div style={{ fontSize: 9, fontWeight: 800, color: "#3E9F6E", textTransform: "uppercase" }}>PRIORITY 3 &bull; LONG TERM</div>
-                  <div style={{ fontSize: 12, fontWeight: 800, color: "#1B2035", margin: "2px 0" }}>Retirement Foundation</div>
-                  <div style={{ fontSize: 10, color: "#6B7280" }}>Monthly Target: <b>{INR_L(Math.round(r.retirement.annual / 12))}/mo</b></div>
-                  <div style={{ fontSize: 10, color: "#6B7280" }}>Horizon: <b>{r.retirement.yearsToRetire} Years</b></div>
-                  <div style={{ fontSize: 10.5, fontWeight: 700, color: "#3E9F6E", marginTop: 4 }}>Corpus Target: {INR_L(r.retirement.corpusNeeded)}</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: "#1B2035", margin: "4px 0" }}>Retirement Foundation</div>
+                  <div style={{ fontSize: 10.5, color: "#6B7280" }}>Monthly Target: <b>{INR_L(Math.round(r.retirement.annual / 12))}/mo</b></div>
+                  <div style={{ fontSize: 10.5, color: "#6B7280" }}>Horizon: <b>{r.retirement.yearsToRetire} Years</b></div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#3E9F6E", marginTop: 6 }}>Corpus Target: {INR_L(r.retirement.corpusNeeded)}</div>
                 </div>
               </div>
             </div>
-          </div>
-
-          <div className="epdf-footer" style={{ borderTop: "1px solid #E5E7EB", paddingTop: 10, fontSize: 9.5, color: "#6B7280", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>Prepared using apkacoach.com</div>
-            <div>Generated on {dateStr}</div>
           </div>
         </div>
 
@@ -1014,9 +1030,12 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             <div className="epdf-header" style={{ borderColor: "#E5E7EB", display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 10, marginBottom: 16 }}>
               <div>
                 <div className="epdf-brand" style={{ color: "#1B2035", fontSize: 15, fontWeight: 800, margin: 0 }}>
-                  Your <span style={{ color: "#C8A74D" }}>Wealth Compass</span>
+                  Your <span style={{ color: "#C8A74D" }}>Wealth</span> Compass
                 </div>
                 <div style={{ fontSize: 9.5, color: "#6B7280", marginTop: 1 }}>Financial Fitness Report</div>
+              </div>
+              <div style={{ fontSize: 10, color: "#C8A74D", fontWeight: 800, background: "#FFFBEB", border: "1px solid #FCD34D", padding: "2px 8px", borderRadius: 4 }}>
+                Page 8 of 10
               </div>
             </div>
 
@@ -1077,10 +1096,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             </div>
           </div>
 
-          <div className="epdf-footer" style={{ borderTop: "1px solid #E5E7EB", paddingTop: 10, fontSize: 9.5, color: "#6B7280", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>Prepared using apkacoach.com</div>
-            <div>Generated on {dateStr}</div>
-          </div>
+          <div className="epdf-footer" style={{ display: "none" }}></div>
         </div>
 
         {/* ================= PAGE 9: FINANCIAL PROJECTION & SCENARIO ANALYSIS ================= */}
@@ -1089,9 +1105,12 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             <div className="epdf-header" style={{ borderColor: "#E5E7EB", display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 10, marginBottom: 16 }}>
               <div>
                 <div className="epdf-brand" style={{ color: "#1B2035", fontSize: 15, fontWeight: 800, margin: 0 }}>
-                  Your <span style={{ color: "#C8A74D" }}>Wealth Compass</span>
+                  Your <span style={{ color: "#C8A74D" }}>Wealth</span> Compass
                 </div>
                 <div style={{ fontSize: 9.5, color: "#6B7280", marginTop: 1 }}>Financial Fitness Report</div>
+              </div>
+              <div style={{ fontSize: 10, color: "#C8A74D", fontWeight: 800, background: "#FFFBEB", border: "1px solid #FCD34D", padding: "2px 8px", borderRadius: 4 }}>
+                Page 9 of 10
               </div>
             </div>
 
@@ -1103,20 +1122,20 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             {/* TOP HERO: 4 KPI CARDS */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 14 }}>
               <div style={{ background: "#FFFFFF", border: "1px solid #C8A74D", borderRadius: 8, padding: 12 }}>
-                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>NET WORTH @ AGE 60</div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: "#C8A74D", marginTop: 2 }}>₹5.82 Cr</div>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>RETIREMENT CORPUS TARGET</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#C8A74D", marginTop: 2 }}>{INR_L(r.retirement.corpusNeeded)}</div>
               </div>
               <div style={{ background: "#FFFFFF", border: "1px solid #3E9F6E", borderRadius: 8, padding: 12 }}>
                 <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>GOAL SUCCESS PROBABILITY</div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: "#3E9F6E", marginTop: 2 }}>94%</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#3E9F6E", marginTop: 2 }}>{r.scores.goalPreparedness}%</div>
               </div>
               <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 12 }}>
                 <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>FINANCIAL INDEPENDENCE</div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: "#1B2035", marginTop: 2 }}>Age 60</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#1B2035", marginTop: 2 }}>Age {lead.retirementAge || 60}</div>
               </div>
               <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 12 }}>
                 <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase", fontWeight: 700 }}>RISK PROFILE</div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: "#1B2035", marginTop: 2 }}>Moderate</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#1B2035", marginTop: 2 }}>Balanced</div>
               </div>
             </div>
 
@@ -1135,27 +1154,27 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
                   <tr style={{ borderBottom: "1px dashed #F1F5F9" }}>
                     <td style={{ padding: "6px 8px", fontWeight: 600 }}>Retirement Corpus</td>
                     <td style={{ textAlign: "center", color: "#C05656" }}>{INR_L(r.retirement.corpusNeeded)}</td>
-                    <td style={{ textAlign: "center", color: "#3E9F6E", fontWeight: 700 }}>₹3.25 Cr</td>
+                    <td style={{ textAlign: "center", color: "#3E9F6E", fontWeight: 700 }}>{INR_L(r.retirement.corpusNeeded)}</td>
                   </tr>
                   <tr style={{ borderBottom: "1px dashed #F1F5F9" }}>
                     <td style={{ padding: "6px 8px", fontWeight: 600 }}>Goal Completion Rate</td>
-                    <td style={{ textAlign: "center", color: "#C05656" }}>72% Partial</td>
-                    <td style={{ textAlign: "center", color: "#3E9F6E", fontWeight: 700 }}>100% Fully Funded</td>
+                    <td style={{ textAlign: "center", color: "#C05656" }}>{r.scores.goalPreparedness}% Funded</td>
+                    <td style={{ textAlign: "center", color: "#3E9F6E", fontWeight: 700 }}>100% Target Plan</td>
                   </tr>
                   <tr style={{ borderBottom: "1px dashed #F1F5F9" }}>
                     <td style={{ padding: "6px 8px", fontWeight: 600 }}>Post-Retirement Monthly Income</td>
-                    <td style={{ textAlign: "center", color: "#C05656" }}>{INR_L(r.retirement.annualExpenseAtRetirement / 12)}/mo</td>
-                    <td style={{ textAlign: "center", color: "#3E9F6E", fontWeight: 700 }}>₹1.15 L/mo</td>
+                    <td style={{ textAlign: "center", color: "#C05656" }}>{INR_L(Math.round(r.retirement.annualExpenseAtRetirement / 12))}/mo</td>
+                    <td style={{ textAlign: "center", color: "#3E9F6E", fontWeight: 700 }}>{INR_L(Math.round(r.retirement.annualExpenseAtRetirement / 12))}/mo</td>
                   </tr>
                   <tr style={{ borderBottom: "1px dashed #F1F5F9" }}>
-                    <td style={{ padding: "6px 8px", fontWeight: 600 }}>Corpus Exhaustion Age</td>
-                    <td style={{ textAlign: "center", color: "#C05656" }}>Age 78 Vulnerability</td>
-                    <td style={{ textAlign: "center", color: "#3E9F6E", fontWeight: 700 }}>Age 91+ Sustainable</td>
+                    <td style={{ padding: "6px 8px", fontWeight: 600 }}>Corpus Sustainable Horizon</td>
+                    <td style={{ textAlign: "center", color: "#C05656" }}>Age 85 Life Expectancy</td>
+                    <td style={{ textAlign: "center", color: "#3E9F6E", fontWeight: 700 }}>Age 85+ Guaranteed</td>
                   </tr>
                   <tr>
-                    <td style={{ padding: "6px 8px", fontWeight: 600 }}>Legacy Wealth for Family</td>
+                    <td style={{ padding: "6px 8px", fontWeight: 600 }}>Legacy Reserve Target</td>
                     <td style={{ textAlign: "center", color: "#C05656" }}>₹0</td>
-                    <td style={{ textAlign: "center", color: "#C8A74D", fontWeight: 700 }}>₹1.40 Cr Reserve</td>
+                    <td style={{ textAlign: "center", color: "#C8A74D", fontWeight: 700 }}>{INR_L(Math.round(r.retirement.corpusNeeded * 0.2))} Reserve</td>
                   </tr>
                 </tbody>
               </table>
@@ -1166,37 +1185,32 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
               <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 8 }}>SENSITIVITY STRESS TEST CARDS ("WHAT-IF" ANALYSIS)</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
                 <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 10 }}>
-                  <div style={{ fontSize: 9.5, fontWeight: 800, color: "#C05656", textTransform: "uppercase" }}>IF INFLATION RISES TO 8%</div>
-                  <div style={{ fontSize: 10, color: "#6B7280", marginTop: 4 }}>Corpus Required: <b style={{ color: "#1B2035" }}>₹2.18 Cr</b></div>
-                  <div style={{ fontSize: 10, color: "#6B7280" }}>Monthly Investment Target: <b style={{ color: "#C05656" }}>₹61,400/mo</b></div>
+                  <div style={{ fontSize: 9.5, fontWeight: 800, color: "#C05656", textTransform: "uppercase" }}>IF INFLATION RISES BY +1.5%</div>
+                  <div style={{ fontSize: 10, color: "#6B7280", marginTop: 4 }}>Corpus Target: <b style={{ color: "#1B2035" }}>{INR_L(r.retirement.corpusNeeded * 1.28)}</b></div>
+                  <div style={{ fontSize: 10, color: "#6B7280" }}>Monthly Target: <b style={{ color: "#C05656" }}>{INR_L(Math.round((r.retirement.annual * 1.28) / 12))}/mo</b></div>
                 </div>
 
                 <div style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 10 }}>
                   <div style={{ fontSize: 9.5, fontWeight: 800, color: "#3E9F6E", textTransform: "uppercase" }}>IF RETIREMENT DELAYED BY 3 YRS</div>
-                  <div style={{ fontSize: 10, color: "#6B7280", marginTop: 4 }}>Corpus Required: <b style={{ color: "#1B2035" }}>₹1.75 Cr</b></div>
-                  <div style={{ fontSize: 10, color: "#6B7280" }}>Monthly Investment Target: <b style={{ color: "#3E9F6E" }}>₹45,200/mo</b></div>
+                  <div style={{ fontSize: 10, color: "#6B7280", marginTop: 4 }}>Corpus Target: <b style={{ color: "#1B2035" }}>{INR_L(r.retirement.corpusNeeded * 0.82)}</b></div>
+                  <div style={{ fontSize: 10, color: "#6B7280" }}>Monthly Target: <b style={{ color: "#3E9F6E" }}>{INR_L(Math.round((r.retirement.annual * 0.75) / 12))}/mo</b></div>
                 </div>
 
                 <div style={{ background: "#FFFFFF", border: "1px solid #C8A74D", borderRadius: 8, padding: 10 }}>
-                  <div style={{ fontSize: 9.5, fontWeight: 800, color: "#C8A74D", textTransform: "uppercase" }}>IF INVESTMENT ESCALATES BY +10%/YR</div>
-                  <div style={{ fontSize: 10, color: "#6B7280", marginTop: 4 }}>Retirement Corpus: <b style={{ color: "#1B2035" }}>₹3.80 Cr</b></div>
-                  <div style={{ fontSize: 10, color: "#6B7280" }}>Monthly Income: <b style={{ color: "#C8A74D" }}>₹1.42 L/mo</b></div>
+                  <div style={{ fontSize: 9.5, fontWeight: 800, color: "#C8A74D", textTransform: "uppercase" }}>IF INVESTMENT STEP-UP +10%/YR</div>
+                  <div style={{ fontSize: 10, color: "#6B7280", marginTop: 4 }}>Retirement Corpus: <b style={{ color: "#1B2035" }}>{INR_L(r.retirement.corpusNeeded * 1.35)}</b></div>
+                  <div style={{ fontSize: 10, color: "#6B7280" }}>Monthly Income: <b style={{ color: "#C8A74D" }}>{INR_L(Math.round((r.retirement.annualExpenseAtRetirement * 1.35) / 12))}/mo</b></div>
                 </div>
               </div>
             </div>
 
-            {/* BOTTOM: AI FINANCIAL OBSERVATION */}
+            {/* BOTTOM: ADVISORY SUMMARY */}
             <div style={{ background: "#F8FAFC", border: "1px solid #E5E7EB", borderRadius: 10, padding: 12 }}>
               <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 4 }}>FINANCIAL OBSERVATION & ADVISORY</div>
               <p style={{ fontSize: 10.5, color: "#1B2035", margin: 0, lineHeight: 1.45 }}>
-                Your current net monthly savings (<b>{INR_L(r.monthlySurplus)}/mo</b>) is fully sufficient to achieve every financial milestone. The primary vulnerability is inadequate term life cover (<b>{INR_L(r.termGap)} gap</b>) and liquid emergency reserves (<b>{INR_L(r.emergencyGap)} gap</b>). Correcting the insurance gap within 90 days improves plan success from <b>62% to 94%</b>.
+                Your current net monthly savings (<b>{INR_L(r.monthlySurplus)}/mo</b>) provides a solid base for systematic wealth creation. Primary recommendation is to close the insurance top-up gaps ({INR_L(r.termGap)} term, {INR_L(r.healthGap)} health) to ensure 100% protection strength.
               </p>
             </div>
-          </div>
-
-          <div className="epdf-footer" style={{ borderTop: "1px solid #E5E7EB", paddingTop: 10, fontSize: 9.5, color: "#6B7280", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>Prepared using apkacoach.com</div>
-            <div>Generated on {dateStr}</div>
           </div>
         </div>
 
@@ -1206,19 +1220,34 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             <div className="epdf-header" style={{ borderColor: "#E5E7EB", display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 10, marginBottom: 16 }}>
               <div>
                 <div className="epdf-brand" style={{ color: "#1B2035", fontSize: 15, fontWeight: 800, margin: 0 }}>
-                  Your <span style={{ color: "#C8A74D" }}>Wealth Compass</span>
+                  Your <span style={{ color: "#C8A74D" }}>Wealth</span> Compass
                 </div>
                 <div style={{ fontSize: 9.5, color: "#6B7280", marginTop: 1 }}>Financial Fitness Report</div>
+              </div>
+              <div style={{ fontSize: 10, color: "#C8A74D", fontWeight: 800, background: "#FFFBEB", border: "1px solid #FCD34D", padding: "2px 8px", borderRadius: 4 }}>
+                Page 10 of 10
               </div>
             </div>
 
             <h2 className="epdf-h2" style={{ color: "#1B2035", fontSize: 22, margin: "0 0 14px" }}>Financial Fitness Report</h2>
 
             {/* CENTERED HERO READINESS BADGE */}
-            <div style={{ background: "#FFFFFF", border: "1px solid #3E9F6E", borderRadius: 10, padding: 14, textAlign: "center", marginBottom: 14 }}>
+            <div style={{ background: "#FFFFFF", border: `1px solid ${r.scores.overallScore >= 70 ? "#3E9F6E" : "#C8A74D"}`, borderRadius: 10, padding: 14, textAlign: "center", marginBottom: 14 }}>
               <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, letterSpacing: "0.05em" }}>FINANCIAL READINESS SCORE</div>
-              <div style={{ fontSize: 26, fontWeight: 900, color: "#3E9F6E", margin: "2px 0" }}>92 <span style={{ fontSize: 14, color: "#6B7280" }}>/ 100</span></div>
-              <span style={{ background: "#ECFDF5", color: "#065F46", border: "1px solid #A7F3D0", padding: "3px 12px", borderRadius: 12, fontSize: 10, fontWeight: 800 }}>STATUS: READY TO EXECUTE</span>
+              <div style={{ fontSize: 26, fontWeight: 900, color: r.scores.overallScore >= 70 ? "#3E9F6E" : "#C8A74D", margin: "2px 0" }}>
+                {r.scores.overallScore} <span style={{ fontSize: 14, color: "#6B7280" }}>/ 100</span>
+              </div>
+              <span style={{
+                background: r.scores.overallScore >= 70 ? "#ECFDF5" : "#FFFBEB",
+                color: r.scores.overallScore >= 70 ? "#065F46" : "#92400E",
+                border: `1px solid ${r.scores.overallScore >= 70 ? "#A7F3D0" : "#FCD34D"}`,
+                padding: "3px 12px",
+                borderRadius: 12,
+                fontSize: 10,
+                fontWeight: 800
+              }}>
+                {r.scores.overallScore >= 70 ? "STATUS: READY TO EXECUTE" : "STATUS: REBALANCING RECOMMENDED"}
+              </span>
             </div>
 
             {/* ROW 2: ACHIEVEMENT SUMMARY (DYNAMIC CARDS GRID) */}
@@ -1280,10 +1309,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             </div>
           </div>
 
-          <div className="epdf-footer" style={{ borderTop: "1px solid #E5E7EB", paddingTop: 10, fontSize: 9.5, color: "#6B7280", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>Prepared using apkacoach.com</div>
-            <div>Generated on {dateStr}</div>
-          </div>
+          <div className="epdf-footer" style={{ display: "none" }}></div>
         </div>
 
       </div>

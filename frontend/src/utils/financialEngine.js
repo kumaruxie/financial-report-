@@ -9,7 +9,7 @@ export const TRAVEL_INFLATION = 6;
 export const MARRIAGE_AGE = 26.5;      // midpoint of the 25–28 "good marriage age" band
 export const UG_DURATION = 3.5;        // midpoint of 3–4 years
 export const LIFE_EXPECTANCY = 85;     // standard planning assumption for corpus longevity
-export const SHORT_TERM_RETURN = 8;    // blended RD/FD/SIP, short-term goals
+export const SHORT_TERM_RETURN = 8;    // blended RD/FD/investment, short-term goals
 export const SHORT_TERM_MAX_YEARS = 4 + 10 / 12; // up to 4 yrs 10 months = short-term; 5 yrs+ = long-term
 export const GUARANTEED_RETURN = 6;    // guaranteed-return insurance plan, goals >5 years
 export const SWP_RETURN = 8;           // 8% post-retirement withdrawal-phase return
@@ -32,9 +32,9 @@ export const GOAL_META = {
 export const GOAL_TYPES = GOAL_META;
 
 export const TYPE_DEFAULTS = {
-  education: { childClass: 8, ugCost: 800000, pgPlanned: "no", pgCost: "" },
-  marriage: { childAge: 5, cost: 1500000 },
-  house: { years: 5, cost: 4000000 },
+  education: { childSelection: "", childName: "", childClass: "", ugCost: "", pgPlanned: "no", pgCost: "" },
+  marriage: { childAge: "", cost: "" },
+  house: { years: "", cost: "" },
 };
 
 export const DEFAULT_GOALS = [];
@@ -56,7 +56,7 @@ export function futureValue(pv, inflationPct, years) {
   return (Number(pv) || 0) * Math.pow(1 + (Number(inflationPct) || 0) / 100, Math.max(0, Number(years) || 0));
 }
 
-// Annual SIP/RD/premium required (annuity-due, annual compounding)
+// Annual investment required (annuity-due, annual compounding)
 export function annualRequired(fv, annualReturnPct, years) {
   const r = (Number(annualReturnPct) || 0) / 100;
   const n = Math.max(1, Math.round(Number(years) || 1));
@@ -80,9 +80,17 @@ export function healthBaseline(city, age) {
 }
 
 export function computeRetirement(age, retirementAge, monthlyExpenses) {
-  const yearsToRetire = Math.max(1, (Number(retirementAge) || 60) - (Number(age) || 0));
-  const postRetireYears = Math.max(1, LIFE_EXPECTANCY - (Number(retirementAge) || 60));
-  const annualExpenseAtRetirement = futureValue((Number(monthlyExpenses) || 0) * 12, RETIREMENT_INFLATION, yearsToRetire);
+  const a = Number(age) || 0;
+  const rAge = Number(retirementAge) || 0;
+  const mExp = Number(monthlyExpenses) || 0;
+
+  if (a === 0 || rAge === 0 || mExp === 0) {
+    return { yearsToRetire: 0, postRetireYears: 0, corpusNeeded: 0, annualExpenseAtRetirement: 0, annual: 0 };
+  }
+
+  const yearsToRetire = Math.max(1, rAge - a);
+  const postRetireYears = Math.max(1, LIFE_EXPECTANCY - rAge);
+  const annualExpenseAtRetirement = futureValue(mExp * 12, RETIREMENT_INFLATION, yearsToRetire);
   const realReturn = (1 + GUARANTEED_RETURN / 100) / (1 + RETIREMENT_INFLATION / 100) - 1;
   const corpusNeeded = realReturn > 0
     ? annualExpenseAtRetirement * ((1 - Math.pow(1 + realReturn, -postRetireYears)) / realReturn) * (1 + realReturn)
@@ -249,12 +257,43 @@ export function computeReport(lead) {
   if (!lead) return null;
 
   const age = Number(lead.age) || 0;
-  const retirementAge = Number(lead.retirementAge) || 60;
+  const retirementAge = Number(lead.retirementAge) || 0;
   const income = Number(lead.income) || 0;
   const expenses = Number(lead.expenses) || 0;
   const savings = Number(lead.savings) || 0;
+  const goals = Array.isArray(lead.goals) ? lead.goals : [];
 
-  const rows = buildGoalRows(lead.goals);
+  // STRICT ZERO-CHECK GUARD: If user hasn't entered inputs, return clean 0 state without fake data
+  const hasInputs = (income > 0 || expenses > 0 || savings > 0 || age > 0 || goals.length > 0);
+  if (!hasInputs) {
+    return {
+      rows: [],
+      retirement: { yearsToRetire: 0, postRetireYears: 0, corpusNeeded: 0, annualExpenseAtRetirement: 0, annual: 0 },
+      swpTable: [],
+      swpChartData: [],
+      swpKpi: { initialCorpus: 0, firstYearWithdrawal: 0, finalYearWithdrawal: 0, finalClosingCorpus: 0, realRate: "0.0", isSustainable: false },
+      swpSchedule: [],
+      distribution: [],
+      goalsAnnual: 0,
+      totalAnnual: 0,
+      monthlySurplus: 0,
+      annualSurplus: 0,
+      recommendedCover: 0,
+      currentTerm: 0,
+      termGap: 0,
+      healthTarget: 0,
+      currentHealth: 0,
+      healthGap: 0,
+      emergencyTarget: 0,
+      emergencyCurrent: 0,
+      emergencyGap: 0,
+      scores: { retirementReadiness: 0, goalPreparedness: 0, protectionStrength: 0, overallScore: 0 },
+      priorities: [],
+      costExample: null
+    };
+  }
+
+  const rows = buildGoalRows(goals);
   const retirement = computeRetirement(age, retirementAge, expenses);
   const swp = simulateSWP(retirement.corpusNeeded, retirement.annualExpenseAtRetirement, retirementAge, retirement.postRetireYears);
 
@@ -264,11 +303,11 @@ export function computeReport(lead) {
   const annualSurplus = monthlySurplus * 12;
 
   const futureBigGoals = rows.filter((r) => r.years > SHORT_TERM_MAX_YEARS).reduce((s, r) => s + r.fv, 0);
-  const recommendedCover = Math.max(0, income * 12 * coverMultiplier(age) + futureBigGoals * 0.3 - savings);
+  const recommendedCover = income > 0 ? Math.max(0, income * 12 * coverMultiplier(age) + futureBigGoals * 0.3 - savings) : 0;
   const currentTerm = lead.termInsurance === "yes" ? Number(lead.termAmount) || 0 : 0;
   const termGap = Math.max(0, recommendedCover - currentTerm);
 
-  const healthTarget = healthBaseline(lead.city, age);
+  const healthTarget = (income > 0 || expenses > 0) ? healthBaseline(lead.city, age) : 0;
   const currentHealth = lead.healthInsurance === "yes" ? Number(lead.healthAmount) || 0 : 0;
   const healthGap = Math.max(0, healthTarget - currentHealth);
 
@@ -276,24 +315,31 @@ export function computeReport(lead) {
   const emergencyCurrent = Math.min(savings, emergencyTarget);
   const emergencyGap = Math.max(0, emergencyTarget - emergencyCurrent);
 
-  // REALISTIC & ACCURATE SCORE COMPUTATION MATH:
-  // 1. Retirement Readiness: surplus coverage of required retirement SIP + liquid savings buffer ratio
-  const monthlyRetirementReq = (retirement.annual || 0) / 12;
-  const retSurplusCoverage = monthlyRetirementReq > 0 ? Math.min(1.0, Math.max(0, monthlySurplus * 0.5) / monthlyRetirementReq) : 1.0;
-  const retSavingsBuffer = Math.min(1.0, savings / Math.max(1, income * 6));
-  const retirementReadiness = clamp(Math.round((retSurplusCoverage * 70) + (retSavingsBuffer * 30)));
+  // ACCURATE & DYNAMIC SCORE COMPUTATION:
+  // 1. Retirement Readiness: Evaluates monthly savings vs required annual retirement contribution + existing reserve
+  const reqRetirementMonthly = retirement.annual > 0 ? retirement.annual / 12 : 0;
+  const cashflowRetirementScore = reqRetirementMonthly > 0 ? clamp((monthlySurplus / reqRetirementMonthly) * 100) : (monthlySurplus > 0 ? 100 : 0);
+  const reserveAssetScore = retirement.corpusNeeded > 0 ? clamp((savings / (retirement.corpusNeeded * 0.15)) * 100) : 0;
+  const retirementReadiness = (income > 0 || savings > 0) ? clamp(cashflowRetirementScore * 0.75 + reserveAssetScore * 0.25) : 0;
 
-  // 2. Goal Preparedness: surplus ratio available for annual goal funding + existing savings backing
-  const goalSurplusCoverage = goalsAnnual > 0 ? Math.min(1.0, Math.max(0, annualSurplus) / goalsAnnual) : 1.0;
-  const goalPreparedness = clamp(Math.round((goalSurplusCoverage * 65) + (retSavingsBuffer * 35)));
+  // 2. Goal Preparedness: Evaluates annual surplus vs milestone goal funding requirements
+  let goalPreparedness = 0;
+  if (goalsAnnual > 0) {
+    goalPreparedness = clamp((annualSurplus / goalsAnnual) * 100);
+  } else if (income > 0) {
+    // If no extra goals added, evaluate healthy savings rate (30% benchmark)
+    const savingsRate = (monthlySurplus / income) * 100;
+    goalPreparedness = clamp((savingsRate / 30) * 100);
+  }
 
-  // 3. Protection Strength: term & health insurance gap coverage
-  const termRatio = recommendedCover > 0 ? Math.min(1.0, currentTerm / recommendedCover) : (currentTerm > 0 ? 1.0 : 0);
-  const healthRatio = healthTarget > 0 ? Math.min(1.0, currentHealth / healthTarget) : (currentHealth > 0 ? 1.0 : 0);
-  const protectionStrength = clamp(Math.round((termRatio * 60 + healthRatio * 40) * 100));
+  // 3. Protection Strength: Evaluates Term Cover (40%), Health Cover (40%), and Emergency Buffer (20%)
+  const termScore = recommendedCover > 0 ? clamp((currentTerm / recommendedCover) * 100) : (currentTerm > 0 ? 100 : 0);
+  const healthScore = healthTarget > 0 ? clamp((currentHealth / healthTarget) * 100) : (currentHealth > 0 ? 100 : 0);
+  const emergencyScore = emergencyTarget > 0 ? clamp((savings / emergencyTarget) * 100) : (savings > 0 ? 100 : 0);
+  const protectionStrength = (income > 0 || expenses > 0 || savings > 0) ? clamp(termScore * 0.40 + healthScore * 0.40 + emergencyScore * 0.20) : 0;
 
-  // Overall Financial Health Score (Weighted average)
-  const overallScore = clamp(Math.round((retirementReadiness * 0.35) + (goalPreparedness * 0.35) + (protectionStrength * 0.30)));
+  // 4. Overall Financial Health Score: Weighted average of the three core sub-scores
+  const overallScore = (income > 0 || expenses > 0 || savings > 0 || goals.length > 0) ? clamp(retirementReadiness * 0.40 + goalPreparedness * 0.30 + protectionStrength * 0.30) : 0;
 
   // Priority Ranking Engine
   const priorities = [];
@@ -310,22 +356,24 @@ export function computeReport(lead) {
       tag: currentTerm > 0 || currentHealth > 0 ? "PRIORITY 1: TOP-UP COVER NEEDED" : "PRIORITY 1: URGENT ACTION",
       title: "Risk Protection Shield Top-Up",
       type: "protection",
-      desc: `Your active insurance cover provides a great baseline. To fully protect your income (15x HLV rule) and future goals, an additional top-up is recommended (${termGap > 0 ? termExplanation : ""}${termGap > 0 && healthGap > 0 ? " | " : ""}${healthGap > 0 ? healthExplanation : ""}).`,
+      desc: `Your active insurance cover provides a baseline. To fully protect your income (HLV rule) and future goals, top-up cover is recommended (${termGap > 0 ? termExplanation : ""}${termGap > 0 && healthGap > 0 ? " | " : ""}${healthGap > 0 ? healthExplanation : ""}).`,
       color: "#F87171",
       bgColor: "rgba(239, 68, 68, 0.12)",
       borderColor: "rgba(239, 68, 68, 0.35)"
     });
   }
-  priorities.push({
-    level: priorities.length + 1,
-    tag: `PRIORITY ${priorities.length + 1}: HIGH IMPORTANCE`,
-    title: "Retirement Foundation",
-    type: "retirement",
-    desc: `Build your ${INR_L(retirement.corpusNeeded)} corpus target over ${retirement.yearsToRetire} years with a monthly SIP of ${INR_L(Math.round(retirement.annual / 12))}/mo.`,
-    color: "var(--accent-gold)",
-    bgColor: "rgba(201, 154, 75, 0.12)",
-    borderColor: "rgba(201, 154, 75, 0.35)"
-  });
+  if (retirement.corpusNeeded > 0) {
+    priorities.push({
+      level: priorities.length + 1,
+      tag: `PRIORITY ${priorities.length + 1}: HIGH IMPORTANCE`,
+      title: "Retirement Foundation",
+      type: "retirement",
+      desc: `Build your ${INR_L(retirement.corpusNeeded)} corpus target over ${retirement.yearsToRetire} years with a monthly investment of ${INR_L(Math.round(retirement.annual / 12))}/mo.`,
+      color: "var(--accent-gold)",
+      bgColor: "rgba(201, 154, 75, 0.12)",
+      borderColor: "rgba(201, 154, 75, 0.35)"
+    });
+  }
   if (rows.length > 0) {
     priorities.push({
       level: priorities.length + 1,

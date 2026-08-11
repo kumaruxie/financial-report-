@@ -17,12 +17,15 @@ export default function StepGoals({ goals, setGoals }) {
       {
         id: newId,
         type: "education",
-        childClass: 5,
-        ugCost: 1000000,
-        pgCost: 500000,
-        childAge: 5,
-        years: 5,
-        cost: 500000
+        childSelection: "",
+        childName: "",
+        childClass: "",
+        ugCost: "",
+        pgPlanned: "no",
+        pgCost: "",
+        childAge: "",
+        years: "",
+        cost: ""
       }
     ]);
   };
@@ -125,12 +128,14 @@ export default function StepGoals({ goals, setGoals }) {
                     <select
                       className="ff-input-56px"
                       style={{ background: "#151824", color: "var(--text-main)", cursor: "pointer", appearance: "auto" }}
-                      value={goal.childSelection || "Child 1"}
+                      value={goal.childSelection || ""}
                       onChange={(e) => updateGoal(goal.id, { childSelection: e.target.value })}
                     >
+                      <option value="" style={{ background: "#151824", color: "#888" }}>Select Child</option>
                       <option value="Child 1" style={{ background: "#151824", color: "#FFFFFF" }}>Child 1</option>
-                      <option value="Another Child" style={{ background: "#151824", color: "#FFFFFF" }}>Another Child (Child 2)</option>
+                      <option value="Child 2" style={{ background: "#151824", color: "#FFFFFF" }}>Child 2</option>
                       <option value="Child 3" style={{ background: "#151824", color: "#FFFFFF" }}>Child 3</option>
+                      <option value="Child 4" style={{ background: "#151824", color: "#FFFFFF" }}>Child 4</option>
                     </select>
                   </div>
 
@@ -152,10 +157,10 @@ export default function StepGoals({ goals, setGoals }) {
                     <select
                       className="ff-input-56px"
                       style={{ background: "#151824", color: "var(--text-main)", cursor: "pointer", appearance: "auto" }}
-                      value={goal.childClass || 5}
+                      value={goal.childClass || ""}
                       onChange={(e) => updateGoal(goal.id, { childClass: e.target.value })}
                     >
-                      {/* Restrict to Class 1 through Class 7 to ensure at least a 5-year gap before Class 12 */}
+                      <option value="" style={{ background: "#151824", color: "#888" }}>Select Child's Class</option>
                       {Array.from({ length: 7 }, (_, i) => i + 1).map((c) => (
                         <option key={c} value={c} style={{ background: "#151824", color: "#FFFFFF" }}>
                           Class {c} ({12 - c} yrs to college)
