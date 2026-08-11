@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   Shield, HeartPulse, CheckCircle2, AlertTriangle, PiggyBank,
-  Printer, ArrowRight, GraduationCap, Heart, Home, Plane, Sparkles,
+  Printer, Download, ArrowRight, GraduationCap, Heart, Home, Plane, Sparkles,
   TrendingUp, Calendar, AlertCircle, CheckSquare, Layers, Award, BarChart3, PieChart as PieChartIcon, Info, RefreshCw
 } from "lucide-react";
 import {
@@ -208,7 +208,7 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
               whiteSpace: "nowrap"
             }}
           >
-            <Printer size={17} /> Print Report Preview
+            <Download size={17} /> Download Report Preview
           </button>
         </div>
       </div>
