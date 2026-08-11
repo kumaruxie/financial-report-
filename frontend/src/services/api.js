@@ -65,6 +65,7 @@ export async function submitReportApi(payload) {
     const res = await fetch(`${API_BASE_URL}/reports/submit`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      cache: "no-store",
       body: JSON.stringify(payload)
     });
     return await res.json();
@@ -80,7 +81,10 @@ export async function submitReportApi(payload) {
 
 export async function getLeadsApi() {
   try {
-    const res = await fetch(`${API_BASE_URL}/admin/leads`);
+    const res = await fetch(`${API_BASE_URL}/admin/leads?_t=${Date.now()}`, {
+      cache: "no-store",
+      headers: { "Cache-Control": "no-cache, no-store, must-revalidate" }
+    });
     const data = await res.json();
     return data.leads || [];
   } catch (err) {
@@ -92,7 +96,8 @@ export async function getLeadsApi() {
 export async function deleteLeadApi(leadId) {
   try {
     const res = await fetch(`${API_BASE_URL}/admin/leads/${leadId}`, {
-      method: "DELETE"
+      method: "DELETE",
+      cache: "no-store"
     });
     return await res.json();
   } catch (err) {
@@ -103,7 +108,10 @@ export async function deleteLeadApi(leadId) {
 
 export async function getAuditLogsApi() {
   try {
-    const res = await fetch(`${API_BASE_URL}/admin/logs`);
+    const res = await fetch(`${API_BASE_URL}/admin/logs?_t=${Date.now()}`, {
+      cache: "no-store",
+      headers: { "Cache-Control": "no-cache, no-store, must-revalidate" }
+    });
     const data = await res.json();
     return data.logs || [];
   } catch (err) {
@@ -117,6 +125,7 @@ export async function submitEnquiryApi(payload) {
     const res = await fetch(`${API_BASE_URL}/reports/enquiry`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      cache: "no-store",
       body: JSON.stringify(payload)
     });
     return await res.json();
@@ -128,7 +137,10 @@ export async function submitEnquiryApi(payload) {
 
 export async function getEnquiriesApi() {
   try {
-    const res = await fetch(`${API_BASE_URL}/admin/enquiries`);
+    const res = await fetch(`${API_BASE_URL}/admin/enquiries?_t=${Date.now()}`, {
+      cache: "no-store",
+      headers: { "Cache-Control": "no-cache, no-store, must-revalidate" }
+    });
     const data = await res.json();
     return data.enquiries || [];
   } catch (err) {

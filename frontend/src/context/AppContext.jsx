@@ -29,32 +29,35 @@ export function AppProvider({ children }) {
   const [auditLogs, setAuditLogs] = useState([]);
   const [activeLead, setActiveLead] = useState(null);
 
-  // On mount: fetch real data from backend to sync
-  useEffect(() => {
-    async function syncBackendData() {
-      const backendLeads = await getLeadsApi();
-      if (backendLeads && Array.isArray(backendLeads) && backendLeads.length > 0) {
-        setLeads(backendLeads);
+  const refreshBackendData = async () => {
+    const backendLeads = await getLeadsApi();
+    if (backendLeads && Array.isArray(backendLeads)) {
+      setLeads(backendLeads);
+      if (backendLeads.length > 0 && !activeLead) {
         setActiveLead(backendLeads[0]);
-        try {
-          localStorage.setItem(STORAGE_LEADS_KEY, JSON.stringify(backendLeads));
-        } catch (e) {}
       }
-
-      const backendEnquiries = await getEnquiriesApi();
-      if (backendEnquiries && Array.isArray(backendEnquiries) && backendEnquiries.length > 0) {
-        setContactEnquiries(backendEnquiries);
-        try {
-          localStorage.setItem(STORAGE_ENQUIRIES_KEY, JSON.stringify(backendEnquiries));
-        } catch (e) {}
-      }
-
-      const backendLogs = await getAuditLogsApi();
-      if (backendLogs && Array.isArray(backendLogs) && backendLogs.length > 0) {
-        setAuditLogs(backendLogs);
-      }
+      try {
+        localStorage.setItem(STORAGE_LEADS_KEY, JSON.stringify(backendLeads));
+      } catch (e) {}
     }
-    syncBackendData();
+
+    const backendEnquiries = await getEnquiriesApi();
+    if (backendEnquiries && Array.isArray(backendEnquiries)) {
+      setContactEnquiries(backendEnquiries);
+      try {
+        localStorage.setItem(STORAGE_ENQUIRIES_KEY, JSON.stringify(backendEnquiries));
+      } catch (e) {}
+    }
+
+    const backendLogs = await getAuditLogsApi();
+    if (backendLogs && Array.isArray(backendLogs)) {
+      setAuditLogs(backendLogs);
+    }
+  };
+
+  // On mount & periodically sync real data from backend
+  useEffect(() => {
+    refreshBackendData();
   }, []);
 
   const addAuditLog = (type, user, status, details) => {
@@ -169,7 +172,8 @@ export function AppProvider({ children }) {
         auditLogs,
         addAuditLog,
         saveLeadSubmission,
-        deleteLead
+        deleteLead,
+        refreshBackendData
       }}
     >
       {children}

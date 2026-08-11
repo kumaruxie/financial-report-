@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Users, AlertTriangle, FileCheck2, Clock, Filter, Lock, ShieldCheck, LogOut, ArrowRight, KeyRound, Mail } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Users, AlertTriangle, FileCheck2, Clock, Filter, Lock, ShieldCheck, LogOut, ArrowRight, KeyRound, Mail, RefreshCw } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
 import { computeReport } from "../../utils/financialEngine";
@@ -43,7 +43,7 @@ class AdminErrorBoundary extends React.Component {
 }
 
 function AdminPortalMain() {
-  const { leads, contactEnquiries = [] } = useApp();
+  const { leads, contactEnquiries = [], refreshBackendData } = useApp();
   const { setPortalMode } = useAuth();
   
   // Require Password Authentication every time /adm is opened or refreshed
@@ -52,9 +52,24 @@ function AdminPortalMain() {
   const [passwordInput, setPasswordInput] = useState("");
   const [authError, setAuthError] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [activeTab, setActiveTab] = useState("crm"); // 'crm' | 'enquiries' | 'logs'
   const [selectedLead, setSelectedLead] = useState(null);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    if (typeof refreshBackendData === "function") {
+      await refreshBackendData();
+    }
+    setTimeout(() => setIsRefreshing(false), 500);
+  };
+
+  useEffect(() => {
+    if (isAuthenticated && typeof refreshBackendData === "function") {
+      refreshBackendData();
+    }
+  }, [isAuthenticated, activeTab]);
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
@@ -72,6 +87,7 @@ function AdminPortalMain() {
         setIsAuthenticated(true);
         setPasswordInput("");
         setAuthError("");
+        if (typeof refreshBackendData === "function") refreshBackendData();
       } else {
         setAuthError("Incorrect Admin Password. Access Denied.");
       }
@@ -80,6 +96,7 @@ function AdminPortalMain() {
         setIsAuthenticated(true);
         setPasswordInput("");
         setAuthError("");
+        if (typeof refreshBackendData === "function") refreshBackendData();
       } else {
         setAuthError("Incorrect Admin Password. Access Denied.");
       }
@@ -251,7 +268,26 @@ function AdminPortalMain() {
             </p>
           </div>
 
-          <div>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="ff-btn-gold"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "10px 18px",
+                borderRadius: 12,
+                fontSize: 13.5,
+                fontWeight: 700,
+                cursor: "pointer"
+              }}
+            >
+              <RefreshCw size={15} style={{ animation: isRefreshing ? "spin 1s linear infinite" : "none" }} />
+              {isRefreshing ? "Syncing..." : "Sync Live DB"}
+            </button>
+
             <button
               onClick={handleLockAdmin}
               className="ff-btn-ghost"
