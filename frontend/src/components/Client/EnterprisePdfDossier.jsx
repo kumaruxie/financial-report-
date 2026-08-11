@@ -414,7 +414,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}><CheckCircle2 size={14} color="#3E9F6E" /> <b>Retirement Horizon:</b> Target corpus of {INR_L(r.retirement.corpusNeeded)} can be systematically accumulated over {r.retirement.yearsToRetire} years.</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}><CheckCircle2 size={14} color="#3E9F6E" /> <b>Health Cover Baseline:</b> Active health insurance of {INR_L(lead.healthAmount)} provides baseline coverage in {lead.city || "Metro"}.</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}><AlertTriangle size={14} color={r.termGap > 0 ? "#C05656" : "#3E9F6E"} /> <b>Term Life Insurance Gap:</b> {r.termGap > 0 ? `Additional top-up cover of ${INR_L(r.termGap)} is recommended to protect family income.` : `Term cover target is fully adequate.`}</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}><AlertTriangle size={14} color={r.emergencyGap > 0 ? "#C8A74D" : "#3E9F6E"} /> <b>Emergency Buffer:</b> {r.emergencyGap > 0 ? `Current liquid reserve of ${INR_L(lead.savings)} is below the recommended 9-month buffer target (${INR_L(r.emergencyTarget)}).` : `Emergency fund target is fully met.`}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}><AlertTriangle size={14} color={r.emergencyGap > 0 ? "#C8A74D" : "#3E9F6E"} /> <b>Emergency Buffer:</b> {r.emergencyGap > 0 ? `Current liquid reserve of ${INR_L(lead.savings)} is below the recommended 6-month buffer target (${INR_L(r.emergencyTarget)}).` : `Emergency fund target is fully met.`}</div>
               </div>
             </div>
 
@@ -436,7 +436,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             <div style={{ background: "rgba(200, 167, 77, 0.08)", border: "1px solid rgba(200, 167, 77, 0.3)", borderLeft: "4px solid #C8A74D", borderRadius: 10, padding: 16 }}>
               <div style={{ fontSize: 10, fontWeight: 800, color: "#C8A74D", textTransform: "uppercase", marginBottom: 4, letterSpacing: "0.05em" }}>CONSULTANT OBSERVATION & ADVISORY</div>
               <p style={{ fontSize: 11.5, color: "#1B2035", margin: 0, lineHeight: 1.5 }}>
-                Your net monthly savings of <b>{INR_L(r.monthlySurplus)}</b> provides an excellent foundation. Addressing your term insurance top-up ({INR_L(r.termGap)}) and starting a systematic monthly investment of <b>{INR_L(Math.round(r.retirement.annual / 12))}/mo</b> towards retirement will secure your family's future with complete peace of mind.
+                Your net monthly savings of <b>{INR_L(r.monthlySurplus)}</b> provides an excellent foundation. Addressing your term insurance top-up ({INR_L(r.termGap)}) and starting a systematic monthly investment towards retirement will secure your family's future with complete peace of mind.
               </p>
             </div>
           </div>
@@ -982,7 +982,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", background: "#ECFDF5", borderRadius: 6, border: "1px solid #A7F3D0" }}>
                   <div>
                     <b>Priority 3 — Retirement / Goal Investment</b>
-                    <div style={{ fontSize: 10, color: "#065F46", marginTop: 2 }}>Allocate remaining monthly investment capacity towards retirement ({INR_L(Math.round(r.retirement.annual / 12))}/mo) and milestone goals.</div>
+                    <div style={{ fontSize: 10, color: "#065F46", marginTop: 2 }}>Allocate remaining monthly investment capacity towards retirement and milestone goals.</div>
                   </div>
                   <span style={{ color: "#065F46", fontWeight: 800, fontSize: 10, background: "#FFF", padding: "2px 8px", borderRadius: 4 }}>HIGH</span>
                 </div>

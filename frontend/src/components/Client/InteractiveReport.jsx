@@ -73,11 +73,11 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
     mediumPriority.push(`Build ${INR_L(r.emergencyGap)} in liquid emergency funds to reach 6 months buffer (${INR_L(r.emergencyTarget)}).`);
   }
   if (r.totalAnnual > r.annualSurplus) {
-    mediumPriority.push(`Annual goal investment (${INR_L(r.totalAnnual)}) exceeds annual net savings (${INR_L(r.annualSurplus)}) by ${INR_L(r.totalAnnual - r.annualSurplus)}. Phase short-term investments first.`);
+    mediumPriority.push(`Net savings available can be strategically deployed across milestone goals. Prioritize high-priority short-term investments and risk protection first.`);
   } else {
-    lowPriority.push(`Annual net savings (${INR_L(r.annualSurplus)}) covers all goals (${INR_L(r.totalAnnual)}) with ${INR_L(r.annualSurplus - r.totalAnnual)} remaining buffer.`);
+    lowPriority.push(`Annual net savings (${INR_L(r.annualSurplus)}) provides strong coverage across all configured milestone goals.`);
   }
-  lowPriority.push(`Allocate ${INR_L(r.retirement.annual)}/yr into guaranteed retirement plan to build ${INR_L(r.retirement.corpusNeeded)} corpus by age ${lead.retirementAge || 60}.`);
+  lowPriority.push(`Allocate monthly savings into structured investments to build target retirement corpus by age ${lead.retirementAge || 60}.`);
 
   // Chart data for annual investment distribution
   const chartColors = ["var(--accent-gold)", "var(--accent-teal)", "#818CF8", "#F43F5E", "#10B981", "#F59E0B"];
@@ -308,7 +308,7 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
       </div>
       <div className="rpt-exec-box">
         <p>
-          Your net monthly savings of <b style={{ color: "var(--text-main)" }}>{INR_L(r.monthlySurplus)}</b> provides a strong cashflow baseline. To fully fund your milestone goals along with building a <b style={{ color: "var(--accent-teal)" }}>{INR_L(r.retirement.corpusNeeded)}</b> retirement corpus by age {lead.retirementAge || 60}, an annual investment rate of <b style={{ color: "var(--accent-gold)" }}>{INR_L(r.totalAnnual)}</b> ({INR(r.totalAnnual / 12)}/mo) is required. Key risk areas include term protection (<b style={{ color: "var(--alert-coral)" }}>{r.termGap > 0 ? INR_L(r.termGap) + " gap" : "Sufficient"}</b>) and medical floater cover (<b style={{ color: "var(--accent-gold)" }}>{r.healthGap > 0 ? INR_L(r.healthGap) + " gap" : "Sufficient"}</b>).
+          Your net monthly savings of <b style={{ color: "var(--text-main)" }}>{INR_L(r.monthlySurplus)}</b> provides a strong cashflow baseline to build your target retirement corpus of <b style={{ color: "var(--accent-teal)" }}>{INR_L(r.retirement.corpusNeeded)}</b> by age {lead.retirementAge || 60}. Key risk areas include term protection (<b style={{ color: "var(--alert-coral)" }}>{r.termGap > 0 ? INR_L(r.termGap) + " gap" : "Sufficient"}</b>) and medical floater cover (<b style={{ color: "var(--accent-gold)" }}>{r.healthGap > 0 ? INR_L(r.healthGap) + " gap" : "Sufficient"}</b>). Our wealth advisory desk will guide you on the optimal step-up investment strategy on your advisory call.
         </p>
       </div>
 
@@ -541,7 +541,7 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
             </span>
           </div>
           <p style={{ margin: 0, fontSize: 13.5, color: "var(--text-fog)" }}>
-            Current liquid savings: {INR_L(r.emergencyCurrent)} &bull; Required 9-month buffer: <b style={{ color: "var(--text-main)" }}>{INR_L(r.emergencyTarget)}</b>.
+            Current liquid savings: {INR_L(r.emergencyCurrent)} &bull; Required 6-month buffer: <b style={{ color: "var(--text-main)" }}>{INR_L(r.emergencyTarget)}</b>.
           </p>
         </div>
       </div>
@@ -622,19 +622,13 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
 
       {/* Total Savings & Investment Check Banner */}
       <div className="ffr-total-row">
-        <span className="lbl">Total Annual Required Investment Across Goals & Retirement:</span>
-        <span className="val">{INR_L(r.totalAnnual)}</span>
+        <span className="lbl">Monthly Savings Available For Investment Strategy:</span>
+        <span className="val">{INR_L(r.monthlySurplus)}/mo</span>
       </div>
 
-      {r.totalAnnual > r.annualSurplus ? (
-        <div className="ffr-surplus-warn">
-          <b>Notice:</b> Required annual investment is <b>{INR_L(r.totalAnnual - r.annualSurplus)}</b> higher than your current annual net savings of {INR_L(r.annualSurplus)}. Consider prioritizing short-term milestones first.
-        </div>
-      ) : (
-        <div className="ffr-surplus-ok">
-          <b>Healthy Cashflow:</b> Your annual net savings of <b>{INR_L(r.annualSurplus)}</b> fully covers all required investments with <b>{INR_L(r.annualSurplus - r.totalAnnual)}</b> remaining buffer.
-        </div>
-      )}
+      <div className="ffr-surplus-ok">
+        <b>Advisory Cashflow Baseline:</b> Your available monthly savings of <b>{INR_L(r.monthlySurplus)}</b> provides a healthy baseline to structure your milestone goals and retirement portfolio on your client call.
+      </div>
 
       {showPdfDossier && <EnterprisePdfDossier lead={lead} onClose={() => setShowPdfDossier(false)} />}
     </div>

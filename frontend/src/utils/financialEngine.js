@@ -380,7 +380,7 @@ export function computeReport(lead) {
       tag: `PRIORITY ${priorities.length + 1}: SCHEDULED TARGETS`,
       title: "Milestone Life Goals",
       type: "goals",
-      desc: `Fund ${rows.length} milestone goals requiring total annual investment of ${INR_L(Math.round(goalsAnnual))}/yr.`,
+      desc: `Fund ${rows.length} milestone goals through structured systematic investments.`,
       color: "var(--accent-teal)",
       bgColor: "rgba(95, 168, 160, 0.12)",
       borderColor: "rgba(95, 168, 160, 0.35)"
