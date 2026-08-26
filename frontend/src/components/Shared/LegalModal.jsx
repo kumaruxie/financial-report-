@@ -339,11 +339,12 @@ export default function LegalModal({ activeTab: initialTab = "privacy", onClose 
                         <input
                           type="text"
                           required
+                          maxLength={40}
                           className="ff-input-56px"
                           style={{ height: 48, fontSize: 14, borderRadius: 10 }}
-                          placeholder="Enter your name"
+                          placeholder="Enter your name (max 40 chars)"
                           value={contactForm.name}
-                          onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                          onChange={(e) => setContactForm({ ...contactForm, name: e.target.value.slice(0, 40) })}
                         />
                       </div>
                       <div>
@@ -351,11 +352,12 @@ export default function LegalModal({ activeTab: initialTab = "privacy", onClose 
                         <input
                           type="email"
                           required
+                          maxLength={80}
                           className="ff-input-56px"
                           style={{ height: 48, fontSize: 14, borderRadius: 10 }}
                           placeholder="Enter your email"
                           value={contactForm.email}
-                          onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                          onChange={(e) => setContactForm({ ...contactForm, email: e.target.value.slice(0, 80) })}
                         />
                       </div>
                     </div>

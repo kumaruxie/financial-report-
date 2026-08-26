@@ -15,6 +15,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { AppProvider, useApp } from "./context/AppContext";
 import { ChevronLeft, ChevronRight, CheckCircle2, ArrowRight, Activity, TrendingUp, ShieldAlert } from "lucide-react";
 import { computeReport, INR_L } from "./utils/financialEngine";
+import { getCountryConfig } from "./utils/countryData";
 
 function MainContent() {
   const { portalMode, setPortalMode } = useAuth();
@@ -27,7 +28,7 @@ function MainContent() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStatus, setProcessingStatus] = useState("Evaluating Monthly Cashflow...");
 
-  const [basics, setBasics] = useState({ name: "", email: "", mobile: "" });
+  const [basics, setBasics] = useState({ name: "", email: "", countryCode: "+91", mobile: "" });
   const [financials, setFinancials] = useState({ age: "", income: "", expenses: "", savings: "" });
   const [protection, setProtection] = useState({ termInsurance: "", termAmount: "", healthInsurance: "", healthAmount: "", city: "", retirementAge: "" });
   const [goals, setGoals] = useState([]);
@@ -71,9 +72,9 @@ function MainContent() {
   };
 
   const currentPayload = {
-    name: basics.name || "",
-    email: basics.email || "",
-    mobile: basics.mobile || "",
+    name: basics.name ? basics.name.trim() : "",
+    email: basics.email ? basics.email.trim() : "",
+    mobile: basics.mobile ? `${basics.countryCode || "+91"} ${basics.mobile.replace(/\D/g, "")}` : "",
     age: financials.age || "",
     income: financials.income || "0",
     expenses: financials.expenses || "0",
@@ -92,16 +93,31 @@ function MainContent() {
   const validateCurrentStep = () => {
     setStepError("");
     if (wizardStep === 1) {
-      if (!basics.name || !basics.name.trim()) {
+      const trimmedName = (basics.name || "").trim();
+      if (!trimmedName) {
         setStepError("Please enter your Full Name to proceed.");
         return false;
       }
-      if (!basics.email || !basics.email.trim() || !basics.email.includes("@")) {
-        setStepError("Please enter a valid Email Address to proceed.");
+      if (trimmedName.length > 40) {
+        setStepError("Full Name must not exceed 40 characters.");
         return false;
       }
-      if (!basics.mobile || !basics.mobile.trim() || basics.mobile.trim().length < 10) {
-        setStepError("Please enter a 10-digit Mobile Number to proceed.");
+
+      const trimmedEmail = (basics.email || "").trim();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!trimmedEmail || !emailRegex.test(trimmedEmail)) {
+        setStepError("Please enter a valid Email Address (e.g. name@example.com) to proceed.");
+        return false;
+      }
+      if (trimmedEmail.length > 80) {
+        setStepError("Email Address must not exceed 80 characters.");
+        return false;
+      }
+
+      const countryCfg = getCountryConfig(basics.countryCode || "+91");
+      const cleanMobile = (basics.mobile || "").replace(/\D/g, "");
+      if (!cleanMobile || cleanMobile.length !== countryCfg.digits) {
+        setStepError(`Please enter a valid ${countryCfg.digits}-digit Mobile Number for ${countryCfg.country} to proceed.`);
         return false;
       }
     } else if (wizardStep === 2) {
@@ -157,7 +173,7 @@ function MainContent() {
   };
 
   const resetWizard = () => {
-    setBasics({ name: "", email: "", mobile: "" });
+    setBasics({ name: "", email: "", countryCode: "+91", mobile: "" });
     setFinancials({ age: "", income: "", expenses: "", savings: "" });
     setProtection({ termInsurance: "no", termAmount: "", healthInsurance: "no", healthAmount: "", city: "", retirementAge: "60" });
     setGoals([]);

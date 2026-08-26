@@ -361,6 +361,57 @@ body {
   font-weight: 400;
 }
 
+.ff-country-select {
+  height: 56px;
+  min-width: 140px;
+  max-width: 160px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-main);
+  font-size: 14.5px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+  padding: 0 12px;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  appearance: auto;
+}
+
+.ff-country-select:focus {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 20px rgba(201, 154, 75, 0.25);
+}
+
+.ff-country-select option {
+  background: #111420;
+  color: #FFFFFF;
+  padding: 8px;
+}
+
+.ff-input-56px.has-error {
+  border-color: #EF4444 !important;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.28) !important;
+}
+
+.ff-field-error {
+  color: #F87171;
+  font-size: 12.5px;
+  font-weight: 500;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: ffFadeIn 0.2s ease;
+}
+
+@keyframes ffFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .ff-brand {
   display: flex;
   align-items: center;
