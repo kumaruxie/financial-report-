@@ -49,20 +49,19 @@ const startServer = () => {
   });
 };
 
+startServer();
+
 if (MONGO_URI) {
   mongoose
-    .connect(MONGO_URI)
+    .connect(MONGO_URI, { serverSelectionTimeoutMS: 8000 })
     .then(() => {
       console.log("✅ Connected to MongoDB Atlas");
-      startServer();
     })
     .catch((err) => {
       console.error("⚠️ MongoDB connection notice:", err.message);
-      console.log("Starting server in standalone mode...");
-      startServer();
+      console.log("Running API server with local fallback resilience.");
     });
 } else {
   console.log("ℹ️ MONGO_URI not set in environment. Running API server in fallback mode.");
-  startServer();
 }
 
