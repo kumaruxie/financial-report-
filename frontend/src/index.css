@@ -1289,46 +1289,57 @@ html, body, #root, .ff-app-container {
     display: none !important;
   }
 
-  /* Goals timeline: show clean, compact labels under each node */
+  /* Goals timeline: smaller, delicate labels on mobile */
   .ff-goal-node-label {
     display: block !important;
-    font-size: 9.5px !important;
-    font-weight: 600 !important;
+    font-size: 8.5px !important;
+    font-weight: 500 !important;
     color: var(--text-ivory) !important;
     white-space: normal !important;
     text-align: center !important;
-    line-height: 1.15 !important;
-    max-width: 58px !important;
+    line-height: 1.2 !important;
+    max-width: 52px !important;
+    opacity: 0.85 !important;
   }
 
   .ff-desktop-br {
     display: none !important;
   }
   .ff-hero-background {
-    padding: 85px 16px 40px !important;
-    min-height: calc(100svh - 60px) !important;
+    padding: 102px 18px 45px !important;
+    min-height: auto !important;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: center !important;
+    justify-content: flex-start !important;
     align-items: center !important;
     text-align: center !important;
     box-sizing: border-box !important;
   }
-  .ff-hero-background h1 {
-    font-size: clamp(28px, 7.5vw, 36px) !important;
-    line-height: 1.22 !important;
-    margin: 0 auto 14px !important;
+  .ff-hero-title {
+    font-size: clamp(27px, 7vw, 34px) !important;
+    line-height: 1.25 !important;
+    margin: 0 auto 16px !important;
     text-align: center !important;
-    max-width: 340px !important;
+    max-width: 330px !important;
     word-break: break-word !important;
   }
-  .ff-hero-background p {
+  .ff-hero-subtitle {
     font-size: 14px !important;
-    margin: 0 auto 20px !important;
-    line-height: 1.5 !important;
+    margin: 0 auto 26px !important;
+    line-height: 1.55 !important;
     max-width: 320px !important;
     text-align: center !important;
     padding: 0 4px !important;
+  }
+  .ff-hero-cta-btn {
+    margin-bottom: 38px !important;
+    width: 100% !important;
+    max-width: 310px !important;
+  }
+  .ff-hero-timeline {
+    margin-top: 12px !important;
+    max-width: 350px !important;
+    width: 100% !important;
   }
   .ff-section-2 {
     padding: 32px 14px 50px !important;

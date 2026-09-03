@@ -72,13 +72,13 @@ export default function LandingHero({ onStart, onStartWizard, onOpenLegal, onOpe
       <section
         className="ff-hero-background"
         style={{
-          minHeight: "100vh",
+          minHeight: "auto",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          justifyContent: "center",
+          justifyContent: "flex-start",
           position: "relative",
-          padding: "95px 24px 35px",
+          padding: "125px 24px 50px",
           textAlign: "center",
           backgroundColor: "#07080C",
           boxSizing: "border-box"
@@ -116,7 +116,7 @@ export default function LandingHero({ onStart, onStartWizard, onOpenLegal, onOpe
           }}
         >
           {/* Powered by ApkaCoach */}
-          <div style={{ marginBottom: 14, display: "inline-flex", alignItems: "center", gap: 7, opacity: 0.9 }}>
+          <div style={{ marginBottom: 18, display: "inline-flex", alignItems: "center", gap: 7, opacity: 0.9 }}>
             <span style={{ fontSize: 12, color: "var(--text-fog)", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>
               powered by
             </span>
@@ -133,12 +133,13 @@ export default function LandingHero({ onStart, onStartWizard, onOpenLegal, onOpe
 
           {/* Headline Positioned Cleanly in Sky Region */}
           <h1
+            className="ff-hero-title"
             style={{
-              fontSize: "clamp(30px, 5vw, 62px)",
-              lineHeight: 1.12,
+              fontSize: "clamp(32px, 4.5vw, 58px)",
+              lineHeight: 1.15,
               fontWeight: 600,
               color: "var(--text-main)",
-              marginBottom: 16,
+              marginBottom: 18,
               fontFamily: "var(--font-serif)",
               letterSpacing: "-0.02em",
               textShadow: "0 4px 24px rgba(0, 0, 0, 0.9)"
@@ -150,13 +151,14 @@ export default function LandingHero({ onStart, onStartWizard, onOpenLegal, onOpe
 
           {/* Tightened 2-Line Subtitle Paragraph */}
           <p
+            className="ff-hero-subtitle"
             style={{
-              fontSize: "clamp(15px, 1.8vw, 18px)",
+              fontSize: "clamp(15px, 1.8vw, 17px)",
               fontWeight: 500,
               color: "var(--text-ivory)",
               maxWidth: 680,
-              margin: "0 auto 20px",
-              lineHeight: 1.5,
+              margin: "0 auto 28px",
+              lineHeight: 1.6,
               textShadow: "0 2px 10px rgba(0, 0, 0, 0.8)",
               opacity: 0.95
             }}
@@ -166,15 +168,15 @@ export default function LandingHero({ onStart, onStartWizard, onOpenLegal, onOpe
 
           {/* Primary CTA Button */}
           <button
-            className="ff-btn-gold"
+            className="ff-btn-gold ff-hero-cta-btn"
             onClick={scrollToAssessment}
             style={{
               fontSize: 15.5,
               fontWeight: 800,
-              padding: "14px 32px",
+              padding: "15px 34px",
               borderRadius: 10,
               cursor: "pointer",
-              marginBottom: 24,
+              marginBottom: 44,
               boxShadow: "0 0 50px rgba(201, 154, 75, 0.2), 0 16px 36px rgba(0, 0, 0, 0.4)",
               display: "inline-flex",
               alignItems: "center",
@@ -186,7 +188,7 @@ export default function LandingHero({ onStart, onStartWizard, onOpenLegal, onOpe
           </button>
 
           {/* GOAL TIMELINE GLOWING TRAJECTORY TRACK */}
-          <div style={{ width: "100%", maxWidth: 780, position: "relative", marginTop: 6 }}>
+          <div className="ff-hero-timeline" style={{ width: "100%", maxWidth: 740, position: "relative", marginTop: 14 }}>
             {/* Glowing Trajectory Track Line */}
             <div
               style={{
@@ -247,12 +249,13 @@ export default function LandingHero({ onStart, onStartWizard, onOpenLegal, onOpe
                     <span
                       className="ff-goal-node-label"
                       style={{
-                        fontSize: "clamp(10px, 1.1vw, 12px)",
+                        fontSize: 11,
                         fontWeight: isActive ? 700 : 500,
                         color: isActive ? "var(--accent-gold)" : "var(--text-ivory)",
                         transition: "all 0.25s ease",
                         textAlign: "center",
-                        marginTop: 2,
+                        marginTop: 4,
+                        opacity: 0.9,
                         textShadow: "0 2px 6px rgba(0, 0, 0, 0.8)"
                       }}
                     >
