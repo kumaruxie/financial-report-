@@ -12,6 +12,8 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
   const reportId = lead._id || lead.id || `YWC-2026-${Math.floor(1000 + Math.random() * 9000)}`;
   const dateStr = new Date(lead.submittedAt || Date.now()).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
 
+  const docRef = React.useRef(null);
+  const [docHeight, setDocHeight] = React.useState(11230);
   const [isPrinting, setIsPrinting] = React.useState(false);
   const [printStatusText, setPrintStatusText] = React.useState("Preparing Document Layout...");
   const [zoomMode, setZoomMode] = React.useState("fit"); // "fit" | "full"
@@ -23,11 +25,24 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  React.useEffect(() => {
+    const updateHeight = () => {
+      if (docRef.current) {
+        const measured = docRef.current.scrollHeight || docRef.current.offsetHeight;
+        if (measured > 1000) {
+          setDocHeight(measured);
+        }
+      }
+    };
+    updateHeight();
+    const t = setTimeout(updateHeight, 400);
+    return () => clearTimeout(t);
+  }, [screenWidth, lead]);
+
   const isMobile = screenWidth < 820;
   const targetDocWidth = 794;
-  const availableDocWidth = Math.max(280, screenWidth - 20);
-  const fitScale = isMobile ? Math.min(1, availableDocWidth / targetDocWidth) : 1;
-  const currentScale = zoomMode === "fit" ? fitScale : 1;
+  const availableDocWidth = Math.max(280, screenWidth - 16);
+  const fitScale = isMobile ? availableDocWidth / targetDocWidth : 1;
 
   const handlePrint = () => {
     setIsPrinting(true);
@@ -244,10 +259,13 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             box-sizing: border-box !important;
           }
           .epdf-document-viewport, .epdf-document-scaler, .epdf-document {
+            position: static !important;
             transform: none !important;
             width: 210mm !important;
             min-width: 210mm !important;
+            height: auto !important;
             margin: 0 !important;
+            overflow: visible !important;
           }
         }
 
@@ -265,16 +283,22 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
 
         @media (max-width: 820px) {
           .epdf-modal-overlay {
-            padding: 8px 6px !important;
+            padding: 10px 0 30px 0 !important;
+            overflow-x: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
           }
           .epdf-toolbar {
+            width: calc(100% - 16px) !important;
+            max-width: 100% !important;
+            margin: 0 auto 12px auto !important;
             padding: 10px 14px !important;
-            margin-bottom: 12px !important;
             flex-direction: column !important;
             gap: 10px !important;
             align-items: stretch !important;
-            max-width: 100% !important;
             border-radius: 12px !important;
+            box-sizing: border-box !important;
           }
           .epdf-toolbar-top {
             display: flex !important;
@@ -423,27 +447,35 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
           width: "100%",
           overflowX: isMobile && zoomMode === "full" ? "auto" : "hidden",
           WebkitOverflowScrolling: "touch",
+          paddingBottom: 40,
           display: "flex",
-          justifyContent: isMobile && zoomMode === "full" ? "flex-start" : "center",
-          paddingBottom: 40
+          justifyContent: isMobile && zoomMode === "full" ? "flex-start" : "center"
         }}
       >
         <div
           className="epdf-document-scaler"
           style={{
-            width: isMobile && zoomMode === "fit" ? `${Math.round(targetDocWidth * currentScale)}px` : "auto",
+            width: isMobile && zoomMode === "fit" ? `${Math.round(targetDocWidth * fitScale)}px` : isMobile ? "794px" : "auto",
+            height: isMobile && zoomMode === "fit" ? `${Math.round(docHeight * fitScale)}px` : "auto",
+            margin: "0 auto",
+            position: isMobile && zoomMode === "fit" ? "relative" : "static",
             overflow: isMobile && zoomMode === "fit" ? "hidden" : "visible",
-            display: "flex",
-            justifyContent: "center"
+            borderRadius: isMobile && zoomMode === "fit" ? 8 : 0,
+            boxShadow: isMobile && zoomMode === "fit" ? "0 12px 40px rgba(0, 0, 0, 0.5)" : "none"
           }}
         >
           <div
+            ref={docRef}
             className="epdf-document"
             style={{
-              transform: isMobile && zoomMode === "fit" ? `scale(${currentScale})` : "none",
-              transformOrigin: "top left",
               width: "794px",
-              minWidth: "794px"
+              minWidth: "794px",
+              transform: isMobile && zoomMode === "fit" ? `scale(${fitScale})` : "none",
+              transformOrigin: "top left",
+              position: isMobile && zoomMode === "fit" ? "absolute" : "relative",
+              top: 0,
+              left: 0,
+              margin: isMobile && zoomMode === "fit" ? 0 : "0 auto"
             }}
           >
 
