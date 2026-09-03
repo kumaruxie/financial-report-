@@ -61,32 +61,150 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
         .epdf-modal-overlay {
           position: fixed;
           inset: 0;
-          background: rgba(7, 8, 12, 0.88);
+          background: rgba(7, 8, 12, 0.94);
           backdrop-filter: blur(14px);
           z-index: 99999;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding: 20px;
-          overflow-y: auto;
+          overflow-y: auto !important;
+          -webkit-overflow-scrolling: touch !important;
+          padding: 16px 8px 48px !important;
+          display: block !important;
         }
 
+        /* LUXURY EXECUTIVE TOOLBAR - DESKTOP */
         .epdf-toolbar {
           width: 100%;
           max-width: 210mm;
           background: #0F172A;
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          border-radius: 12px;
-          padding: 12px 24px;
+          border: 1px solid rgba(200, 167, 77, 0.35);
+          border-radius: 14px;
+          padding: 12px 18px;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 20px;
+          margin: 0 auto 18px;
           color: #FFF;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+          box-shadow: 0 14px 34px rgba(0, 0, 0, 0.65);
           position: sticky;
           top: 0;
           z-index: 1000;
+          box-sizing: border-box;
+          gap: 14px;
+        }
+
+        .epdf-toolbar-lead {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          min-width: 0;
+          flex: 1;
+        }
+
+        .epdf-toolbar-left-pack {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          min-width: 0;
+          flex: 1;
+        }
+
+        .epdf-toolbar-icon {
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
+          background: rgba(200, 167, 77, 0.15);
+          border: 1px solid rgba(200, 167, 77, 0.35);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .epdf-toolbar-info {
+          min-width: 0;
+        }
+
+        .epdf-toolbar-title {
+          font-weight: 700;
+          font-size: 14px;
+          color: #FFFFFF;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          letter-spacing: -0.01em;
+        }
+
+        .epdf-toolbar-meta {
+          font-size: 11px;
+          color: #94A3B8;
+          margin-top: 2px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .epdf-toolbar-actions {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-shrink: 0;
+        }
+
+        .epdf-toolbar-btn-print {
+          background: linear-gradient(135deg, #DFB755 0%, #C8A74D 50%, #B89238 100%);
+          color: #07080C;
+          border: 1px solid rgba(255, 255, 255, 0.25);
+          border-radius: 8px;
+          padding: 8px 18px;
+          font-weight: 700;
+          font-size: 13px;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 7px;
+          white-space: nowrap;
+          box-shadow: 0 4px 14px rgba(200, 167, 77, 0.3);
+          transition: all 0.15s ease;
+        }
+        .epdf-toolbar-btn-print:hover {
+          background: linear-gradient(135deg, #E8C468 0%, #D4AF37 100%);
+          transform: translateY(-1px);
+        }
+
+        .epdf-toolbar-btn-close {
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 8px;
+          color: #CBD5E1;
+          cursor: pointer;
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.15s ease;
+          padding: 0;
+          flex-shrink: 0;
+        }
+        .epdf-toolbar-btn-close:hover {
+          background: rgba(239, 68, 68, 0.2);
+          border-color: rgba(239, 68, 68, 0.4);
+          color: #F87171;
+        }
+
+        .epdf-mobile-close {
+          display: none !important;
+        }
+        .epdf-desktop-close {
+          display: flex !important;
+        }
+
+        /* DOCUMENT CONTAINER */
+        .epdf-document-scroll-container {
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          padding-bottom: 40px;
         }
 
         .epdf-document {
@@ -94,24 +212,23 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
           background: #FFFFFF;
           color: #0F172A;
           font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-          box-shadow: 0 24px 72px rgba(0, 0, 0, 0.4);
+          box-shadow: 0 24px 72px rgba(0, 0, 0, 0.5);
           margin: 0 auto;
         }
 
-        /* STRICT FIXED A4 PAGE DIMENSIONS */
         .epdf-page {
           width: 210mm;
           height: 297mm;
-          padding: 20mm;
+          padding: 18mm 20mm;
           box-sizing: border-box;
+          background: #FCFBF8;
           position: relative;
-          background: #FFFFFF;
-          page-break-after: always;
-          break-after: page;
           display: flex;
           flex-direction: column;
           justify-content: space-between;
-          border-bottom: 1px solid #E2E8F0;
+          page-break-after: always;
+          break-after: page;
+          border-bottom: 2px dashed #E2E8F0;
         }
 
         .epdf-page:last-child {
@@ -199,11 +316,104 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
           background: #F8FAFC;
         }
 
+        /* MOBILE OVERRIDES */
+        @media (max-width: 820px) {
+          .epdf-modal-overlay {
+            padding: 10px 8px 40px !important;
+            display: block !important;
+            overflow-x: hidden !important;
+          }
+
+          .epdf-toolbar {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 0 14px 0 !important;
+            padding: 12px 14px !important;
+            border-radius: 12px !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 12px !important;
+            background: #0F172A !important;
+            border: 1px solid rgba(200, 167, 77, 0.4) !important;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7) !important;
+          }
+
+          .epdf-toolbar-lead {
+            width: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 8px !important;
+          }
+
+          .epdf-toolbar-left-pack {
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            min-width: 0 !important;
+            flex: 1 !important;
+          }
+
+          .epdf-toolbar-icon {
+            width: 34px !important;
+            height: 34px !important;
+          }
+
+          .epdf-toolbar-title {
+            font-size: 13px !important;
+            max-width: calc(100vw - 115px) !important;
+          }
+
+          .epdf-toolbar-meta {
+            font-size: 10.5px !important;
+          }
+
+          .epdf-mobile-close {
+            display: flex !important;
+            width: 34px !important;
+            height: 34px !important;
+            border-radius: 8px !important;
+          }
+
+          .epdf-desktop-close {
+            display: none !important;
+          }
+
+          .epdf-toolbar-actions {
+            width: 100% !important;
+            display: block !important;
+            padding-top: 10px !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+          }
+
+          .epdf-toolbar-btn-print {
+            width: 100% !important;
+            height: 42px !important;
+            justify-content: center !important;
+            font-size: 13.5px !important;
+            border-radius: 8px !important;
+          }
+
+          .epdf-document-scroll-container {
+            width: 100% !important;
+            display: flex !important;
+            justify-content: center !important;
+            overflow: visible !important;
+          }
+
+          .epdf-document {
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+          }
+        }
+
         /* STRICT DECOUPLED PRINT MEDIA ENGINE */
         @media print {
           @page {
             size: A4 portrait;
             margin: 0;
+          }
           body * {
             visibility: hidden !important;
           }
@@ -242,208 +452,35 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             border-bottom: none !important;
             box-sizing: border-box !important;
           }
-        /* EXECUTIVE CONTROL BAR - DESKTOP */
-        .epdf-toolbar {
-          width: 100%;
-          max-width: 210mm;
-          background: #0B1120;
-          border: 1px solid rgba(200, 167, 77, 0.25);
-          border-radius: 14px;
-          padding: 12px 20px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin: 0 auto 20px;
-          color: #FFF;
-          box-shadow: 0 12px 36px rgba(0,0,0,0.6);
-          position: sticky;
-          top: 0;
-          z-index: 1000;
-          box-sizing: border-box;
-          gap: 16px;
-        }
-
-        .epdf-toolbar-lead {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          min-width: 0;
-          flex: 1;
-        }
-
-        .epdf-toolbar-icon {
-          width: 36px;
-          height: 36px;
-          border-radius: 10px;
-          background: rgba(200, 167, 77, 0.12);
-          border: 1px solid rgba(200, 167, 77, 0.25);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-
-        .epdf-toolbar-info {
-          min-width: 0;
-        }
-
-        .epdf-toolbar-title {
-          font-weight: 700;
-          font-size: 14px;
-          color: #FFFFFF;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          letter-spacing: -0.01em;
-        }
-
-        .epdf-toolbar-meta {
-          font-size: 11px;
-          color: #94A3B8;
-          margin-top: 2px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        .epdf-toolbar-actions {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          flex-shrink: 0;
-        }
-
-        .epdf-toolbar-btn-print {
-          background: linear-gradient(135deg, #D4AF37 0%, #C8A74D 100%);
-          color: #07080C;
-          border: none;
-          border-radius: 8px;
-          padding: 9px 18px;
-          font-weight: 700;
-          font-size: 13px;
-          cursor: pointer;
-          display: inline-flex;
-          align-items: center;
-          gap: 7px;
-          white-space: nowrap;
-          box-shadow: 0 4px 14px rgba(200, 167, 77, 0.3);
-          transition: all 0.15s ease;
-        }
-
-        .epdf-toolbar-btn-close {
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          border-radius: 8px;
-          color: #94A3B8;
-          cursor: pointer;
-          width: 38px;
-          height: 38px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all 0.15s ease;
-          padding: 0;
-          flex-shrink: 0;
-        }
-
-        @media (max-width: 820px) {
-          .epdf-modal-overlay {
-            padding: 10px 8px 40px !important;
-            display: block !important;
-            overflow-x: hidden !important;
-          }
-
-          .epdf-toolbar {
-            width: 100% !important;
-            max-width: 100% !important;
-            margin: 0 0 16px 0 !important;
-            padding: 12px 14px !important;
-            border-radius: 12px !important;
-            flex-direction: column !important;
-            align-items: stretch !important;
-            gap: 12px !important;
-          }
-
-          .epdf-toolbar-lead {
-            width: 100% !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 10px !important;
-          }
-
-          .epdf-toolbar-icon {
-            width: 34px !important;
-            height: 34px !important;
-          }
-
-          .epdf-toolbar-title {
-            font-size: 13px !important;
-          }
-
-          .epdf-toolbar-meta {
-            font-size: 10.5px !important;
-          }
-
-          .epdf-toolbar-actions {
-            width: 100% !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: space-between !important;
-            gap: 8px !important;
-            padding-top: 10px !important;
-            border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
-          }
-
-          .epdf-toolbar-btn-print {
-            flex: 1 !important;
-            height: 42px !important;
-            justify-content: center !important;
-            font-size: 13px !important;
-            border-radius: 9px !important;
-          }
-
-          .epdf-toolbar-btn-close {
-            height: 42px !important;
-            width: 44px !important;
-            border-radius: 9px !important;
-          }
-
-          .epdf-document-scroll-container {
-            width: 100% !important;
-            display: flex !important;
-            justify-content: center !important;
-            overflow: visible !important;
-          }
-
-          .epdf-document {
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
-            border-radius: 8px !important;
-            overflow: hidden !important;
-          }
         }
       `}</style>
 
       {/* EXECUTIVE CONTROL BAR */}
       <div className="epdf-toolbar">
         <div className="epdf-toolbar-lead">
-          <div className="epdf-toolbar-icon">
-            <Compass size={18} color="#C8A74D" />
-          </div>
-          <div className="epdf-toolbar-info">
-            <div className="epdf-toolbar-title">
-              Financial Health Report — {lead.name}
+          <div className="epdf-toolbar-left-pack">
+            <div className="epdf-toolbar-icon">
+              <Compass size={18} color="#C8A74D" />
             </div>
-            <div className="epdf-toolbar-meta">
-              Report ID: {reportId} • {dateStr}
+            <div className="epdf-toolbar-info">
+              <div className="epdf-toolbar-title">
+                Financial Health Report — {lead.name}
+              </div>
+              <div className="epdf-toolbar-meta">
+                Report ID: {reportId} • {dateStr}
+              </div>
             </div>
           </div>
+          <button onClick={onClose} className="epdf-toolbar-btn-close epdf-mobile-close" aria-label="Close Report">
+            <X size={18} />
+          </button>
         </div>
 
         <div className="epdf-toolbar-actions">
           <button onClick={handlePrint} className="epdf-toolbar-btn-print">
             <Printer size={15} /> Print / Save PDF
           </button>
-          <button onClick={onClose} className="epdf-toolbar-btn-close" aria-label="Close">
+          <button onClick={onClose} className="epdf-toolbar-btn-close epdf-desktop-close" aria-label="Close Report">
             <X size={18} />
           </button>
         </div>
