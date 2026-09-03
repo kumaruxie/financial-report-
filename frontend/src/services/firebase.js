@@ -13,7 +13,7 @@ import {
 } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBwNYSEdOlad0R_CjWaP_rIVoIvLZGdM3k",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "financial-fitness-a6116.firebaseapp.com",
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "financial-fitness-a6116",
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "financial-fitness-a6116.firebasestorage.app",
@@ -22,17 +22,27 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-LEDFSPK6FQ"
 };
 
-// Initialize Firebase App
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+// Initialize Firebase App safely
+let app = null;
+let auth = null;
+let googleProvider = null;
 
-// Initialize Firebase Auth
-export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({ prompt: "select_account" });
+try {
+  if (firebaseConfig.apiKey) {
+    app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    googleProvider = new GoogleAuthProvider();
+    googleProvider.setCustomParameters({ prompt: "select_account" });
+  } else {
+    console.warn("Firebase API key missing. Operating in offline/fallback auth mode.");
+  }
+} catch (err) {
+  console.warn("Firebase Auth initialization notice:", err?.message || err);
+}
 
 // Helper: Setup invisible Recaptcha for phone auth
 export function setupRecaptcha(containerId = "recaptcha-container") {
-  if (typeof window === "undefined") return null;
+  if (typeof window === "undefined" || !auth) return null;
   const container = document.getElementById(containerId);
   if (!container) return null;
 
@@ -44,20 +54,27 @@ export function setupRecaptcha(containerId = "recaptcha-container") {
   }
   container.innerHTML = "";
 
-  window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
-    size: "invisible",
-    callback: () => {
-      // reCAPTCHA solved
-    },
-    "expired-callback": () => {
-      console.warn("reCAPTCHA expired, resetting...");
-    }
-  });
+  try {
+    window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
+      size: "invisible",
+      callback: () => {
+        // reCAPTCHA solved
+      },
+      "expired-callback": () => {
+        console.warn("reCAPTCHA expired, resetting...");
+      }
+    });
+  } catch (err) {
+    console.warn("RecaptchaVerifier init error:", err?.message || err);
+    return null;
+  }
 
   return window.recaptchaVerifier;
 }
 
 export {
+  auth,
+  googleProvider,
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,

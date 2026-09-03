@@ -37,6 +37,26 @@ export function AuthProvider({ children }) {
 
   // Firebase auth state observer
   useEffect(() => {
+    if (!auth) {
+      try {
+        const localSaved = localStorage.getItem(AUTH_STORAGE_KEY);
+        if (localSaved) {
+          const parsed = JSON.parse(localSaved);
+          if (parsed && (parsed.token || parsed.id)) {
+            setUser(parsed);
+          } else {
+            setUser(null);
+          }
+        } else {
+          setUser(null);
+        }
+      } catch {
+        setUser(null);
+      }
+      setLoadingAuth(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         const token = await firebaseUser.getIdToken().catch(() => "");
@@ -89,6 +109,9 @@ export function AuthProvider({ children }) {
 
   // 1. Google 1-Click Sign-In
   const loginWithGoogle = async () => {
+    if (!auth || !googleProvider) {
+      return { success: false, error: "Google Sign-In is unavailable in this environment." };
+    }
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const fbUser = result.user;
@@ -125,25 +148,28 @@ export function AuthProvider({ children }) {
   const loginWithEmail = async (email, password) => {
     const cleanEmail = email.trim().toLowerCase();
     try {
-      // First try Firebase Email Auth
-      const result = await signInWithEmailAndPassword(auth, cleanEmail, password);
-      const fbUser = result.user;
-      const token = await fbUser.getIdToken().catch(() => "");
-      const formattedUser = {
-        id: fbUser.uid,
-        uid: fbUser.uid,
-        name: fbUser.displayName || fbUser.email.split("@")[0],
-        email: fbUser.email || cleanEmail,
-        mobile: fbUser.phoneNumber || "",
-        role: "client",
-        token
-      };
-      setUser(formattedUser);
-      try {
-        localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(formattedUser));
-      } catch (e) {}
-      setIsAuthModalOpen(false);
-      return { success: true, user: formattedUser };
+      if (auth) {
+        // First try Firebase Email Auth
+        const result = await signInWithEmailAndPassword(auth, cleanEmail, password);
+        const fbUser = result.user;
+        const token = await fbUser.getIdToken().catch(() => "");
+        const formattedUser = {
+          id: fbUser.uid,
+          uid: fbUser.uid,
+          name: fbUser.displayName || fbUser.email.split("@")[0],
+          email: fbUser.email || cleanEmail,
+          mobile: fbUser.phoneNumber || "",
+          role: "client",
+          token
+        };
+        setUser(formattedUser);
+        try {
+          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(formattedUser));
+        } catch (e) {}
+        setIsAuthModalOpen(false);
+        return { success: true, user: formattedUser };
+      }
+      throw new Error("Firebase auth unavailable");
     } catch (fbErr) {
       // If Firebase email sign in fails, check backend DB
       const res = await loginUserApi(cleanEmail, password);
@@ -194,13 +220,15 @@ export function AuthProvider({ children }) {
 
       if (res && res.success) {
         // Also create in Firebase if possible in background
-        try {
-          const fbRes = await createUserWithEmailAndPassword(auth, cleanEmail, payload.password);
-          if (payload.name) {
-            await updateProfile(fbRes.user, { displayName: payload.name.trim() }).catch(() => {});
+        if (auth) {
+          try {
+            const fbRes = await createUserWithEmailAndPassword(auth, cleanEmail, payload.password);
+            if (payload.name) {
+              await updateProfile(fbRes.user, { displayName: payload.name.trim() }).catch(() => {});
+            }
+          } catch (fbE) {
+            console.warn("Background Firebase register notice:", fbE.message);
           }
-        } catch (fbE) {
-          console.warn("Background Firebase register notice:", fbE.message);
         }
 
         setUser(res.user);
@@ -265,9 +293,11 @@ export function AuthProvider({ children }) {
 
   // 7. Sign Out
   const logout = async () => {
-    try {
-      await signOut(auth);
-    } catch (e) {}
+    if (auth) {
+      try {
+        await signOut(auth);
+      } catch (e) {}
+    }
     setUser(null);
     setPortalMode("client");
     try {
