@@ -243,59 +243,140 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             box-sizing: border-box !important;
           }
         }
+
+        @media (max-width: 820px) {
+          .epdf-modal-overlay {
+            padding: 10px 8px 40px !important;
+            display: block !important;
+            overflow-x: hidden !important;
+          }
+          .epdf-toolbar {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 0 14px 0 !important;
+            padding: 10px 14px !important;
+            border-radius: 10px !important;
+            box-sizing: border-box !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 10px !important;
+          }
+          .epdf-toolbar-top-row {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 10px !important;
+          }
+          .epdf-toolbar-bottom-row {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 10px !important;
+            padding-top: 8px !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+          }
+          .epdf-document-scroll-container {
+            width: 100% !important;
+            display: flex !important;
+            justify-content: center !important;
+            overflow: visible !important;
+          }
+          .epdf-document {
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+          }
+        }
       `}</style>
 
-      {/* MINIMALIST CONTROL BAR - SINGLE CLEAN VIEW */}
+      {/* MINIMALIST CONTROL BAR - CLEAN & RESPONSIVE */}
       <div className="epdf-toolbar">
-        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: 1 }}>
-          <Compass size={20} color="#C8A74D" style={{ flexShrink: 0 }} />
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontWeight: 700, fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              Financial Health Report — {lead.name}
+        {isMobile ? (
+          <>
+            <div className="epdf-toolbar-top-row">
+              <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
+                <Compass size={18} color="#C8A74D" style={{ flexShrink: 0 }} />
+                <div style={{ fontWeight: 700, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {lead.name}'s Financial Report
+                </div>
+              </div>
+              <button
+                onClick={onClose}
+                style={{
+                  background: "rgba(255, 255, 255, 0.06)",
+                  border: "1px solid rgba(255, 255, 255, 0.12)",
+                  borderRadius: 6,
+                  color: "#94A3B8",
+                  cursor: "pointer",
+                  padding: "5px 8px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
             </div>
-            <div style={{ fontSize: 10.5, color: "#94A3B8" }}>
-              Report ID: {reportId} • {dateStr}
-            </div>
-          </div>
-        </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-          <button
-            onClick={handlePrint}
-            style={{
-              background: "#C8A74D",
-              color: "#07080C",
-              border: "none",
-              borderRadius: 6,
-              padding: "7px 14px",
-              fontWeight: 700,
-              fontSize: 12.5,
-              cursor: "pointer",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6
-            }}
-          >
-            <Printer size={15} /> Print / Save PDF
-          </button>
-          <button
-            onClick={onClose}
-            style={{
-              background: "rgba(255, 255, 255, 0.06)",
-              border: "1px solid rgba(255, 255, 255, 0.12)",
-              borderRadius: 6,
-              color: "#94A3B8",
-              cursor: "pointer",
-              padding: "5px 7px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center"
-            }}
-            aria-label="Close"
-          >
-            <X size={18} />
-          </button>
-        </div>
+            <div className="epdf-toolbar-bottom-row">
+              <div style={{ fontSize: 10.5, color: "#94A3B8" }}>
+                {dateStr}
+              </div>
+              <button
+                onClick={handlePrint}
+                style={{
+                  background: "#C8A74D",
+                  color: "#07080C",
+                  border: "none",
+                  borderRadius: 6,
+                  padding: "7px 16px",
+                  fontWeight: 700,
+                  fontSize: 12.5,
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6
+                }}
+              >
+                <Printer size={14} /> Print / Save PDF
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: 1 }}>
+              <Compass size={20} color="#C8A74D" style={{ flexShrink: 0 }} />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 700, fontSize: 14 }}>Financial Health & Wealth Planning Report — {lead.name}</div>
+                <div style={{ fontSize: 11, color: "#94A3B8" }}>Report ID: {reportId} • Generated on {dateStr}</div>
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+              <button
+                onClick={handlePrint}
+                style={{
+                  background: "#C8A74D",
+                  color: "#07080C",
+                  border: "none",
+                  borderRadius: 6,
+                  padding: "8px 16px",
+                  fontWeight: 700,
+                  fontSize: 13,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6
+                }}
+              >
+                <Printer size={15} /> Print Report
+              </button>
+              <button onClick={onClose} style={{ background: "none", border: "none", color: "#94A3B8", cursor: "pointer" }}>
+                <X size={20} />
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       {isPrinting && (
@@ -318,7 +399,15 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
 
       {/* 10-PAGE A4 PDF DOCUMENT SCROLL CONTAINER */}
       <div className="epdf-document-scroll-container">
-        <div className="epdf-document">
+        <div
+          className="epdf-document"
+          style={isMobile ? {
+            width: "794px",
+            minWidth: "794px",
+            zoom: Number(mobileScale),
+            margin: "0 auto"
+          } : {}}
+        >
 
         {/* ================= PAGE 1: COVER PAGE ================= */}
         <div className="epdf-page" style={{ background: "#FCFBF8", position: "relative" }}>
