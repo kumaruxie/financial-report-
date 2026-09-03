@@ -1,13 +1,13 @@
 const getApiBaseUrl = () => {
+  if (import.meta.env && import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
   if (typeof window !== "undefined") {
     const host = window.location.hostname;
     if (host === "localhost" || host === "127.0.0.1" || host.startsWith("192.168.") || host.startsWith("10.") || host.startsWith("172.")) {
       return `http://${host}:5000/api/v1`;
     }
     return "https://financial-report-aq7m.onrender.com/api/v1";
-  }
-  if (import.meta.env && import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
   }
   return "http://localhost:5000/api/v1";
 };
