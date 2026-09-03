@@ -13,13 +13,13 @@ import {
 } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBwNYSEdOlad0R_CjWaP_rIVoIvLZGdM3k",
-  authDomain: "financial-fitness-a6116.firebaseapp.com",
-  projectId: "financial-fitness-a6116",
-  storageBucket: "financial-fitness-a6116.firebasestorage.app",
-  messagingSenderId: "490887071813",
-  appId: "1:490887071813:web:b6e7b41450cad91d9dfb2c",
-  measurementId: "G-LEDFSPK6FQ"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "financial-fitness-a6116.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "financial-fitness-a6116",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "financial-fitness-a6116.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "490887071813",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:490887071813:web:b6e7b41450cad91d9dfb2c",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-LEDFSPK6FQ"
 };
 
 // Initialize Firebase App
