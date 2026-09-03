@@ -172,14 +172,7 @@ export default function AssessmentsDrawer({
         </div>
 
         {/* Sub-header: Title & Quick New Button */}
-        <div
-          style={{
-            padding: "16px 24px 12px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center"
-          }}
-        >
+        <div className="ff-drawer-subheader">
           <div>
             <h4 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-main)", margin: 0 }}>
               My Previous Assessments
@@ -189,7 +182,7 @@ export default function AssessmentsDrawer({
             </p>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div className="ff-drawer-subheader-actions">
             <button
               onClick={() => user && fetchUserAssessments(user)}
               disabled={loadingAssessments}
@@ -295,79 +288,79 @@ export default function AssessmentsDrawer({
               return (
                 <div
                   key={assessment.id || assessment._id || idx}
-                  style={{
-                    background: isLatest ? "rgba(201, 154, 75, 0.05)" : "rgba(255, 255, 255, 0.02)",
-                    border: isLatest ? "1px solid rgba(201, 154, 75, 0.3)" : "1px solid var(--border-subtle)",
-                    borderRadius: 12,
-                    padding: "14px 16px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    flexWrap: "wrap",
-                    gap: 12,
-                    transition: "all 0.15s ease"
-                  }}
+                  className={`ff-drawer-card ${isLatest ? "is-latest" : ""}`}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 200 }}>
-                    <div
-                      style={{
-                        width: 38,
-                        height: 38,
-                        borderRadius: 10,
-                        background: isLatest ? "rgba(201, 154, 75, 0.15)" : "rgba(255, 255, 255, 0.05)",
-                        color: isLatest ? "var(--accent-gold)" : "var(--text-soft)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0
-                      }}
-                    >
-                      <FileText size={18} />
+                  {/* Card Top: Identity + Delete in top-right */}
+                  <div className="ff-drawer-card-top">
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                      <div
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 9,
+                          background: isLatest ? "rgba(201, 154, 75, 0.15)" : "rgba(255, 255, 255, 0.05)",
+                          color: isLatest ? "var(--accent-gold)" : "var(--text-soft)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0
+                        }}
+                      >
+                        <FileText size={17} />
+                      </div>
+
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                          <span style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text-main)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {assessment.name || "Assessment"}
+                          </span>
+                          {isLatest && (
+                            <span
+                              style={{
+                                background: "rgba(201, 154, 75, 0.2)",
+                                color: "var(--accent-gold)",
+                                fontSize: 9.5,
+                                fontWeight: 700,
+                                padding: "1px 6px",
+                                borderRadius: 6,
+                                textTransform: "uppercase"
+                              }}
+                            >
+                              Latest
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: 11, color: "var(--text-fog)", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
+                          <Calendar size={11} />
+                          {new Date(assessment.submittedAt).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric"
+                          })}
+                        </div>
+                      </div>
                     </div>
 
-                    <div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text-main)" }}>
-                          {assessment.name || "Assessment"}
-                        </span>
-                        {isLatest && (
-                          <span
-                            style={{
-                              background: "rgba(201, 154, 75, 0.2)",
-                              color: "var(--accent-gold)",
-                              fontSize: 10,
-                              fontWeight: 700,
-                              padding: "1px 6px",
-                              borderRadius: 8,
-                              textTransform: "uppercase"
-                            }}
-                          >
-                            Latest
-                          </span>
-                        )}
-                      </div>
-                      <div style={{ fontSize: 11.5, color: "var(--text-fog)", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
-                        <Calendar size={12} />
-                        {new Date(assessment.submittedAt).toLocaleDateString("en-IN", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric"
-                        })}
-                      </div>
-                    </div>
+                    <button
+                      onClick={(e) => handleDelete(assessment.id || assessment._id, e)}
+                      className="ff-btn-ghost"
+                      style={{ height: 30, width: 30, padding: 0, borderRadius: 6, color: "#EF4444", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(239, 68, 68, 0.2)", background: "rgba(239, 68, 68, 0.05)", flexShrink: 0 }}
+                      title="Delete assessment"
+                    >
+                      <Trash2 size={13} color="#EF4444" />
+                    </button>
                   </div>
 
-                  {/* Score & Metrics */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                    <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: 10, color: "var(--text-fog)", textTransform: "uppercase", fontWeight: 600 }}>Score</div>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: "var(--accent-gold)", fontFamily: "var(--font-mono)" }}>
+                  {/* Card Bottom: Score on left + Action buttons on right */}
+                  <div className="ff-drawer-card-bottom">
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255, 255, 255, 0.03)", padding: "4px 10px", borderRadius: 8, border: "1px solid var(--border-subtle)" }}>
+                      <span style={{ fontSize: 10, color: "var(--text-fog)", textTransform: "uppercase", fontWeight: 700 }}>Score</span>
+                      <span style={{ fontSize: 14, fontWeight: 800, color: "var(--accent-gold)", fontFamily: "var(--font-mono)" }}>
                         {assessment.healthScore || rep?.healthScore || rep?.scores?.overallScore || 0}/100
-                      </div>
+                      </span>
                     </div>
 
-                    {/* Actions */}
-                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                    <div className="ff-drawer-card-actions">
                       <button
                         onClick={(e) => handleView(assessment, e)}
                         className="ff-btn-wizard-ghost"
@@ -383,7 +376,7 @@ export default function AssessmentsDrawer({
                           setPdfLead(assessment);
                         }}
                         className="ff-btn-wizard-ghost"
-                        style={{ height: 32, padding: "0 9px", fontSize: 11.5, borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 4 }}
+                        style={{ height: 32, padding: "0 10px", fontSize: 11.5, borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 4 }}
                         title="Download PDF"
                       >
                         <Download size={13} /> PDF
@@ -392,19 +385,10 @@ export default function AssessmentsDrawer({
                       <button
                         onClick={(e) => handleClone(assessment, e)}
                         className="ff-btn-wizard-ghost"
-                        style={{ height: 32, padding: "0 9px", fontSize: 11.5, borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 4 }}
+                        style={{ height: 32, padding: "0 10px", fontSize: 11.5, borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 4 }}
                         title="Recalculate with these inputs"
                       >
                         <RefreshCw size={13} /> Retake
-                      </button>
-
-                      <button
-                        onClick={(e) => handleDelete(assessment.id || assessment._id, e)}
-                        className="ff-btn-ghost"
-                        style={{ height: 32, width: 32, padding: 0, borderRadius: 6, color: "var(--text-fog)", display: "flex", alignItems: "center", justifyContent: "center" }}
-                        title="Delete"
-                      >
-                        <Trash2 size={14} color="#EF4444" />
                       </button>
                     </div>
                   </div>

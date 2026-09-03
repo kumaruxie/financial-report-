@@ -131,18 +131,6 @@ export default function HeaderNav({ activeTab, setActiveTab, onResetWizard, onOp
                 </button>
               )}
 
-              <button
-                className="ff-btn-ghost"
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  window.location.hash = "adm";
-                  if (typeof setPortalMode === "function") setPortalMode("admin");
-                }}
-                style={{ width: "100%", justifyContent: "flex-start", height: 42, padding: "0 14px", borderRadius: 10, fontSize: 13, gap: 10, color: "var(--accent-teal)", border: "1px solid var(--border-subtle)" }}
-              >
-                <ShieldCheck size={16} /> Advisory Portal (/adm)
-              </button>
-
               <div style={{ height: 1, background: "var(--border-subtle)", margin: "8px 0" }} />
 
               {user ? (

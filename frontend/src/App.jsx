@@ -268,18 +268,8 @@ function MainContent() {
   };
 
   const startAssessmentFlow = (prefillData = null) => {
-    if (prefillData && typeof prefillData === "object") {
-      setFinancials((prev) => ({
-        ...prev,
-        age: prefillData.age || prev.age,
-        income: prefillData.income || prev.income,
-        expenses: prefillData.expenses || prev.expenses,
-        savings: prefillData.savings || prev.savings
-      }));
-    }
-
     if (!user) {
-      setPendingPrefillData(prefillData || true);
+      setPendingPrefillData(true);
       openAuthModal("signup");
       return;
     }

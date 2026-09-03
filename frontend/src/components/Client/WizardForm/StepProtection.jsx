@@ -102,6 +102,7 @@ export default function StepProtection({ data, onChange, onNext }) {
             </label>
             <input
               type="text"
+              autoComplete="off"
               className="ff-input-56px"
               placeholder="Enter existing term cover amount (₹)"
               value={formatRupeeInput(data.termAmount)}
@@ -179,6 +180,7 @@ export default function StepProtection({ data, onChange, onNext }) {
             </label>
             <input
               type="text"
+              autoComplete="off"
               className="ff-input-56px"
               placeholder="Enter existing health cover amount (₹)"
               value={formatRupeeInput(data.healthAmount)}
@@ -193,6 +195,7 @@ export default function StepProtection({ data, onChange, onNext }) {
         <label className="ff-input-label-uppercase">Your City</label>
         <input
           type="text"
+          autoComplete="off"
           className="ff-input-56px"
           placeholder="Enter your city name"
           value={data.city || ""}
@@ -204,6 +207,7 @@ export default function StepProtection({ data, onChange, onNext }) {
         <label className="ff-input-label-uppercase">Target Retirement Age</label>
         <input
           type="text"
+          autoComplete="off"
           className="ff-input-56px"
           placeholder="Enter target retirement age (e.g. 60)"
           value={data.retirementAge ?? ""}

@@ -32,6 +32,7 @@ export default function StepFinancials({ data, onChange, onNext }) {
         <label className="ff-input-label-uppercase">Current Age</label>
         <input
           type="text"
+          autoComplete="off"
           className="ff-input-56px"
           placeholder="Enter your current age"
           value={data.age || ""}
@@ -43,6 +44,7 @@ export default function StepFinancials({ data, onChange, onNext }) {
         <label className="ff-input-label-uppercase">Monthly Income</label>
         <input
           type="text"
+          autoComplete="off"
           className="ff-input-56px"
           placeholder="Enter monthly take-home income (₹)"
           value={formatRupeeInput(data.income)}
@@ -54,6 +56,7 @@ export default function StepFinancials({ data, onChange, onNext }) {
         <label className="ff-input-label-uppercase">Monthly Expenses</label>
         <input
           type="text"
+          autoComplete="off"
           className="ff-input-56px"
           placeholder="Enter monthly living expenses (₹)"
           value={formatRupeeInput(data.expenses)}
@@ -65,6 +68,7 @@ export default function StepFinancials({ data, onChange, onNext }) {
         <label className="ff-input-label-uppercase">Current Savings</label>
         <input
           type="text"
+          autoComplete="off"
           className="ff-input-56px"
           placeholder="Enter total liquid savings (₹)"
           value={formatRupeeInput(data.savings)}

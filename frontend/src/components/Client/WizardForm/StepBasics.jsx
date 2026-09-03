@@ -75,6 +75,7 @@ export default function StepBasics({ data, onChange, onNext }) {
         <label className="ff-input-label-uppercase">Full Name</label>
         <input
           type="text"
+          autoComplete="off"
           className={`ff-input-56px ${fieldErrors.name ? "has-error" : ""}`}
           placeholder="Enter your full name"
           maxLength={40}
@@ -93,6 +94,7 @@ export default function StepBasics({ data, onChange, onNext }) {
         <label className="ff-input-label-uppercase">Email Address</label>
         <input
           type="email"
+          autoComplete="off"
           className={`ff-input-56px ${fieldErrors.email ? "has-error" : ""}`}
           placeholder="Enter your email address"
           maxLength={80}
@@ -124,6 +126,7 @@ export default function StepBasics({ data, onChange, onNext }) {
           </select>
           <input
             type="tel"
+            autoComplete="off"
             className={`ff-input-56px ${fieldErrors.mobile ? "has-error" : ""}`}
             style={{ flex: 1 }}
             placeholder={currentCountry.placeholder}
