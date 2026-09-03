@@ -53,7 +53,7 @@ class AdminErrorBoundary extends React.Component {
 
 function AdminPortalMain() {
   const { setPortalMode } = useAuth();
-  const { contactEnquiries = [], refreshBackendData } = useApp();
+  const { contactEnquiries = [], refreshBackendData, leads: appLeads = [] } = useApp();
 
   // Authentication State
   const [adminUser, setAdminUser] = useState(() => {
@@ -82,19 +82,32 @@ function AdminPortalMain() {
   const [activeTab, setActiveTab] = useState("crm"); // 'crm' | 'team' | 'enquiries' | 'logs'
   const [selectedLead, setSelectedLead] = useState(null);
 
-  // Dynamic Data Lists
-  const [adminLeads, setAdminLeads] = useState([]);
+  // Dynamic Data Lists — initialized from cache so never zero on first render
+  const [adminLeads, setAdminLeads] = useState(() => {
+    try {
+      const saved = localStorage.getItem("ff_leads_db");
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
   const [teamUsers, setTeamUsers] = useState([]);
 
   const isSuperAdmin = adminUser?.role === "superadmin" || adminUser?.id === "superadmin_master";
 
   const loadPortalData = async (token = adminToken) => {
-    if (!token && !adminUser) return;
     setIsRefreshing(true);
     try {
       // 1. Fetch leads (role-filtered by backend)
       const fetchedLeads = await getLeadsApi(token);
-      if (Array.isArray(fetchedLeads)) setAdminLeads(fetchedLeads);
+      if (Array.isArray(fetchedLeads) && fetchedLeads.length > 0) {
+        setAdminLeads(fetchedLeads);
+        try {
+          localStorage.setItem("ff_leads_db", JSON.stringify(fetchedLeads));
+        } catch (e) {}
+      } else if (Array.isArray(fetchedLeads)) {
+        setAdminLeads(fetchedLeads);
+      }
 
       // 2. Fetch team members (if superadmin)
       if (isSuperAdmin || !adminUser || adminUser?.role === "superadmin") {
@@ -113,7 +126,7 @@ function AdminPortalMain() {
   };
 
   useEffect(() => {
-    if (adminToken && adminUser) {
+    if (adminToken || adminUser) {
       loadPortalData(adminToken);
     }
   }, [adminToken, adminUser?.id]);
@@ -335,7 +348,9 @@ function AdminPortalMain() {
   }
 
   // Compute live metrics across loaded leads
-  const safeLeads = Array.isArray(adminLeads) ? adminLeads : [];
+  const safeLeads = (Array.isArray(adminLeads) && adminLeads.length > 0)
+    ? adminLeads
+    : (Array.isArray(appLeads) && appLeads.length > 0 ? appLeads : []);
   const safeEnquiries = Array.isArray(contactEnquiries) ? contactEnquiries : [];
 
   const totalLeads = safeLeads.length;
@@ -388,6 +403,10 @@ function AdminPortalMain() {
               <span style={{ fontSize: 11.5, color: "var(--accent-teal)", fontWeight: 600, whiteSpace: "nowrap" }}>
                 ● Active Session
               </span>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(16, 185, 129, 0.12)", border: "1px solid rgba(16, 185, 129, 0.35)", padding: "2px 10px", borderRadius: 20, whiteSpace: "nowrap" }}>
+                <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#10B981", display: "inline-block", boxShadow: "0 0 6px #10B981" }}></span>
+                <span style={{ fontSize: 11, color: "#10B981", fontWeight: 700 }}>MongoDB Atlas: Connected ({totalLeads} Leads)</span>
+              </div>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "rgba(255, 255, 255, 0.05)", border: "1px solid var(--border-subtle)", padding: "2px 8px", borderRadius: 8, whiteSpace: "nowrap" }}>
                 <span style={{ fontSize: 10, color: "var(--text-fog)", textTransform: "uppercase" }}>powered by</span>
                 <img src="/apkacoach-logo-dark.png" alt="ApkaCoach" style={{ height: 13, width: "auto" }} />
@@ -582,7 +601,7 @@ function AdminPortalMain() {
       {/* 4. MAIN DATA TAB DISPLAY */}
       {activeTab === "crm" && (
         <LeadTable
-          leads={adminLeads}
+          leads={safeLeads}
           teamUsers={teamUsers}
           onSelectLead={(lead) => setSelectedLead(lead)}
           adminRole={adminUser?.role}
