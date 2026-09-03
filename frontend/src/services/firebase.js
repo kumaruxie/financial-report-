@@ -13,7 +13,7 @@ import {
 } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBwNYSEdOlad0R_CjWaP_rIVoIvLZGdM3k",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "financial-fitness-a6116.firebaseapp.com",
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "financial-fitness-a6116",
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "financial-fitness-a6116.firebasestorage.app",
@@ -22,19 +22,19 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-LEDFSPK6FQ"
 };
 
-// Initialize Firebase App safely
+// Initialize Firebase App safely ONLY if a valid API key is present
 let app = null;
 let auth = null;
 let googleProvider = null;
 
 try {
-  if (firebaseConfig.apiKey) {
+  if (firebaseConfig.apiKey && firebaseConfig.apiKey.trim() !== "") {
     app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
     auth = getAuth(app);
     googleProvider = new GoogleAuthProvider();
     googleProvider.setCustomParameters({ prompt: "select_account" });
   } else {
-    console.warn("Firebase API key missing. Operating in offline/fallback auth mode.");
+    console.info("ℹ️ Firebase API key not set in environment. Running in resilient fallback mode without Firebase.");
   }
 } catch (err) {
   console.warn("Firebase Auth initialization notice:", err?.message || err);
