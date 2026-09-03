@@ -149,6 +149,67 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
         .ffr-surplus-warn { font-size: 13.5px; color: var(--alert-coral); background: rgba(239, 68, 68, 0.08); padding: 12px 18px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2); margin-top: 10px; }
         .ffr-surplus-ok { font-size: 13.5px; color: var(--accent-teal); background: rgba(16, 185, 129, 0.08); padding: 12px 18px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2); margin-top: 10px; }
 
+        /* Priority Cards */
+        .rpt-priorities-list { display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px; }
+        .rpt-priority-card { border-radius: 14px; padding: 18px 22px; display: flex; align-items: flex-start; gap: 16px; transition: transform 0.2s; }
+        .rpt-priority-badge { color: #07080C; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; margin-top: 2px; flex-shrink: 0; }
+        .rpt-priority-content { flex: 1; }
+        .rpt-priority-content h4 { margin: 0 0 4px; font-size: 16px; font-weight: 700; color: var(--text-main); }
+        .rpt-priority-content p { margin: 0; font-size: 13.5px; color: var(--text-fog); line-height: 1.5; }
+
+        .rpt-score-gauges { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
+
+        /* MOBILE RESPONSIVENESS (< 768px) */
+        @media (max-width: 768px) {
+          .rpt-banner { padding: 18px 14px !important; margin-bottom: 18px !important; border-radius: 14px !important; }
+          .rpt-banner-top { flex-direction: column !important; align-items: stretch !important; gap: 14px !important; }
+          .rpt-banner-top > div { width: 100% !important; }
+          .rpt-banner-top button { width: 100% !important; justify-content: center !important; height: 44px !important; font-size: 13.5px !important; }
+          .rpt-banner h2 { font-size: 18px !important; }
+
+          .ffr-info-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; margin-bottom: 18px !important; }
+          .ffr-info-item { padding: 10px 10px !important; border-radius: 10px !important; }
+          .ffr-info-item .l { font-size: 10px !important; }
+          .ffr-info-item .v { font-size: 14.5px !important; margin-top: 3px !important; }
+
+          .rpt-score-card { padding: 18px 14px !important; border-radius: 14px !important; flex-direction: column !important; align-items: center !important; text-align: center !important; gap: 18px !important; margin-bottom: 18px !important; }
+          .rpt-score-num { font-size: 38px !important; }
+          .rpt-score-gauges { gap: 10px !important; justify-content: space-around !important; width: 100% !important; }
+
+          .rpt-section-title { font-size: 15.5px !important; margin: 22px 0 10px !important; padding-bottom: 8px !important; flex-wrap: wrap !important; }
+
+          .rpt-exec-box { padding: 14px 14px !important; margin-bottom: 18px !important; border-radius: 12px !important; }
+          .rpt-exec-box p { font-size: 13px !important; line-height: 1.55 !important; }
+
+          /* CRITICAL: STACK PRIORITY CARDS VERTICALLY ON MOBILE */
+          .rpt-priority-card { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; padding: 14px 14px !important; border-radius: 12px !important; }
+          .rpt-priority-badge { align-self: flex-start !important; font-size: 10px !important; padding: 3px 8px !important; margin-top: 0 !important; }
+          .rpt-priority-content { width: 100% !important; }
+          .rpt-priority-content h4 { font-size: 15px !important; margin-bottom: 4px !important; }
+          .rpt-priority-content p { font-size: 12.5px !important; line-height: 1.5 !important; }
+
+          /* STACK COST OF WAITING ON MOBILE */
+          .rpt-cow { flex-direction: column !important; border-radius: 12px !important; margin-bottom: 18px !important; }
+          .rpt-cow-block { padding: 14px 14px !important; text-align: center !important; }
+          .rpt-cow-block .v { font-size: 20px !important; }
+          .rpt-cow-arrow { flex-direction: row !important; padding: 8px 12px !important; border-left: none !important; border-right: none !important; border-top: 1px solid var(--border-subtle) !important; border-bottom: 1px solid var(--border-subtle) !important; justify-content: center !important; }
+          .rpt-cow-arrow svg { transform: rotate(90deg) !important; }
+
+          .rpt-goal-grid { grid-template-columns: 1fr !important; gap: 12px !important; margin-bottom: 18px !important; }
+          .rpt-goal-card { padding: 14px 14px !important; border-radius: 12px !important; }
+
+          .ffr-risk-card { flex-direction: column !important; padding: 14px 14px !important; gap: 10px !important; border-radius: 12px !important; }
+
+          .rpt-summary-charts { grid-template-columns: 1fr !important; gap: 14px !important; margin-bottom: 18px !important; }
+
+          .ffr-total-row { flex-direction: column !important; align-items: flex-start !important; gap: 6px !important; padding: 12px 4px !important; }
+          .ffr-total-row .lbl { font-size: 13.5px !important; }
+          .ffr-total-row .val { font-size: 19px !important; }
+
+          .rpt-priority-box { padding: 12px !important; }
+          .rpt-p-item { flex-direction: column !important; gap: 6px !important; padding: 10px 0 !important; }
+        }
+
         @media print {
           .ffr-full-report-container { color: #000 !important; background: #fff !important; padding: 0 !important; }
           .rpt-banner, .rpt-score-card, .ffr-info-item, .rpt-goal-card, .ffr-risk-card, .rpt-priority-box, .rpt-exec-box { background: #fff !important; color: #000 !important; border: 1px solid #ccc !important; box-shadow: none !important; }
@@ -295,7 +356,7 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
             {r.scores.overallScore >= 70 ? "On Track" : r.scores.overallScore >= 40 ? "Needs Improvement" : "Needs Attention"}
           </div>
         </div>
-        <div style={{ display: "flex", gap: 24, flexWrap: "wrap", justifyContent: "center" }}>
+        <div className="rpt-score-gauges">
           <CircleGauge value={r.scores.retirementReadiness} label="Retirement Readiness" color={scoreColor(r.scores.retirementReadiness)} />
           <CircleGauge value={r.scores.goalPreparedness} label="Goal Preparedness" color={scoreColor(r.scores.goalPreparedness)} />
           <CircleGauge value={r.scores.protectionStrength} label="Protection Strength" color={scoreColor(r.scores.protectionStrength)} />
@@ -318,41 +379,29 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
           <div className="rpt-section-title">
             <Award size={18} color="var(--accent-gold)" /> Action Priority (Where to Focus First)
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 28 }}>
+          <div className="rpt-priorities-list">
             {r.priorities.map((item) => (
               <div
                 key={item.tag}
+                className="rpt-priority-card"
                 style={{
                   background: item.bgColor,
-                  border: `1.5px solid ${item.borderColor}`,
-                  borderRadius: 14,
-                  padding: "18px 22px",
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: 16
+                  border: `1.5px solid ${item.borderColor}`
                 }}
               >
                 <div
+                  className="rpt-priority-badge"
                   style={{
-                    background: item.color,
-                    color: "#07080C",
-                    fontSize: 11,
-                    fontWeight: 800,
-                    padding: "4px 10px",
-                    borderRadius: 20,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.04em",
-                    whiteSpace: "nowrap",
-                    marginTop: 2
+                    background: item.color
                   }}
                 >
                   {item.tag}
                 </div>
-                <div style={{ flex: 1 }}>
-                  <h4 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 700, color: "var(--text-main)" }}>
+                <div className="rpt-priority-content">
+                  <h4>
                     {item.title}
                   </h4>
-                  <p style={{ margin: 0, fontSize: 13.5, color: "var(--text-fog)", lineHeight: 1.5 }}>
+                  <p>
                     {item.desc}
                   </p>
                 </div>

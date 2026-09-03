@@ -396,23 +396,22 @@ function MainContent() {
 
           {/* FORM CARD / FULL-SCREEN REPORT CONTAINER */}
           <div
-            className="ff-wizard-floating-card"
+            className={`ff-wizard-floating-card ${wizardStep === 5 ? "is-report-step" : ""}`}
             style={{
               background: "var(--bg-surface)",
               border: "1px solid var(--border-medium)",
               borderRadius: 20,
-              padding: wizardStep === 5 ? "36px 40px" : "40px 44px",
               boxShadow: "var(--shadow-layered)",
               width: "100%"
             }}
           >
             {isProcessing ? (
-              <div className="ff-processing-wrap" style={{ padding: "60px 24px" }}>
+              <div className="ff-processing-wrap">
                 <div className="ff-spinner"></div>
-                <h3 style={{ fontSize: 24, color: "var(--text-main)", fontWeight: 600, fontFamily: "var(--font-serif)", marginBottom: 8 }}>
+                <h3>
                   Analyzing Your Financial Profile...
                 </h3>
-                <p style={{ color: "var(--accent-gold)", fontSize: 14, fontFamily: "var(--font-mono)" }}>
+                <p>
                   {processingStatus}
                 </p>
               </div>
@@ -446,7 +445,7 @@ function MainContent() {
                       </div>
                     )}
 
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 24, paddingTop: 20, borderTop: "1px solid var(--border-subtle)" }}>
+                    <div className="ff-wizard-actions">
                       <button
                         className="ff-btn-wizard-ghost"
                         onClick={() => {
@@ -454,7 +453,6 @@ function MainContent() {
                           if (wizardStep > 1) setWizardStep(wizardStep - 1);
                           else setActiveTab("landing");
                         }}
-                        style={{ height: 52, borderRadius: 14, padding: "0 24px" }}
                       >
                         <ChevronLeft size={16} /> Back
                       </button>
@@ -463,15 +461,13 @@ function MainContent() {
                         <button
                           className="ff-btn-wizard-primary"
                           onClick={handleNextStep}
-                          style={{ height: 52, borderRadius: 14, padding: "0 32px", fontSize: 15 }}
                         >
                           Continue <ChevronRight size={16} />
                         </button>
                       ) : (
                         <button
-                          className="ff-btn-wizard-primary"
+                          className="ff-btn-wizard-primary ff-btn-generate"
                           onClick={handleNextStep}
-                          style={{ height: 52, borderRadius: 14, padding: "0 32px", fontSize: 15, background: "var(--accent-gold)" }}
                         >
                           Generate Diagnostic Report <ArrowRight size={16} />
                         </button>
@@ -483,7 +479,7 @@ function MainContent() {
                   <div style={{ padding: "10px 0", width: "100%" }}>
                     <InteractiveReport lead={submittedLead || currentPayload} audience="client" onOpenPdf={() => setIsPdfModalOpen(true)} />
 
-                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 36, paddingTop: 24, borderTop: "1px solid var(--border-subtle)", flexWrap: "wrap", gap: 12 }}>
+                    <div className="ff-wizard-report-footer">
                       <button className="ff-btn-wizard-ghost" onClick={resetWizard}>
                         + Start New Assessment
                       </button>

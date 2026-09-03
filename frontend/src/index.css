@@ -2804,3 +2804,186 @@ html, body, #root, .ff-app-container {
     border-radius: 12px !important;
   }
 }
+
+/* =========================================================
+   WIZARD, GENERATE SCREEN & REPORT MOBILE OPTIMIZATIONS
+   ========================================================= */
+.ff-wizard-wrapper {
+  padding: 95px 4% 80px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ff-wizard-floating-card {
+  padding: 40px 44px;
+  box-sizing: border-box;
+  transition: padding 0.3s ease;
+}
+
+.ff-wizard-floating-card.is-report-step {
+  padding: 36px 40px;
+}
+
+.ff-goal-card {
+  padding: 24px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+}
+
+.ff-processing-wrap {
+  padding: 60px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.ff-processing-wrap .ff-spinner {
+  margin: 0 auto 20px;
+  width: 48px;
+  height: 48px;
+  border-width: 3.5px;
+}
+
+.ff-processing-wrap h3 {
+  font-size: 24px;
+  color: var(--text-main);
+  font-weight: 600;
+  font-family: var(--font-serif);
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+
+.ff-processing-wrap p {
+  color: var(--accent-gold);
+  font-size: 14.5px;
+  font-family: var(--font-mono);
+  margin: 0;
+}
+
+.ff-wizard-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-subtle);
+  gap: 12px;
+}
+
+.ff-wizard-actions .ff-btn-wizard-ghost {
+  height: 52px;
+  border-radius: 14px;
+  padding: 0 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.ff-wizard-actions .ff-btn-wizard-primary {
+  height: 52px;
+  border-radius: 14px;
+  padding: 0 32px;
+  font-size: 15px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.ff-wizard-actions .ff-btn-generate {
+  background: var(--accent-gold) !important;
+  color: #07080C !important;
+}
+
+.ff-wizard-report-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 36px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .ff-wizard-wrapper {
+    padding: 68px 10px 36px !important;
+  }
+
+  .ff-wizard-floating-card {
+    padding: 18px 12px !important;
+    border-radius: 14px !important;
+  }
+
+  .ff-wizard-floating-card.is-report-step {
+    padding: 16px 10px !important;
+    border-radius: 14px !important;
+  }
+
+  .ff-goal-card {
+    padding: 16px 12px !important;
+    border-radius: 14px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .ff-processing-wrap {
+    padding: 44px 12px !important;
+  }
+
+  .ff-processing-wrap .ff-spinner {
+    width: 40px !important;
+    height: 40px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .ff-processing-wrap h3 {
+    font-size: 19px !important;
+    line-height: 1.35 !important;
+  }
+
+  .ff-processing-wrap p {
+    font-size: 13px !important;
+  }
+
+  .ff-wizard-actions {
+    gap: 8px !important;
+    margin-top: 18px !important;
+    padding-top: 16px !important;
+  }
+
+  .ff-wizard-actions .ff-btn-wizard-ghost {
+    height: 46px !important;
+    padding: 0 14px !important;
+    font-size: 13.5px !important;
+    border-radius: 10px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .ff-wizard-actions .ff-btn-wizard-primary {
+    height: 46px !important;
+    padding: 0 12px !important;
+    font-size: 13px !important;
+    border-radius: 10px !important;
+    flex: 1 !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+  }
+
+  .ff-wizard-report-footer {
+    flex-direction: column !important;
+    gap: 10px !important;
+    margin-top: 24px !important;
+    padding-top: 18px !important;
+  }
+
+  .ff-wizard-report-footer button {
+    width: 100% !important;
+    justify-content: center !important;
+    height: 44px !important;
+    font-size: 13.5px !important;
+  }
+}
