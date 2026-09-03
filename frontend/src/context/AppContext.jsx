@@ -48,6 +48,7 @@ export function AppProvider({ children }) {
 
   const [auditLogs, setAuditLogs] = useState([]);
   const [activeLead, setActiveLead] = useState(null);
+  const [loadingAssessments, setLoadingAssessments] = useState(false);
 
   const refreshBackendData = async () => {
     const backendLeads = await getLeadsApi();
@@ -76,36 +77,45 @@ export function AppProvider({ children }) {
   };
 
   const fetchUserAssessments = useCallback(async (userData) => {
-    if (!userData) {
+    if (!userData || (!userData.id && !userData.uid && !userData.email && !userData.mobile)) {
       setUserAssessments([]);
       return;
     }
-    const backendData = await getMyAssessmentsApi({
-      userId: userData.id,
-      email: userData.email,
-      mobile: userData.mobile
-    });
+    setLoadingAssessments(true);
+    try {
+      const uId = userData.id || userData.uid || "";
+      const uEmail = userData.email || "";
+      const uMob = userData.mobile || "";
 
-    if (backendData && Array.isArray(backendData)) {
-      setUserAssessments(backendData);
-      try {
-        localStorage.setItem(STORAGE_USER_ASSESSMENTS_KEY, JSON.stringify(backendData));
-      } catch (e) {}
-    } else {
-      // Filter local leads as fallback
-      try {
-        const localSaved = localStorage.getItem(STORAGE_LEADS_KEY);
-        if (localSaved) {
-          const all = JSON.parse(localSaved);
-          const filtered = all.filter(
-            (l) =>
-              (userData.email && l.email && l.email.toLowerCase() === userData.email.toLowerCase()) ||
-              (userData.mobile && l.mobile && l.mobile.includes(userData.mobile)) ||
-              (l.userId && l.userId === userData.id)
-          );
-          setUserAssessments(filtered);
-        }
-      } catch (e) {}
+      const backendData = await getMyAssessmentsApi({
+        userId: uId,
+        email: uEmail,
+        mobile: uMob
+      });
+
+      if (backendData && Array.isArray(backendData)) {
+        setUserAssessments(backendData);
+        try {
+          localStorage.setItem(STORAGE_USER_ASSESSMENTS_KEY, JSON.stringify(backendData));
+        } catch (e) {}
+      } else {
+        // Filter local leads as fallback
+        try {
+          const localSaved = localStorage.getItem(STORAGE_LEADS_KEY);
+          if (localSaved) {
+            const all = JSON.parse(localSaved);
+            const filtered = all.filter(
+              (l) =>
+                (uEmail && l.email && l.email.toLowerCase() === uEmail.toLowerCase()) ||
+                (uMob && l.mobile && l.mobile.includes(uMob)) ||
+                (l.userId && (l.userId === uId || l.userId === userData.uid))
+            );
+            setUserAssessments(filtered);
+          }
+        } catch (e) {}
+      }
+    } finally {
+      setLoadingAssessments(false);
     }
   }, []);
 
@@ -192,7 +202,7 @@ export function AppProvider({ children }) {
     };
 
     setLeads((prev) => {
-      const updated = [newLead, ...prev];
+      const updated = [newLead, ...prev.filter((item) => item.id !== newLead.id && item._id !== newLead.id)];
       try {
         localStorage.setItem(STORAGE_LEADS_KEY, JSON.stringify(updated));
       } catch (e) {}
@@ -200,7 +210,7 @@ export function AppProvider({ children }) {
     });
 
     setUserAssessments((prev) => {
-      const updated = [newLead, ...prev.filter((item) => item.id !== newLead.id)];
+      const updated = [newLead, ...prev.filter((item) => item.id !== newLead.id && item._id !== newLead.id)];
       try {
         localStorage.setItem(STORAGE_USER_ASSESSMENTS_KEY, JSON.stringify(updated));
       } catch (e) {}
@@ -209,6 +219,11 @@ export function AppProvider({ children }) {
 
     setActiveLead(newLead);
     addAuditLog("Report Generation", newLead.email, "Success", `Lead submitted: ${newLead.name}`);
+
+    if (currentUser) {
+      fetchUserAssessments(currentUser).catch(() => {});
+    }
+
     return newLead;
   };
 
@@ -260,6 +275,7 @@ export function AppProvider({ children }) {
         setActiveLead,
         userAssessments,
         fetchUserAssessments,
+        loadingAssessments,
         deleteUserAssessment,
         contactEnquiries,
         saveContactEnquiry,

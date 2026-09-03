@@ -38,20 +38,25 @@ function MainContent() {
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const [pendingPrefillData, setPendingPrefillData] = useState(null);
 
-  // Sync user details to basics form if user is logged in
+  // Sync user details and fetch previous assessments if user is logged in
   useEffect(() => {
-    if (user && !basics.name && !basics.email) {
-      const parts = (user.mobile || "").split(" ");
-      const cCode = parts.length > 1 && parts[0].startsWith("+") ? parts[0] : "+91";
-      const mob = parts.length > 1 ? parts.slice(1).join("") : user.mobile || "";
+    if (user) {
+      if (typeof fetchUserAssessments === "function") {
+        fetchUserAssessments(user);
+      }
+      if (!basics.name && !basics.email) {
+        const parts = (user.mobile || "").split(" ");
+        const cCode = parts.length > 1 && parts[0].startsWith("+") ? parts[0] : "+91";
+        const mob = parts.length > 1 ? parts.slice(1).join("") : user.mobile || "";
 
-      setBasics((prev) => ({
-        ...prev,
-        name: user.name || prev.name,
-        email: user.email || prev.email,
-        countryCode: cCode,
-        mobile: mob || prev.mobile
-      }));
+        setBasics((prev) => ({
+          ...prev,
+          name: user.name || prev.name,
+          email: user.email || prev.email,
+          countryCode: cCode,
+          mobile: mob || prev.mobile
+        }));
+      }
     }
   }, [user]);
 
@@ -219,11 +224,14 @@ function MainContent() {
           submittedAt: new Date().toISOString()
         };
 
-        const savedResult = await saveLeadSubmission(payloadToSave);
+        const savedResult = await saveLeadSubmission(payloadToSave, user);
         if (savedResult) {
           setSubmittedLead(savedResult);
         } else {
           setSubmittedLead(payloadToSave);
+        }
+        if (user && typeof fetchUserAssessments === "function") {
+          fetchUserAssessments(user);
         }
 
         setIsProcessing(false);
@@ -336,7 +344,12 @@ function MainContent() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onResetWizard={() => startAssessmentFlow()}
-        onOpenAssessments={() => setIsAssessmentsOpen(true)}
+        onOpenAssessments={() => {
+          if (user && typeof fetchUserAssessments === "function") {
+            fetchUserAssessments(user);
+          }
+          setIsAssessmentsOpen(true);
+        }}
       />
 
       {/* 2. LANDING VIEW */}

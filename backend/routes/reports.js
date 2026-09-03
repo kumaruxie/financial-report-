@@ -7,12 +7,23 @@ const AuditLog = require("../models/AuditLog");
 
 const router = express.Router();
 
-// Helper to extract user info from Authorization token
+// Helper to extract user info from Authorization token (supports both base64 JSON & Firebase JWTs)
 function getUserFromAuth(req) {
   const authHeader = req.headers.authorization;
   if (!authHeader) return null;
   try {
-    const raw = authHeader.replace("Bearer ", "");
+    const raw = authHeader.replace("Bearer ", "").trim();
+    const parts = raw.split(".");
+    if (parts.length === 3) {
+      const payload = parts[1];
+      const decoded = JSON.parse(Buffer.from(payload, "base64").toString("utf-8"));
+      return {
+        id: decoded.user_id || decoded.sub || decoded.uid || decoded.id,
+        email: decoded.email || "",
+        name: decoded.name || "",
+        role: decoded.role || "client"
+      };
+    }
     return JSON.parse(Buffer.from(raw, "base64").toString("utf-8"));
   } catch (e) {
     return null;

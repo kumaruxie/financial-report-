@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   FileText,
@@ -28,9 +28,15 @@ export default function AssessmentsDrawer({
   onCloneAssessment
 }) {
   const { user, logout } = useAuth();
-  const { userAssessments, deleteUserAssessment, loadingAssessments } = useApp();
+  const { userAssessments, deleteUserAssessment, loadingAssessments, fetchUserAssessments } = useApp();
 
   const [pdfLead, setPdfLead] = useState(null);
+
+  useEffect(() => {
+    if (isOpen && user) {
+      fetchUserAssessments(user);
+    }
+  }, [isOpen, user]);
 
   if (!isOpen) return null;
 
@@ -183,25 +189,49 @@ export default function AssessmentsDrawer({
             </p>
           </div>
 
-          <button
-            onClick={() => {
-              onClose();
-              if (onStartNewAssessment) onStartNewAssessment();
-            }}
-            className="ff-btn-gold"
-            style={{
-              height: 34,
-              padding: "0 14px",
-              borderRadius: 8,
-              fontSize: 12.5,
-              fontWeight: 700,
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6
-            }}
-          >
-            <PlusCircle size={14} /> New Assessment
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button
+              onClick={() => user && fetchUserAssessments(user)}
+              disabled={loadingAssessments}
+              className="ff-btn-ghost"
+              style={{
+                height: 34,
+                padding: "0 10px",
+                borderRadius: 8,
+                fontSize: 12,
+                border: "1px solid var(--border-subtle)",
+                color: "var(--text-main)",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                cursor: "pointer"
+              }}
+              title="Sync latest records from MongoDB database"
+            >
+              <RefreshCw size={13} style={{ animation: loadingAssessments ? "spin 1s linear infinite" : "none" }} />
+              {loadingAssessments ? "Syncing..." : "Sync DB"}
+            </button>
+
+            <button
+              onClick={() => {
+                onClose();
+                if (onStartNewAssessment) onStartNewAssessment();
+              }}
+              className="ff-btn-gold"
+              style={{
+                height: 34,
+                padding: "0 14px",
+                borderRadius: 8,
+                fontSize: 12.5,
+                fontWeight: 700,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6
+              }}
+            >
+              <PlusCircle size={14} /> New Assessment
+            </button>
+          </div>
         </div>
 
         {/* Assessments List Content */}
