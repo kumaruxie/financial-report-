@@ -76,9 +76,9 @@ export default function LandingHero({ onStart, onStartWizard, onOpenLegal, onOpe
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          justifyContent: "flex-start",
+          justifyContent: "center",
           position: "relative",
-          padding: "135px 24px 70px",
+          padding: "95px 24px 35px",
           textAlign: "center",
           backgroundColor: "#07080C",
           boxSizing: "border-box"
@@ -116,7 +116,7 @@ export default function LandingHero({ onStart, onStartWizard, onOpenLegal, onOpe
           }}
         >
           {/* Powered by ApkaCoach */}
-          <div style={{ marginBottom: 22, display: "inline-flex", alignItems: "center", gap: 7, opacity: 0.9 }}>
+          <div style={{ marginBottom: 14, display: "inline-flex", alignItems: "center", gap: 7, opacity: 0.9 }}>
             <span style={{ fontSize: 12, color: "var(--text-fog)", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>
               powered by
             </span>
@@ -134,11 +134,11 @@ export default function LandingHero({ onStart, onStartWizard, onOpenLegal, onOpe
           {/* Headline Positioned Cleanly in Sky Region */}
           <h1
             style={{
-              fontSize: "clamp(32px, 5.5vw, 68px)",
+              fontSize: "clamp(30px, 5vw, 62px)",
               lineHeight: 1.12,
               fontWeight: 600,
               color: "var(--text-main)",
-              marginBottom: 34,
+              marginBottom: 16,
               fontFamily: "var(--font-serif)",
               letterSpacing: "-0.02em",
               textShadow: "0 4px 24px rgba(0, 0, 0, 0.9)"
@@ -151,12 +151,12 @@ export default function LandingHero({ onStart, onStartWizard, onOpenLegal, onOpe
           {/* Tightened 2-Line Subtitle Paragraph */}
           <p
             style={{
-              fontSize: 19,
+              fontSize: "clamp(15px, 1.8vw, 18px)",
               fontWeight: 500,
               color: "var(--text-ivory)",
-              maxWidth: 720,
-              margin: "0 auto 42px",
-              lineHeight: 1.55,
+              maxWidth: 680,
+              margin: "0 auto 20px",
+              lineHeight: 1.5,
               textShadow: "0 2px 10px rgba(0, 0, 0, 0.8)",
               opacity: 0.95
             }}
@@ -164,18 +164,18 @@ export default function LandingHero({ onStart, onStartWizard, onOpenLegal, onOpe
             Answer a few questions to uncover your financial gaps across cash flow, protection, retirement, and investments.
           </p>
 
-          {/* Primary CTA Button (Reduced ~10% width, Layered Gold Glow) */}
+          {/* Primary CTA Button */}
           <button
             className="ff-btn-gold"
             onClick={scrollToAssessment}
             style={{
-              fontSize: 16,
+              fontSize: 15.5,
               fontWeight: 800,
-              padding: "15px 34px",
+              padding: "14px 32px",
               borderRadius: 10,
               cursor: "pointer",
-              marginBottom: 72,
-              boxShadow: "0 0 60px rgba(201, 154, 75, 0.18), 0 18px 40px rgba(0, 0, 0, 0.4)",
+              marginBottom: 24,
+              boxShadow: "0 0 50px rgba(201, 154, 75, 0.2), 0 16px 36px rgba(0, 0, 0, 0.4)",
               display: "inline-flex",
               alignItems: "center",
               gap: 8,
@@ -186,7 +186,7 @@ export default function LandingHero({ onStart, onStartWizard, onOpenLegal, onOpe
           </button>
 
           {/* GOAL TIMELINE GLOWING TRAJECTORY TRACK */}
-          <div style={{ width: "100%", maxWidth: 800, position: "relative", marginTop: 28 }}>
+          <div style={{ width: "100%", maxWidth: 780, position: "relative", marginTop: 6 }}>
             {/* Glowing Trajectory Track Line */}
             <div
               style={{
@@ -226,8 +226,8 @@ export default function LandingHero({ onStart, onStartWizard, onOpenLegal, onOpe
                   >
                     <div
                       style={{
-                        width: "clamp(34px, 7.5vw, 48px)",
-                        height: "clamp(34px, 7.5vw, 48px)",
+                        width: "clamp(34px, 7.5vw, 46px)",
+                        height: "clamp(34px, 7.5vw, 46px)",
                         borderRadius: "50%",
                         background: isActive ? "var(--accent-gold)" : "rgba(10, 12, 18, 0.9)",
                         border: `2px solid ${isActive ? "var(--accent-gold)" : "rgba(255, 255, 255, 0.2)"}`,
@@ -247,11 +247,12 @@ export default function LandingHero({ onStart, onStartWizard, onOpenLegal, onOpe
                     <span
                       className="ff-goal-node-label"
                       style={{
-                        fontSize: "clamp(9.5px, 2.2vw, 12.5px)",
+                        fontSize: "clamp(10px, 1.1vw, 12px)",
                         fontWeight: isActive ? 700 : 500,
                         color: isActive ? "var(--accent-gold)" : "var(--text-ivory)",
                         transition: "all 0.25s ease",
-                        whiteSpace: "nowrap",
+                        textAlign: "center",
+                        marginTop: 2,
                         textShadow: "0 2px 6px rgba(0, 0, 0, 0.8)"
                       }}
                     >

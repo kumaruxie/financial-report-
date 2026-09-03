@@ -1289,28 +1289,45 @@ html, body, #root, .ff-app-container {
     display: none !important;
   }
 
-  /* Goals timeline: hide cramped labels on mobile so the 5 trajectory node dots stay clean & spacious */
+  /* Goals timeline: show clean, compact labels under each node */
   .ff-goal-node-label {
-    display: none !important;
+    display: block !important;
+    font-size: 9.5px !important;
+    font-weight: 600 !important;
+    color: var(--text-ivory) !important;
+    white-space: normal !important;
+    text-align: center !important;
+    line-height: 1.15 !important;
+    max-width: 58px !important;
   }
 
   .ff-desktop-br {
     display: none !important;
   }
   .ff-hero-background {
-    padding: 72px 14px 34px !important;
-    min-height: auto !important;
+    padding: 85px 16px 40px !important;
+    min-height: calc(100svh - 60px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
   }
   .ff-hero-background h1 {
-    font-size: clamp(26px, 7.5vw, 38px) !important;
-    line-height: 1.2 !important;
-    margin-bottom: 16px !important;
+    font-size: clamp(28px, 7.5vw, 36px) !important;
+    line-height: 1.22 !important;
+    margin: 0 auto 14px !important;
+    text-align: center !important;
+    max-width: 340px !important;
     word-break: break-word !important;
   }
   .ff-hero-background p {
     font-size: 14px !important;
-    margin-bottom: 24px !important;
+    margin: 0 auto 20px !important;
     line-height: 1.5 !important;
+    max-width: 320px !important;
+    text-align: center !important;
     padding: 0 4px !important;
   }
   .ff-section-2 {
