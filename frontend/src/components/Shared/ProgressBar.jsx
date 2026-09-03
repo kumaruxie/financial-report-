@@ -58,16 +58,6 @@ export default function ProgressBar({ currentStep }) {
         })}
       </div>
 
-      {/* Progress Meta Info */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10, fontSize: 13, fontFamily: "var(--font-sans)" }}>
-        <span style={{ fontWeight: 700, fontFamily: "var(--font-mono)", color: "var(--accent-gold)" }}>
-          {percentage}% Complete
-        </span>
-        <span style={{ color: "var(--text-fog)", display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5 }}>
-          <Clock size={13} color="var(--accent-gold)" /> {timeRemainingMap[currentStep] || "≈ 3 minutes remaining"}
-        </span>
-      </div>
-
       {/* Animated Vibrant Gold-Teal Gradient Progress Bar */}
       <div style={{ width: "100%", height: 6, borderRadius: 10, background: "rgba(255, 255, 255, 0.08)", overflow: "hidden" }}>
         <div

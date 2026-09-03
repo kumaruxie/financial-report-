@@ -1,28 +1,29 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import HeaderNav from "./components/Shared/HeaderNav";
 import LandingHero from "./components/Client/LandingHero";
 import StepBasics from "./components/Client/WizardForm/StepBasics";
 import StepFinancials from "./components/Client/WizardForm/StepFinancials";
 import StepProtection from "./components/Client/WizardForm/StepProtection";
 import StepGoals from "./components/Client/WizardForm/StepGoals";
-import Dashboard from "./components/Portal/Dashboard";
+import AssessmentsDrawer from "./components/Portal/AssessmentsDrawer";
 import AdminPortal from "./components/Admin/AdminPortal";
-import OtpModal from "./components/Auth/OtpModal";
+import AuthModal from "./components/Auth/AuthModal";
 import InteractiveReport from "./components/Client/InteractiveReport";
 import PdfViewer from "./components/Client/PdfViewer";
 import LegalModal from "./components/Shared/LegalModal";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { AppProvider, useApp } from "./context/AppContext";
-import { ChevronLeft, ChevronRight, CheckCircle2, ArrowRight, Activity, TrendingUp, ShieldAlert } from "lucide-react";
-import { computeReport, INR_L } from "./utils/financialEngine";
+import { ChevronLeft, ChevronRight, ArrowRight, ShieldAlert, FileText } from "lucide-react";
+import { computeReport } from "./utils/financialEngine";
 import { getCountryConfig } from "./utils/countryData";
 
 function MainContent() {
-  const { portalMode, setPortalMode } = useAuth();
-  const { saveLeadSubmission } = useApp();
+  const { user, portalMode, setPortalMode, openAuthModal } = useAuth();
+  const { saveLeadSubmission, fetchUserAssessments } = useApp();
 
-  const [activeTab, setActiveTab] = useState("landing");
+  const [activeTab, setActiveTab] = useState("landing"); // 'landing' | 'wizard' | 'admin'
   const [legalModalTab, setLegalModalTab] = useState(null); // null | 'privacy' | 'terms' | 'contact'
+  const [isAssessmentsOpen, setIsAssessmentsOpen] = useState(false);
   const [wizardStep, setWizardStep] = useState(1);
   const [stepError, setStepError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -35,8 +36,27 @@ function MainContent() {
 
   const [submittedLead, setSubmittedLead] = useState(null);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+  const [pendingPrefillData, setPendingPrefillData] = useState(null);
 
-  React.useEffect(() => {
+  // Sync user details to basics form if user is logged in
+  useEffect(() => {
+    if (user && !basics.name && !basics.email) {
+      const parts = (user.mobile || "").split(" ");
+      const cCode = parts.length > 1 && parts[0].startsWith("+") ? parts[0] : "+91";
+      const mob = parts.length > 1 ? parts.slice(1).join("") : user.mobile || "";
+
+      setBasics((prev) => ({
+        ...prev,
+        name: user.name || prev.name,
+        email: user.email || prev.email,
+        countryCode: cCode,
+        mobile: mob || prev.mobile
+      }));
+    }
+  }, [user]);
+
+  // Route detection for admin portal
+  useEffect(() => {
     const path = window.location.pathname.toLowerCase();
     const search = window.location.search.toLowerCase();
     const hash = window.location.hash.toLowerCase();
@@ -72,6 +92,7 @@ function MainContent() {
   };
 
   const currentPayload = {
+    userId: user?.id || "",
     name: basics.name ? basics.name.trim() : "",
     email: basics.email ? basics.email.trim() : "",
     mobile: basics.mobile ? `${basics.countryCode || "+91"} ${basics.mobile.replace(/\D/g, "")}` : "",
@@ -79,201 +100,294 @@ function MainContent() {
     income: financials.income || "0",
     expenses: financials.expenses || "0",
     savings: financials.savings || "0",
-    city: protection.city || "",
-    retirementAge: protection.retirementAge || "60",
-    termInsurance: protection.termInsurance || "no",
-    termAmount: protection.termAmount || "0",
-    healthInsurance: protection.healthInsurance || "no",
-    healthAmount: protection.healthAmount || "0",
-    goals: Array.isArray(goals) ? goals : []
-  };
-
-  const liveReport = computeReport(currentPayload);
-
-  const validateCurrentStep = () => {
-    setStepError("");
-    if (wizardStep === 1) {
-      const trimmedName = (basics.name || "").trim();
-      if (!trimmedName) {
-        setStepError("Please enter your Full Name to proceed.");
-        return false;
-      }
-      if (trimmedName.length > 40) {
-        setStepError("Full Name must not exceed 40 characters.");
-        return false;
-      }
-
-      const trimmedEmail = (basics.email || "").trim();
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!trimmedEmail || !emailRegex.test(trimmedEmail)) {
-        setStepError("Please enter a valid Email Address (e.g. name@example.com) to proceed.");
-        return false;
-      }
-      if (trimmedEmail.length > 80) {
-        setStepError("Email Address must not exceed 80 characters.");
-        return false;
-      }
-
-      const countryCfg = getCountryConfig(basics.countryCode || "+91");
-      const cleanMobile = (basics.mobile || "").replace(/\D/g, "");
-      if (!cleanMobile || cleanMobile.length !== countryCfg.digits) {
-        setStepError(`Please enter a valid ${countryCfg.digits}-digit Mobile Number for ${countryCfg.country} to proceed.`);
-        return false;
-      }
-    } else if (wizardStep === 2) {
-      if (!financials.age || Number(financials.age) <= 0) {
-        setStepError("Please enter your Current Age to proceed.");
-        return false;
-      }
-      if (!financials.income || Number(financials.income) <= 0) {
-        setStepError("Please enter your Monthly Income to proceed.");
-        return false;
-      }
-      if (financials.expenses === "" || financials.expenses === null || Number(financials.expenses) < 0) {
-        setStepError("Please enter your Monthly Expenses to proceed.");
-        return false;
-      }
-      if (financials.savings === "" || financials.savings === null) {
-        setStepError("Please enter your Current Liquid Savings (enter 0 if none).");
-        return false;
-      }
-    } else if (wizardStep === 3) {
-      if (!protection.city || !protection.city.trim()) {
-        setStepError("Please select or enter your City / Location to proceed.");
-        return false;
-      }
-    }
-    return true;
+    protection: {
+      termInsurance: protection.termInsurance === "yes",
+      termAmount: protection.termAmount || "0",
+      healthInsurance: protection.healthInsurance === "yes",
+      healthAmount: protection.healthAmount || "0",
+      city: protection.city || "",
+      retirementAge: protection.retirementAge || "60"
+    },
+    goals: goals || []
   };
 
   const handleNextStep = () => {
-    if (!validateCurrentStep()) return;
     setStepError("");
-    if (wizardStep < 4) {
-      setWizardStep((prev) => prev + 1);
-    } else {
-      handleWizardSubmit();
+
+    if (wizardStep === 1) {
+      if (!basics.name || !basics.name.trim()) {
+        setStepError("Please provide your full legal name.");
+        return;
+      }
+      if (!basics.email || !basics.email.includes("@")) {
+        setStepError("Please provide a valid email address.");
+        return;
+      }
+      const cCode = basics.countryCode || "+91";
+      const config = getCountryConfig(cCode);
+      const digitsOnly = (basics.mobile || "").replace(/\D/g, "");
+      if (!digitsOnly || digitsOnly.length !== config.digits) {
+        setStepError(`Please enter a valid ${config.digits}-digit mobile number for ${config.country}.`);
+        return;
+      }
+      setWizardStep(2);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    if (wizardStep === 2) {
+      const ageNum = Number(financials.age);
+      if (!financials.age || isNaN(ageNum) || ageNum < 18 || ageNum > 80) {
+        setStepError("Please enter a valid age between 18 and 80.");
+        return;
+      }
+      const incNum = Number(financials.income);
+      if (!financials.income || isNaN(incNum) || incNum <= 0) {
+        setStepError("Please enter your current monthly income.");
+        return;
+      }
+      const expNum = Number(financials.expenses);
+      if (financials.expenses === "" || isNaN(expNum) || expNum < 0) {
+        setStepError("Please enter your estimated monthly expenses.");
+        return;
+      }
+      if (expNum > incNum) {
+        setStepError("Monthly expenses cannot exceed your stated monthly income.");
+        return;
+      }
+      const savNum = Number(financials.savings);
+      if (financials.savings === "" || isNaN(savNum) || savNum < 0) {
+        setStepError("Please enter your total liquid cash & savings buffer.");
+        return;
+      }
+      setWizardStep(3);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    if (wizardStep === 3) {
+      if (!protection.termInsurance) {
+        setStepError("Please indicate whether you currently hold a Term Life Insurance policy.");
+        return;
+      }
+      if (protection.termInsurance === "yes") {
+        const termVal = Number(protection.termAmount);
+        if (!protection.termAmount || isNaN(termVal) || termVal <= 0) {
+          setStepError("Please enter your existing Term Life cover amount in Lakhs.");
+          return;
+        }
+      }
+      if (!protection.healthInsurance) {
+        setStepError("Please indicate whether you have Health Insurance coverage.");
+        return;
+      }
+      if (protection.healthInsurance === "yes") {
+        const healthVal = Number(protection.healthAmount);
+        if (!protection.healthAmount || isNaN(healthVal) || healthVal <= 0) {
+          setStepError("Please enter your Health Insurance cover amount in Lakhs.");
+          return;
+        }
+      }
+      if (!protection.city || !protection.city.trim()) {
+        setStepError("Please enter your current City of residence.");
+        return;
+      }
+      setWizardStep(4);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    if (wizardStep === 4) {
+      setIsProcessing(true);
+      setProcessingStatus("Evaluating Monthly Cashflow & Surplus...");
+
+      const t1 = setTimeout(() => setProcessingStatus("Computing Retirement Corpus & Inflation Trajectory..."), 450);
+      const t2 = setTimeout(() => setProcessingStatus("Simulating Multi-Goal SIP Allocation Pathways..."), 900);
+      const t3 = setTimeout(() => setProcessingStatus("Finalizing Precision Financial Health Score..."), 1350);
+
+      setTimeout(async () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+
+        const rep = computeReport(currentPayload);
+        const payloadToSave = {
+          ...currentPayload,
+          healthScore: rep.healthScore,
+          totalMonthlyRequired: rep.totalMonthly,
+          emergencyGap: rep.emergency?.gapAmount || 0,
+          submittedAt: new Date().toISOString()
+        };
+
+        const savedResult = await saveLeadSubmission(payloadToSave);
+        if (savedResult) {
+          setSubmittedLead(savedResult);
+        } else {
+          setSubmittedLead(payloadToSave);
+        }
+
+        setIsProcessing(false);
+        setWizardStep(5);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }, 1800);
     }
   };
 
-  const handleWizardSubmit = async () => {
-    setIsProcessing(true);
-    setProcessingStatus("Evaluating Monthly Cashflow...");
-
-    const saved = await saveLeadSubmission(currentPayload);
-    setSubmittedLead(saved);
-
-    setTimeout(() => setProcessingStatus("Compounding Inflation Across Goal Horizons..."), 600);
-    setTimeout(() => setProcessingStatus("Calculating Real-Rate Retirement Corpus..."), 1200);
-    setTimeout(() => setProcessingStatus("Generating Diagnostic Report..."), 1800);
-    setTimeout(() => {
-      setIsProcessing(false);
-      setWizardStep(5);
-    }, 2400);
-  };
-
-  const resetWizard = () => {
-    setBasics({ name: "", email: "", countryCode: "+91", mobile: "" });
-    setFinancials({ age: "", income: "", expenses: "", savings: "" });
-    setProtection({ termInsurance: "no", termAmount: "", healthInsurance: "no", healthAmount: "", city: "", retirementAge: "60" });
+  const resetWizard = (prefillData = null) => {
+    setWizardStep(1);
+    setStepError("");
+    setBasics({
+      name: user?.name || "",
+      email: user?.email || "",
+      countryCode: "+91",
+      mobile: user?.mobile ? user.mobile.replace(/\D/g, "") : ""
+    });
+    if (prefillData && typeof prefillData === "object") {
+      setFinancials({
+        age: prefillData.age || "",
+        income: prefillData.income || "",
+        expenses: prefillData.expenses || "",
+        savings: prefillData.savings || ""
+      });
+    } else {
+      setFinancials({ age: "", income: "", expenses: "", savings: "" });
+    }
+    setProtection({ termInsurance: "", termAmount: "", healthInsurance: "", healthAmount: "", city: "", retirementAge: "" });
     setGoals([]);
     setSubmittedLead(null);
-    setWizardStep(1);
-    setActiveTab("landing");
+    setActiveTab("wizard");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const startAssessmentFlow = (prefillData = null) => {
+    if (prefillData && typeof prefillData === "object") {
+      setFinancials((prev) => ({
+        ...prev,
+        age: prefillData.age || prev.age,
+        income: prefillData.income || prev.income,
+        expenses: prefillData.expenses || prev.expenses,
+        savings: prefillData.savings || prev.savings
+      }));
+    }
+
+    if (!user) {
+      setPendingPrefillData(prefillData || true);
+      openAuthModal("signup");
+      return;
+    }
+
+    resetWizard(prefillData);
+  };
+
+  const handleCloneAssessment = (assessment) => {
+    if (assessment) {
+      const parts = (assessment.mobile || "").split(" ");
+      const cCode = parts.length > 1 && parts[0].startsWith("+") ? parts[0] : "+91";
+      const mob = parts.length > 1 ? parts.slice(1).join("") : assessment.mobile || "";
+
+      setBasics({
+        name: assessment.name || "",
+        email: assessment.email || "",
+        countryCode: cCode,
+        mobile: mob
+      });
+      setFinancials({
+        age: assessment.age || "",
+        income: assessment.income || "",
+        expenses: assessment.expenses || "",
+        savings: assessment.savings || ""
+      });
+      setProtection({
+        termInsurance: assessment.protection?.termInsurance ? "yes" : "no",
+        termAmount: assessment.protection?.termAmount || "",
+        healthInsurance: assessment.protection?.healthInsurance ? "yes" : "no",
+        healthAmount: assessment.protection?.healthAmount || "",
+        city: assessment.protection?.city || "",
+        retirementAge: assessment.protection?.retirementAge || ""
+      });
+      setGoals(Array.isArray(assessment.goals) ? assessment.goals : []);
+      setSubmittedLead(null);
+      setWizardStep(1);
+      setActiveTab("wizard");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const handleViewReportFromDrawer = (assessment) => {
+    setSubmittedLead(assessment);
+    setActiveTab("wizard");
+    setWizardStep(5);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // If Admin Portal Mode
   if (portalMode === "admin" || activeTab === "admin") {
     return (
-      <div className="ff-app-container">
-        <HeaderNav activeTab={activeTab} setActiveTab={setActiveTab} onResetWizard={resetWizard} />
+      <div className="ff-app-root">
         <AdminPortal />
-        <footer className="ff-footer">
-          &copy; {new Date().getFullYear()} Your Wealth Compass. All rights reserved by apkacoach.com.
-        </footer>
       </div>
     );
   }
 
   return (
-    <div className="ff-app-container">
-      <HeaderNav activeTab={activeTab} setActiveTab={setActiveTab} onResetWizard={resetWizard} />
+    <div className="ff-app-root">
+      {/* 1. TOP HEADER NAVIGATION (Clean, 2 CTAs) */}
+      <HeaderNav
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onResetWizard={() => startAssessmentFlow()}
+        onOpenAssessments={() => setIsAssessmentsOpen(true)}
+      />
 
+      {/* 2. LANDING VIEW */}
       {activeTab === "landing" && (
         <LandingHero
-          onStartWizard={() => {
-            resetWizard();
-            setActiveTab("wizard");
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          }}
+          onStart={(data) => startAssessmentFlow(data)}
+          onOpenAdvisory={() => setLegalModalTab("contact")}
           onOpenLegal={(tab) => setLegalModalTab(tab)}
         />
       )}
 
-      {activeTab === "dashboard" && (
-        <Dashboard
-          onStartWizard={() => {
-            resetWizard();
-            setActiveTab("wizard");
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          }}
-        />
-      )}
-
-      {/* =========================================================
-         DEDICATED ASSESSMENT FORM & FULL-SCREEN REPORT VIEW
-         ========================================================= */}
+      {/* 3. WIZARD EVALUATION FORM / REPORT VIEW */}
       {activeTab === "wizard" && (
-        <div
-          className="ff-wizard-wrapper"
-          style={{
-            minHeight: "100vh",
-            padding: wizardStep === 5 ? "95px 4% 80px" : "100px 24px 80px",
-            maxWidth: wizardStep === 5 ? 1380 : 840,
-            margin: "0 auto",
-            transition: "max-width 0.4s ease, padding 0.4s ease"
-          }}
-        >
-          {/* Top Navigation & Back Header */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-            <button
-              className="ff-btn-ghost"
-              onClick={() => {
-                resetWizard();
-              }}
-              style={{ fontSize: 13.5, color: "var(--text-fog)", display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8 }}
-            >
-              <ChevronLeft size={16} /> Back to Overview
-            </button>
-
-            {wizardStep === 5 && (
-              <div style={{ display: "flex", gap: 12 }}>
-                <button
-                  className="ff-btn-wizard-ghost"
-                  onClick={() => resetWizard()}
-                  style={{ height: 40, padding: "0 16px", fontSize: 13 }}
-                >
-                  Edit Inputs
-                </button>
+        <div className="ff-wizard-wrapper" style={{ padding: "95px 4% 80px", maxWidth: wizardStep === 5 ? 1380 : 880, margin: "0 auto" }}>
+          {/* Progress Indicator */}
+          {wizardStep < 5 && (
+            <div className="ff-wizard-progress-card" style={{ marginBottom: 28 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent-gold)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                  Step {wizardStep} of 4 &bull; {wizardStep === 1 ? "Identity & Contact" : wizardStep === 2 ? "Income & Cashflow" : wizardStep === 3 ? "Risk & Protection" : "Life Milestones"}
+                </span>
+                <span style={{ fontSize: 13, color: "var(--text-fog)", fontFamily: "var(--font-mono)" }}>
+                  {wizardStep === 1 ? "25%" : wizardStep === 2 ? "50%" : wizardStep === 3 ? "75%" : "100%"}
+                </span>
               </div>
-            )}
-          </div>
+              <div style={{ width: "100%", height: 6, backgroundColor: "rgba(255, 255, 255, 0.08)", borderRadius: 3, overflow: "hidden" }}>
+                <div
+                  style={{
+                    width: `${wizardStep * 25}%`,
+                    height: "100%",
+                    backgroundColor: "var(--accent-gold)",
+                    transition: "width 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
+                  }}
+                />
+              </div>
+            </div>
+          )}
 
-
-
-          {/* Compact Privacy & Security Info Card */}
-          {wizardStep < 5 && !isProcessing && (
+          {wizardStep < 5 && (
             <div
               style={{
-                display: "block",
-                textAlign: "center",
-                padding: "10px 16px",
-                borderRadius: 10,
-                background: "rgba(95, 168, 160, 0.08)",
-                border: "1px solid rgba(95, 168, 160, 0.2)",
-                marginBottom: 32,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                color: "var(--text-fog)",
                 fontSize: 13,
-                fontWeight: 600,
-                color: "var(--accent-teal)"
+                marginBottom: 16,
+                padding: "8px 14px",
+                background: "rgba(255, 255, 255, 0.03)",
+                border: "1px solid var(--border-subtle)",
+                borderRadius: 8
               }}
             >
               <span>Please provide accurate information to get an accurate financial report.</span>
@@ -369,25 +483,43 @@ function MainContent() {
                   <div style={{ padding: "10px 0", width: "100%" }}>
                     <InteractiveReport lead={submittedLead || currentPayload} audience="client" onOpenPdf={() => setIsPdfModalOpen(true)} />
 
-                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 36, paddingTop: 24, borderTop: "1px solid var(--border-subtle)" }}>
-                      <button className="ff-btn-wizard-ghost" onClick={resetWizard}>Start New Assessment</button>
-                      <button className="ff-btn-wizard-primary" onClick={() => setActiveTab("dashboard")}>
-                        Go to Client Dashboard <ArrowRight size={16} />
+                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 36, paddingTop: 24, borderTop: "1px solid var(--border-subtle)", flexWrap: "wrap", gap: 12 }}>
+                      <button className="ff-btn-wizard-ghost" onClick={resetWizard}>
+                        + Start New Assessment
                       </button>
+                      {user && (
+                        <button
+                          className="ff-btn-wizard-ghost"
+                          onClick={() => setIsAssessmentsOpen(true)}
+                          style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+                        >
+                          <FileText size={15} color="var(--accent-gold)" /> View Previous Assessments
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
               </>
             )}
           </div>
-
         </div>
       )}
 
+      {/* PDF Modal */}
       {isPdfModalOpen && (
         <PdfViewer lead={submittedLead || currentPayload} onClose={() => setIsPdfModalOpen(false)} />
       )}
 
+      {/* User Assessments Modal Drawer */}
+      <AssessmentsDrawer
+        isOpen={isAssessmentsOpen}
+        onClose={() => setIsAssessmentsOpen(false)}
+        onViewReport={handleViewReportFromDrawer}
+        onStartNewAssessment={resetWizard}
+        onCloneAssessment={handleCloneAssessment}
+      />
+
+      {/* Footer */}
       {activeTab !== "landing" && portalMode !== "admin" && (
         <footer style={{ borderTop: "1px solid var(--border-subtle)", padding: "32px 24px", textAlign: "center", fontSize: 13, color: "var(--text-fog)", backgroundColor: "#07080C" }}>
           <div style={{ maxWidth: 1140, margin: "0 auto", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
@@ -412,7 +544,42 @@ function MainContent() {
         <LegalModal activeTab={legalModalTab} onClose={() => setLegalModalTab(null)} />
       )}
 
-      <OtpModal />
+      {/* Authentication Modal */}
+      <AuthModal
+        onSuccess={(loggedUser) => {
+          if (loggedUser) {
+            fetchUserAssessments(loggedUser);
+
+            const parts = (loggedUser.mobile || "").split(" ");
+            const cCode = parts.length > 1 && parts[0].startsWith("+") ? parts[0] : "+91";
+            const mob = parts.length > 1 ? parts.slice(1).join("") : loggedUser.mobile || "";
+
+            setBasics({
+              name: loggedUser.name || "",
+              email: loggedUser.email || "",
+              countryCode: cCode,
+              mobile: mob.replace(/\D/g, "")
+            });
+
+            if (pendingPrefillData) {
+              const prefill = typeof pendingPrefillData === "object" ? pendingPrefillData : null;
+              if (prefill) {
+                setFinancials((prev) => ({
+                  ...prev,
+                  age: prefill.age || prev.age,
+                  income: prefill.income || prev.income,
+                  expenses: prefill.expenses || prev.expenses,
+                  savings: prefill.savings || prev.savings
+                }));
+              }
+              setPendingPrefillData(null);
+              setWizardStep(1);
+              setActiveTab("wizard");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+          }
+        }}
+      />
     </div>
   );
 }

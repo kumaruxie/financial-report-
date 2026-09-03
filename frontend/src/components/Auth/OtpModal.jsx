@@ -115,7 +115,7 @@ export default function OtpModal() {
                 <input
                   type="text"
                   className="ff-input"
-                  placeholder="e.g. priya@example.com or 9876543210"
+                  placeholder="Enter email or mobile number"
                   value={inputTarget}
                   onChange={(e) => setInputTarget(e.target.value)}
                   autoFocus

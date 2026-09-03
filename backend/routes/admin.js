@@ -1,27 +1,386 @@
 const express = require("express");
+const crypto = require("crypto");
 const mongoose = require("mongoose");
+const User = require("../models/User");
 const Lead = require("../models/Lead");
 const Enquiry = require("../models/Enquiry");
 const AuditLog = require("../models/AuditLog");
 
 const router = express.Router();
 
-// POST /api/v1/admin/verify-pass — verify admin password
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, "sha512").toString("hex");
+  return `${salt}:${hash}`;
+}
+
+function verifyPassword(password, storedHash) {
+  try {
+    if (!storedHash || !storedHash.includes(":")) return false;
+    const [salt, originalHash] = storedHash.split(":");
+    const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, "sha512").toString("hex");
+    return hash === originalHash;
+  } catch (e) {
+    return false;
+  }
+}
+
+function generateAdminToken(user) {
+  const payload = {
+    id: user._id ? user._id.toString() : user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role || "advisor",
+    ts: Date.now()
+  };
+  return Buffer.from(JSON.stringify(payload)).toString("base64");
+}
+
+function getUserFromAuth(req) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
+    const token = authHeader.split(" ")[1];
+    const decoded = JSON.parse(Buffer.from(token, "base64").toString("utf-8"));
+    return decoded;
+  } catch (e) {
+    return null;
+  }
+}
+
+// -------------------------------------------------------------
+// 1. AUTHENTICATION & LOGIN
+// -------------------------------------------------------------
+
+// POST /api/v1/admin/auth/login — multi-tier login (master password OR advisor/admin credentials)
+router.post("/auth/login", async (req, res) => {
+  try {
+    const { identifier, password } = req.body;
+    if (!password) {
+      return res.status(400).json({ success: false, error: "Password is required" });
+    }
+
+    // 1. Check Master Key Bypass (Super Admin)
+    if (password === "work2026@") {
+      const superUser = {
+        id: "superadmin_master",
+        name: "Super Administrator",
+        email: identifier ? identifier.toLowerCase().trim() : "admin@apkacoach.com",
+        role: "superadmin"
+      };
+      const token = generateAdminToken(superUser);
+
+      await AuditLog.create({
+        type: "Admin Login",
+        user: superUser.email,
+        status: "Success",
+        details: "Super Admin master session authenticated"
+      }).catch(() => {});
+
+      return res.json({
+        success: true,
+        message: "Super Admin authenticated",
+        user: superUser,
+        token
+      });
+    }
+
+    // 2. Check Database User by Email / Username
+    if (!identifier) {
+      return res.status(400).json({ success: false, error: "Email/Username is required" });
+    }
+
+    const cleanIdentifier = identifier.toLowerCase().trim();
+    const user = await User.findOne({
+      $or: [{ email: cleanIdentifier }, { mobile: cleanIdentifier }]
+    });
+
+    if (!user) {
+      return res.status(401).json({ success: false, error: "Invalid credentials. User not found." });
+    }
+
+    if (!["advisor", "admin", "superadmin"].includes(user.role)) {
+      return res.status(403).json({ success: false, error: "Access denied. Client accounts cannot access Admin Portal." });
+    }
+
+    if (user.status === "inactive") {
+      return res.status(403).json({ success: false, error: "Your advisor account is deactivated. Contact Super Admin." });
+    }
+
+    const isValidPass = verifyPassword(password, user.passwordHash);
+    if (!isValidPass) {
+      return res.status(401).json({ success: false, error: "Invalid password." });
+    }
+
+    user.lastLoginAt = new Date();
+    await user.save().catch(() => {});
+
+    const userPayload = {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      mobile: user.mobile,
+      role: user.role
+    };
+    const token = generateAdminToken(userPayload);
+
+    await AuditLog.create({
+      type: "Advisor Login",
+      user: user.email,
+      status: "Success",
+      details: `Role: ${user.role} logged in`
+    }).catch(() => {});
+
+    res.json({
+      success: true,
+      message: "Login successful",
+      user: userPayload,
+      token
+    });
+  } catch (err) {
+    console.error("Admin login error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/v1/admin/verify-pass — backwards compatibility
 router.post("/verify-pass", (req, res) => {
   const { password } = req.body;
   if (password === "work2026@") {
-    res.json({ success: true, message: "Access granted" });
+    const superUser = {
+      id: "superadmin_master",
+      name: "Super Administrator",
+      email: "admin@apkacoach.com",
+      role: "superadmin"
+    };
+    const token = generateAdminToken(superUser);
+    res.json({ success: true, message: "Access granted", user: superUser, token });
   } else {
     res.status(401).json({ success: false, error: "Invalid admin password" });
   }
 });
 
-// GET /api/v1/admin/leads — fetch all real leads for admin CRM
+// -------------------------------------------------------------
+// 2. ADVISOR & TEAM MANAGEMENT (SUPER ADMIN ONLY)
+// -------------------------------------------------------------
+
+// GET /api/v1/admin/users — list all advisors / sub-admins with lead stats
+router.get("/users", async (req, res) => {
+  try {
+    const authUser = getUserFromAuth(req);
+    // Allow superadmin or master token
+    if (authUser && authUser.role === "advisor") {
+      return res.status(403).json({ success: false, error: "Unauthorized. Super Admin access required." });
+    }
+
+    const teamUsers = await User.find({
+      role: { $in: ["advisor", "admin", "superadmin"] }
+    }).sort({ createdAt: -1 }).lean();
+
+    // Attach active lead counts and conversions for each advisor
+    const enriched = await Promise.all(
+      teamUsers.map(async (u) => {
+        const uId = u._id.toString();
+        const totalAssigned = await Lead.countDocuments({ "assignedTo.advisorId": uId }).catch(() => 0);
+        const converted = await Lead.countDocuments({ "assignedTo.advisorId": uId, leadStatus: "converted" }).catch(() => 0);
+        const inProgress = await Lead.countDocuments({
+          "assignedTo.advisorId": uId,
+          leadStatus: { $in: ["contacted", "in_discussion", "meeting_scheduled"] }
+        }).catch(() => 0);
+
+        return {
+          id: u._id,
+          name: u.name,
+          email: u.email,
+          mobile: u.mobile || "",
+          role: u.role,
+          status: u.status || "active",
+          assignedLeadsCount: totalAssigned,
+          convertedLeadsCount: converted,
+          inProgressLeadsCount: inProgress,
+          conversionRate: totalAssigned > 0 ? Math.round((converted / totalAssigned) * 100) : 0,
+          createdAt: u.createdAt,
+          lastLoginAt: u.lastLoginAt
+        };
+      })
+    );
+
+    res.json({ success: true, users: enriched });
+  } catch (err) {
+    console.error("Get team users error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/v1/admin/users — create new advisor / sub-admin account
+router.post("/users", async (req, res) => {
+  try {
+    const authUser = getUserFromAuth(req);
+    if (authUser && authUser.role === "advisor") {
+      return res.status(403).json({ success: false, error: "Unauthorized. Super Admin access required." });
+    }
+
+    const { name, email, mobile, password, role = "advisor" } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, error: "Name, email, and password are required." });
+    }
+
+    const cleanEmail = email.toLowerCase().trim();
+    const existing = await User.findOne({ email: cleanEmail });
+    if (existing) {
+      return res.status(400).json({ success: false, error: `User ID "${cleanEmail}" already exists in the database.` });
+    }
+
+    const passwordHash = hashPassword(password);
+    const createdUser = await User.create({
+      name: name.trim(),
+      email: cleanEmail,
+      mobile: mobile ? mobile.trim() : "",
+      passwordHash,
+      role: role === "superadmin" ? "superadmin" : "advisor",
+      status: "active"
+    });
+
+    await AuditLog.create({
+      type: "Team Management",
+      user: authUser ? authUser.email : "Super Admin",
+      status: "Success",
+      details: `Created new ${createdUser.role}: ${createdUser.name} (${createdUser.email})`
+    }).catch(() => {});
+
+    res.json({
+      success: true,
+      message: "Advisor account created successfully.",
+      user: {
+        id: createdUser._id,
+        name: createdUser.name,
+        email: createdUser.email,
+        mobile: createdUser.mobile,
+        role: createdUser.role,
+        status: createdUser.status,
+        createdAt: createdUser.createdAt
+      }
+    });
+  } catch (err) {
+    console.error("Create advisor error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// PUT /api/v1/admin/users/:id/password — reset advisor password
+router.post("/users/:id/password", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { newPassword } = req.body;
+
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ success: false, error: "New password must be at least 6 characters." });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: "User not found." });
+    }
+
+    user.passwordHash = hashPassword(newPassword);
+    await user.save();
+
+    await AuditLog.create({
+      type: "Team Management",
+      user: "Super Admin",
+      status: "Success",
+      details: `Password reset for user: ${user.email}`
+    }).catch(() => {});
+
+    res.json({ success: true, message: `Password updated for ${user.name}.` });
+  } catch (err) {
+    console.error("Reset password error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// PUT /api/v1/admin/users/:id/status — toggle active/inactive status
+router.post("/users/:id/status", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!["active", "inactive"].includes(status)) {
+      return res.status(400).json({ success: false, error: "Invalid status value." });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: "User not found." });
+    }
+
+    user.status = status;
+    await user.save();
+
+    await AuditLog.create({
+      type: "Team Management",
+      user: "Super Admin",
+      status: "Success",
+      details: `Status set to '${status}' for user: ${user.email}`
+    }).catch(() => {});
+
+    res.json({ success: true, message: `Account status updated to ${status}.`, user: { id: user._id, status: user.status } });
+  } catch (err) {
+    console.error("Update status error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// DELETE /api/v1/admin/users/:id — delete advisor and unassign leads
+router.delete("/users/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: "User not found." });
+    }
+
+    // Unassign their leads
+    await Lead.updateMany(
+      { "assignedTo.advisorId": id },
+      { $set: { "assignedTo.advisorId": null, "assignedTo.advisorName": "", "assignedTo.advisorEmail": "" } }
+    ).catch(() => {});
+
+    await User.findByIdAndDelete(id);
+
+    await AuditLog.create({
+      type: "Team Management",
+      user: "Super Admin",
+      status: "Success",
+      details: `Deleted advisor: ${user.email}`
+    }).catch(() => {});
+
+    res.json({ success: true, message: "Advisor deleted successfully and their leads were unassigned." });
+  } catch (err) {
+    console.error("Delete advisor error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// -------------------------------------------------------------
+// 3. LEADS & ASSIGNMENTS (ROLE-AWARE)
+// -------------------------------------------------------------
+
+// GET /api/v1/admin/leads — fetch leads (filtered for advisors, all for superadmin)
 router.get("/leads", async (req, res) => {
   try {
+    const authUser = getUserFromAuth(req);
+    let filter = {};
+
+    // If logged in as specific advisor, only return leads assigned to them!
+    if (authUser && authUser.role === "advisor") {
+      filter = { "assignedTo.advisorId": authUser.id };
+    }
+
     let leads = [];
     try {
-      leads = await Lead.find().sort({ createdAt: -1 }).lean();
+      leads = await Lead.find(filter).sort({ createdAt: -1 }).lean();
     } catch (dbErr) {
       console.error("Lead fetch error:", dbErr.message);
     }
@@ -42,7 +401,22 @@ router.get("/leads", async (req, res) => {
       healthInsurance: l.healthInsurance,
       healthAmount: l.healthAmount,
       goals: l.goals || [],
+      healthScore: l.healthScore || (l.scores?.overallScore) || 0,
+      totalMonthlyRequired: l.totalMonthlyRequired || 0,
+      emergencyGap: l.emergencyGap || 0,
+      scores: l.scores || {},
+      protection: l.protection || {
+        termInsurance: l.termInsurance === "yes",
+        termAmount: l.termAmount || "0",
+        healthInsurance: l.healthInsurance === "yes",
+        healthAmount: l.healthAmount || "0",
+        city: l.city || "",
+        retirementAge: l.retirementAge || "60"
+      },
       pdfUrl: l.pdfUrl || null,
+      assignedTo: l.assignedTo || { advisorId: null, advisorName: "", advisorEmail: "", assignedAt: null },
+      leadStatus: l.leadStatus || "new",
+      advisorNotes: l.advisorNotes || [],
       submittedAt: l.createdAt,
       updatedAt: l.updatedAt,
     }));
@@ -50,6 +424,91 @@ router.get("/leads", async (req, res) => {
     res.json({ success: true, leads: mapped });
   } catch (err) {
     console.error("Get leads error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// PUT /api/v1/admin/leads/:id/assign — assign lead to an advisor (Super Admin)
+router.post("/leads/:id/assign", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { advisorId, advisorName, advisorEmail } = req.body;
+    const authUser = getUserFromAuth(req);
+
+    const lead = await Lead.findById(id);
+    if (!lead) {
+      return res.status(404).json({ success: false, error: "Lead not found." });
+    }
+
+    lead.assignedTo = {
+      advisorId: advisorId || null,
+      advisorName: advisorName || "",
+      advisorEmail: advisorEmail || "",
+      assignedAt: advisorId ? new Date() : null
+    };
+
+    // If newly assigned and still "new", keep "new" or transition
+    await lead.save();
+
+    await AuditLog.create({
+      type: "Lead Assignment",
+      user: authUser ? authUser.email : "Super Admin",
+      status: "Success",
+      details: advisorId
+        ? `Lead '${lead.name}' assigned to Advisor: ${advisorName} (${advisorEmail})`
+        : `Lead '${lead.name}' unassigned`
+    }).catch(() => {});
+
+    res.json({ success: true, message: "Lead assignment updated.", assignedTo: lead.assignedTo });
+  } catch (err) {
+    console.error("Assign lead error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// PUT /api/v1/admin/leads/:id/status — update lead pipeline status & add internal note
+router.post("/leads/:id/status", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { leadStatus, note } = req.body;
+    const authUser = getUserFromAuth(req);
+
+    const lead = await Lead.findById(id);
+    if (!lead) {
+      return res.status(404).json({ success: false, error: "Lead not found." });
+    }
+
+    if (leadStatus) {
+      lead.leadStatus = leadStatus;
+    }
+
+    if (note && note.trim()) {
+      lead.advisorNotes.unshift({
+        id: "note_" + Date.now() + "_" + Math.random().toString(36).substring(2, 6),
+        note: note.trim(),
+        authorName: authUser ? authUser.name : "Advisor",
+        authorRole: authUser ? authUser.role : "advisor",
+        createdAt: new Date()
+      });
+    }
+
+    await lead.save();
+
+    await AuditLog.create({
+      type: "Lead Stage Update",
+      user: authUser ? authUser.email : "Advisor",
+      status: "Success",
+      details: `Lead '${lead.name}' status changed to '${lead.leadStatus}'`
+    }).catch(() => {});
+
+    res.json({
+      success: true,
+      message: "Lead updated successfully.",
+      leadStatus: lead.leadStatus,
+      advisorNotes: lead.advisorNotes
+    });
+  } catch (err) {
+    console.error("Update lead status error:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
@@ -73,6 +532,10 @@ router.delete("/leads/:id", async (req, res) => {
   }
 });
 
+// -------------------------------------------------------------
+// 4. ENQUIRIES & AUDIT LOGS
+// -------------------------------------------------------------
+
 // GET /api/v1/admin/enquiries — fetch all contact enquiries
 router.get("/enquiries", async (req, res) => {
   try {
@@ -87,6 +550,7 @@ router.get("/enquiries", async (req, res) => {
       id: e._id,
       name: e.name,
       email: e.email,
+      mobile: e.mobile || "",
       topic: e.topic,
       message: e.message,
       submittedAt: e.createdAt
@@ -138,4 +602,3 @@ router.get("/logs", async (req, res) => {
 });
 
 module.exports = router;
-

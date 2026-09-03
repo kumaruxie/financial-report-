@@ -15,7 +15,34 @@ const leadSchema = new mongoose.Schema({
   healthInsurance: { type: String, default: "no" },
   healthAmount:    { type: String, default: "0" },
   goals:           { type: Array, default: [] },
+  healthScore:     { type: Number, default: 0 },
+  totalMonthlyRequired: { type: Number, default: 0 },
+  emergencyGap:    { type: Number, default: 0 },
+  scores:          { type: Object, default: {} },
+  protection:      { type: Object, default: {} },
   pdfUrl:          { type: String, default: null },
+  userId:          { type: String, default: "", index: true },
+  assignedTo: {
+    advisorId:    { type: String, default: null, index: true },
+    advisorName:  { type: String, default: "" },
+    advisorEmail: { type: String, default: "" },
+    assignedAt:   { type: Date, default: null }
+  },
+  leadStatus: {
+    type: String,
+    enum: ["new", "contacted", "in_discussion", "meeting_scheduled", "converted", "lost", "archived"],
+    default: "new",
+    index: true
+  },
+  advisorNotes: [
+    {
+      id: { type: String, default: () => "note_" + Date.now() + "_" + Math.random().toString(36).substring(2, 6) },
+      note: { type: String, default: "" },
+      authorName: { type: String, default: "Advisor" },
+      authorRole: { type: String, default: "advisor" },
+      createdAt: { type: Date, default: Date.now }
+    }
+  ]
 }, {
   timestamps: true
 });

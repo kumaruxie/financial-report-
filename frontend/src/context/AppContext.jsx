@@ -1,16 +1,36 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { submitReportApi, getLeadsApi, getAuditLogsApi, deleteLeadApi, submitEnquiryApi, getEnquiriesApi, deleteEnquiryApi } from "../services/api";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import {
+  submitReportApi,
+  getLeadsApi,
+  getAuditLogsApi,
+  deleteLeadApi,
+  submitEnquiryApi,
+  getEnquiriesApi,
+  deleteEnquiryApi,
+  getMyAssessmentsApi,
+  deleteAssessmentApi
+} from "../services/api";
 
 const AppContext = createContext(null);
 
 const STORAGE_LEADS_KEY = "ff_leads_db";
 const STORAGE_LOGS_KEY = "ff_audit_logs_db";
 const STORAGE_ENQUIRIES_KEY = "ff_contact_enquiries_db";
+const STORAGE_USER_ASSESSMENTS_KEY = "ff_user_assessments_db";
 
 export function AppProvider({ children }) {
   const [leads, setLeads] = useState(() => {
     try {
       const localSaved = localStorage.getItem(STORAGE_LEADS_KEY);
+      return localSaved ? JSON.parse(localSaved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [userAssessments, setUserAssessments] = useState(() => {
+    try {
+      const localSaved = localStorage.getItem(STORAGE_USER_ASSESSMENTS_KEY);
       return localSaved ? JSON.parse(localSaved) : [];
     } catch {
       return [];
@@ -55,7 +75,40 @@ export function AppProvider({ children }) {
     }
   };
 
-  // On mount & periodically sync real data from backend
+  const fetchUserAssessments = useCallback(async (userData) => {
+    if (!userData) {
+      setUserAssessments([]);
+      return;
+    }
+    const backendData = await getMyAssessmentsApi({
+      userId: userData.id,
+      email: userData.email,
+      mobile: userData.mobile
+    });
+
+    if (backendData && Array.isArray(backendData)) {
+      setUserAssessments(backendData);
+      try {
+        localStorage.setItem(STORAGE_USER_ASSESSMENTS_KEY, JSON.stringify(backendData));
+      } catch (e) {}
+    } else {
+      // Filter local leads as fallback
+      try {
+        const localSaved = localStorage.getItem(STORAGE_LEADS_KEY);
+        if (localSaved) {
+          const all = JSON.parse(localSaved);
+          const filtered = all.filter(
+            (l) =>
+              (userData.email && l.email && l.email.toLowerCase() === userData.email.toLowerCase()) ||
+              (userData.mobile && l.mobile && l.mobile.includes(userData.mobile)) ||
+              (l.userId && l.userId === userData.id)
+          );
+          setUserAssessments(filtered);
+        }
+      } catch (e) {}
+    }
+  }, []);
+
   useEffect(() => {
     refreshBackendData();
   }, []);
@@ -109,12 +162,17 @@ export function AppProvider({ children }) {
     addAuditLog("Enquiry Management", "Admin", "Success", `Contact enquiry deleted: ${enquiryId}`);
   };
 
-  const saveLeadSubmission = async (leadData) => {
-    const res = await submitReportApi(leadData);
+  const saveLeadSubmission = async (leadData, currentUser = null) => {
+    const payload = {
+      ...leadData,
+      userId: currentUser?.id || leadData.userId || ""
+    };
+    const res = await submitReportApi(payload);
     const rawReport = res.report || {};
 
     const newLead = {
       id: rawReport._id || rawReport.id || "lead_" + Date.now(),
+      userId: payload.userId,
       name: leadData.name || "Client User",
       email: leadData.email || "",
       mobile: leadData.mobile || "",
@@ -140,6 +198,15 @@ export function AppProvider({ children }) {
       } catch (e) {}
       return updated;
     });
+
+    setUserAssessments((prev) => {
+      const updated = [newLead, ...prev.filter((item) => item.id !== newLead.id)];
+      try {
+        localStorage.setItem(STORAGE_USER_ASSESSMENTS_KEY, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
     setActiveLead(newLead);
     addAuditLog("Report Generation", newLead.email, "Success", `Lead submitted: ${newLead.name}`);
     return newLead;
@@ -154,10 +221,35 @@ export function AppProvider({ children }) {
       } catch (e) {}
       return updated;
     });
+    setUserAssessments((prev) => {
+      const updated = prev.filter((l) => l.id !== leadId && l._id !== leadId);
+      try {
+        localStorage.setItem(STORAGE_USER_ASSESSMENTS_KEY, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
     if (activeLead && (activeLead.id === leadId || activeLead._id === leadId)) {
       setActiveLead(null);
     }
     addAuditLog("Lead Management", "Admin", "Success", `Lead deleted: ${leadId}`);
+  };
+
+  const deleteUserAssessment = async (leadId) => {
+    await deleteAssessmentApi(leadId);
+    setUserAssessments((prev) => {
+      const updated = prev.filter((l) => l.id !== leadId && l._id !== leadId);
+      try {
+        localStorage.setItem(STORAGE_USER_ASSESSMENTS_KEY, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+    setLeads((prev) => {
+      const updated = prev.filter((l) => l.id !== leadId && l._id !== leadId);
+      try {
+        localStorage.setItem(STORAGE_LEADS_KEY, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
   };
 
   return (
@@ -166,6 +258,9 @@ export function AppProvider({ children }) {
         leads,
         activeLead,
         setActiveLead,
+        userAssessments,
+        fetchUserAssessments,
+        deleteUserAssessment,
         contactEnquiries,
         saveContactEnquiry,
         deleteContactEnquiry,

@@ -144,7 +144,7 @@ export default function StepGoals({ goals, setGoals }) {
                     <input
                       type="text"
                       className="ff-input-56px"
-                      placeholder="e.g. Aarav / Ananya"
+                      placeholder="Child's Name"
                       value={goal.childName || ""}
                       onChange={(e) => updateGoal(goal.id, { childName: e.target.value })}
                     />
