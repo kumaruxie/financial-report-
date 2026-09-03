@@ -116,7 +116,7 @@ export default function LandingHero({ onStart, onStartWizard, onOpenLegal, onOpe
           }}
         >
           {/* Powered by ApkaCoach */}
-          <div style={{ marginBottom: 18, display: "inline-flex", alignItems: "center", gap: 7, opacity: 0.9 }}>
+          <div style={{ marginBottom: 22, display: "inline-flex", alignItems: "center", gap: 7, opacity: 0.9 }}>
             <span style={{ fontSize: 12, color: "var(--text-fog)", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>
               powered by
             </span>
@@ -139,7 +139,7 @@ export default function LandingHero({ onStart, onStartWizard, onOpenLegal, onOpe
               lineHeight: 1.15,
               fontWeight: 600,
               color: "var(--text-main)",
-              marginBottom: 18,
+              marginBottom: 24,
               fontFamily: "var(--font-serif)",
               letterSpacing: "-0.02em",
               textShadow: "0 4px 24px rgba(0, 0, 0, 0.9)"
@@ -157,7 +157,7 @@ export default function LandingHero({ onStart, onStartWizard, onOpenLegal, onOpe
               fontWeight: 500,
               color: "var(--text-ivory)",
               maxWidth: 680,
-              margin: "0 auto 28px",
+              margin: "0 auto 34px",
               lineHeight: 1.6,
               textShadow: "0 2px 10px rgba(0, 0, 0, 0.8)",
               opacity: 0.95
@@ -176,7 +176,7 @@ export default function LandingHero({ onStart, onStartWizard, onOpenLegal, onOpe
               padding: "15px 34px",
               borderRadius: 10,
               cursor: "pointer",
-              marginBottom: 44,
+              marginBottom: 50,
               boxShadow: "0 0 50px rgba(201, 154, 75, 0.2), 0 16px 36px rgba(0, 0, 0, 0.4)",
               display: "inline-flex",
               alignItems: "center",
@@ -188,7 +188,7 @@ export default function LandingHero({ onStart, onStartWizard, onOpenLegal, onOpe
           </button>
 
           {/* GOAL TIMELINE GLOWING TRAJECTORY TRACK */}
-          <div className="ff-hero-timeline" style={{ width: "100%", maxWidth: 740, position: "relative", marginTop: 14 }}>
+          <div className="ff-hero-timeline" style={{ width: "100%", maxWidth: 740, position: "relative", marginTop: 18 }}>
             {/* Glowing Trajectory Track Line */}
             <div
               style={{
