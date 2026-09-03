@@ -12,11 +12,8 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
   const reportId = lead._id || lead.id || `YWC-2026-${Math.floor(1000 + Math.random() * 9000)}`;
   const dateStr = new Date(lead.submittedAt || Date.now()).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
 
-  const docRef = React.useRef(null);
-  const [docHeight, setDocHeight] = React.useState(11230);
   const [isPrinting, setIsPrinting] = React.useState(false);
   const [printStatusText, setPrintStatusText] = React.useState("Preparing Document Layout...");
-  const [zoomMode, setZoomMode] = React.useState("fit"); // "fit" | "full"
   const [screenWidth, setScreenWidth] = React.useState(typeof window !== "undefined" ? window.innerWidth : 1200);
 
   React.useEffect(() => {
@@ -25,24 +22,9 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  React.useEffect(() => {
-    const updateHeight = () => {
-      if (docRef.current) {
-        const measured = docRef.current.scrollHeight || docRef.current.offsetHeight;
-        if (measured > 1000) {
-          setDocHeight(measured);
-        }
-      }
-    };
-    updateHeight();
-    const t = setTimeout(updateHeight, 400);
-    return () => clearTimeout(t);
-  }, [screenWidth, lead]);
-
   const isMobile = screenWidth < 820;
-  const targetDocWidth = 794;
-  const availableDocWidth = Math.max(280, screenWidth - 16);
-  const fitScale = isMobile ? availableDocWidth / targetDocWidth : 1;
+  const availableWidth = Math.max(280, screenWidth - 16);
+  const mobileScale = isMobile ? Math.min(1, availableWidth / 794).toFixed(4) : "1";
 
   const handlePrint = () => {
     setIsPrinting(true);
@@ -222,12 +204,6 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
           @page {
             size: A4 portrait;
             margin: 0;
-          }
-          body {
-            background: #FFFFFF !important;
-            margin: 0 !important;
-            padding: 0 !important;
-          }
           body * {
             visibility: hidden !important;
           }
@@ -244,10 +220,18 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
           .epdf-toolbar {
             display: none !important;
           }
+          .epdf-document-scroll-container {
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
           .epdf-document {
             box-shadow: none !important;
             width: 210mm !important;
+            min-width: 210mm !important;
             margin: 0 !important;
+            zoom: 1 !important;
+            transform: none !important;
           }
           .epdf-page {
             width: 210mm !important;
@@ -258,168 +242,60 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             border-bottom: none !important;
             box-sizing: border-box !important;
           }
-          .epdf-document-viewport, .epdf-document-scaler, .epdf-document {
-            position: static !important;
-            transform: none !important;
-            width: 210mm !important;
-            min-width: 210mm !important;
-            height: auto !important;
-            margin: 0 !important;
-            overflow: visible !important;
-          }
-        }
-
-        .epdf-document-viewport {
-          width: 100%;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          padding-bottom: 40px;
-        }
-        .epdf-document-scaler {
-          display: flex;
-          justify-content: center;
-        }
-
-        @media (max-width: 820px) {
-          .epdf-modal-overlay {
-            padding: 10px 0 30px 0 !important;
-            overflow-x: hidden !important;
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: center !important;
-          }
-          .epdf-toolbar {
-            width: calc(100% - 16px) !important;
-            max-width: 100% !important;
-            margin: 0 auto 12px auto !important;
-            padding: 10px 14px !important;
-            flex-direction: column !important;
-            gap: 10px !important;
-            align-items: stretch !important;
-            border-radius: 12px !important;
-            box-sizing: border-box !important;
-          }
-          .epdf-toolbar-top {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: space-between !important;
-            gap: 8px !important;
-          }
-          .epdf-toolbar-bottom {
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-            gap: 8px !important;
-            padding-top: 8px !important;
-            border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
-          }
-          .epdf-zoom-btn {
-            background: rgba(255, 255, 255, 0.08) !important;
-            color: #C99A4B !important;
-            border: 1px solid rgba(201, 154, 75, 0.35) !important;
-            border-radius: 8px !important;
-            padding: 6px 12px !important;
-            font-size: 11.5px !important;
-            font-weight: 700 !important;
-            cursor: pointer !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 5px !important;
-          }
-          .epdf-print-btn {
-            background: #C8A74D !important;
-            color: #07080C !important;
-            border: none !important;
-            border-radius: 8px !important;
-            padding: 6px 14px !important;
-            font-weight: 700 !important;
-            font-size: 12px !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            gap: 6px !important;
-            cursor: pointer !important;
-          }
-          .epdf-close-btn {
-            background: rgba(255, 255, 255, 0.05) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            border-radius: 8px !important;
-            color: #94A3B8 !important;
-            padding: 4px 6px !important;
-            cursor: pointer !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-          }
         }
       `}</style>
 
-      {/* MINIMALIST CONTROL BAR */}
+      {/* MINIMALIST CONTROL BAR - SINGLE CLEAN VIEW */}
       <div className="epdf-toolbar">
-        {isMobile ? (
-          <>
-            <div className="epdf-toolbar-top">
-              <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-                <Compass size={18} color="#C8A74D" style={{ flexShrink: 0 }} />
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {lead.name}'s Financial Report
-                  </div>
-                  <div style={{ fontSize: 10.5, color: "#94A3B8" }}>{dateStr}</div>
-                </div>
-              </div>
-              <button onClick={onClose} className="epdf-close-btn" aria-label="Close">
-                <X size={18} />
-              </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: 1 }}>
+          <Compass size={20} color="#C8A74D" style={{ flexShrink: 0 }} />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              Financial Health Report — {lead.name}
             </div>
+            <div style={{ fontSize: 10.5, color: "#94A3B8" }}>
+              Report ID: {reportId} • {dateStr}
+            </div>
+          </div>
+        </div>
 
-            <div className="epdf-toolbar-bottom">
-              <button
-                onClick={() => setZoomMode(zoomMode === "fit" ? "full" : "fit")}
-                className="epdf-zoom-btn"
-              >
-                {zoomMode === "fit" ? "🔍 100% Size" : "📱 Fit Mobile"}
-              </button>
-
-              <button onClick={handlePrint} className="epdf-print-btn">
-                <Printer size={14} /> Print / Save PDF
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <Compass size={20} color="#C8A74D" />
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 14 }}>Financial Health & Wealth Planning Report — {lead.name}</div>
-                <div style={{ fontSize: 11, color: "#94A3B8" }}>Report ID: {reportId} • Generated on {dateStr}</div>
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 10 }}>
-              <button
-                onClick={handlePrint}
-                style={{
-                  background: "#C8A74D",
-                  color: "#07080C",
-                  border: "none",
-                  borderRadius: 6,
-                  padding: "8px 16px",
-                  fontWeight: 700,
-                  fontSize: 13,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6
-                }}
-              >
-                <Printer size={15} /> Print Report
-              </button>
-              <button onClick={onClose} style={{ background: "none", border: "none", color: "#94A3B8", cursor: "pointer" }}>
-                <X size={20} />
-              </button>
-            </div>
-          </>
-        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          <button
+            onClick={handlePrint}
+            style={{
+              background: "#C8A74D",
+              color: "#07080C",
+              border: "none",
+              borderRadius: 6,
+              padding: "7px 14px",
+              fontWeight: 700,
+              fontSize: 12.5,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6
+            }}
+          >
+            <Printer size={15} /> Print / Save PDF
+          </button>
+          <button
+            onClick={onClose}
+            style={{
+              background: "rgba(255, 255, 255, 0.06)",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
+              borderRadius: 6,
+              color: "#94A3B8",
+              cursor: "pointer",
+              padding: "5px 7px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+            aria-label="Close"
+          >
+            <X size={18} />
+          </button>
+        </div>
       </div>
 
       {isPrinting && (
@@ -440,44 +316,9 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
         </div>
       )}
 
-      {/* DECOUPLED 10-PAGE A4 PDF DOCUMENT VIEWPORT */}
-      <div
-        className="epdf-document-viewport"
-        style={{
-          width: "100%",
-          overflowX: isMobile && zoomMode === "full" ? "auto" : "hidden",
-          WebkitOverflowScrolling: "touch",
-          paddingBottom: 40,
-          display: "flex",
-          justifyContent: isMobile && zoomMode === "full" ? "flex-start" : "center"
-        }}
-      >
-        <div
-          className="epdf-document-scaler"
-          style={{
-            width: isMobile && zoomMode === "fit" ? `${Math.round(targetDocWidth * fitScale)}px` : isMobile ? "794px" : "auto",
-            height: isMobile && zoomMode === "fit" ? `${Math.round(docHeight * fitScale)}px` : "auto",
-            margin: "0 auto",
-            position: isMobile && zoomMode === "fit" ? "relative" : "static",
-            overflow: isMobile && zoomMode === "fit" ? "hidden" : "visible",
-            borderRadius: isMobile && zoomMode === "fit" ? 8 : 0,
-            boxShadow: isMobile && zoomMode === "fit" ? "0 12px 40px rgba(0, 0, 0, 0.5)" : "none"
-          }}
-        >
-          <div
-            ref={docRef}
-            className="epdf-document"
-            style={{
-              width: "794px",
-              minWidth: "794px",
-              transform: isMobile && zoomMode === "fit" ? `scale(${fitScale})` : "none",
-              transformOrigin: "top left",
-              position: isMobile && zoomMode === "fit" ? "absolute" : "relative",
-              top: 0,
-              left: 0,
-              margin: isMobile && zoomMode === "fit" ? 0 : "0 auto"
-            }}
-          >
+      {/* 10-PAGE A4 PDF DOCUMENT SCROLL CONTAINER */}
+      <div className="epdf-document-scroll-container">
+        <div className="epdf-document">
 
         {/* ================= PAGE 1: COVER PAGE ================= */}
         <div className="epdf-page" style={{ background: "#FCFBF8", position: "relative" }}>
@@ -1504,7 +1345,6 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
           <div className="epdf-footer" style={{ display: "none" }}></div>
         </div>
 
-          </div>
         </div>
       </div>
     </div>
