@@ -242,6 +242,108 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             border-bottom: none !important;
             box-sizing: border-box !important;
           }
+        /* EXECUTIVE CONTROL BAR - DESKTOP */
+        .epdf-toolbar {
+          width: 100%;
+          max-width: 210mm;
+          background: #0B1120;
+          border: 1px solid rgba(200, 167, 77, 0.25);
+          border-radius: 14px;
+          padding: 12px 20px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin: 0 auto 20px;
+          color: #FFF;
+          box-shadow: 0 12px 36px rgba(0,0,0,0.6);
+          position: sticky;
+          top: 0;
+          z-index: 1000;
+          box-sizing: border-box;
+          gap: 16px;
+        }
+
+        .epdf-toolbar-lead {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          min-width: 0;
+          flex: 1;
+        }
+
+        .epdf-toolbar-icon {
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
+          background: rgba(200, 167, 77, 0.12);
+          border: 1px solid rgba(200, 167, 77, 0.25);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .epdf-toolbar-info {
+          min-width: 0;
+        }
+
+        .epdf-toolbar-title {
+          font-weight: 700;
+          font-size: 14px;
+          color: #FFFFFF;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          letter-spacing: -0.01em;
+        }
+
+        .epdf-toolbar-meta {
+          font-size: 11px;
+          color: #94A3B8;
+          margin-top: 2px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .epdf-toolbar-actions {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-shrink: 0;
+        }
+
+        .epdf-toolbar-btn-print {
+          background: linear-gradient(135deg, #D4AF37 0%, #C8A74D 100%);
+          color: #07080C;
+          border: none;
+          border-radius: 8px;
+          padding: 9px 18px;
+          font-weight: 700;
+          font-size: 13px;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          white-space: nowrap;
+          box-shadow: 0 4px 14px rgba(200, 167, 77, 0.3);
+          transition: all 0.15s ease;
+        }
+
+        .epdf-toolbar-btn-close {
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 8px;
+          color: #94A3B8;
+          cursor: pointer;
+          width: 38px;
+          height: 38px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.15s ease;
+          padding: 0;
+          flex-shrink: 0;
         }
 
         @media (max-width: 820px) {
@@ -250,37 +352,69 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             display: block !important;
             overflow-x: hidden !important;
           }
+
           .epdf-toolbar {
             width: 100% !important;
             max-width: 100% !important;
-            margin: 0 0 14px 0 !important;
-            padding: 10px 14px !important;
-            border-radius: 10px !important;
-            box-sizing: border-box !important;
+            margin: 0 0 16px 0 !important;
+            padding: 12px 14px !important;
+            border-radius: 12px !important;
             flex-direction: column !important;
             align-items: stretch !important;
+            gap: 12px !important;
+          }
+
+          .epdf-toolbar-lead {
+            width: 100% !important;
+            display: flex !important;
+            align-items: center !important;
             gap: 10px !important;
           }
-          .epdf-toolbar-top-row {
+
+          .epdf-toolbar-icon {
+            width: 34px !important;
+            height: 34px !important;
+          }
+
+          .epdf-toolbar-title {
+            font-size: 13px !important;
+          }
+
+          .epdf-toolbar-meta {
+            font-size: 10.5px !important;
+          }
+
+          .epdf-toolbar-actions {
+            width: 100% !important;
             display: flex !important;
             align-items: center !important;
             justify-content: space-between !important;
-            gap: 10px !important;
-          }
-          .epdf-toolbar-bottom-row {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: space-between !important;
-            gap: 10px !important;
-            padding-top: 8px !important;
+            gap: 8px !important;
+            padding-top: 10px !important;
             border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
           }
+
+          .epdf-toolbar-btn-print {
+            flex: 1 !important;
+            height: 42px !important;
+            justify-content: center !important;
+            font-size: 13px !important;
+            border-radius: 9px !important;
+          }
+
+          .epdf-toolbar-btn-close {
+            height: 42px !important;
+            width: 44px !important;
+            border-radius: 9px !important;
+          }
+
           .epdf-document-scroll-container {
             width: 100% !important;
             display: flex !important;
             justify-content: center !important;
             overflow: visible !important;
           }
+
           .epdf-document {
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
             border-radius: 8px !important;
@@ -289,94 +423,30 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
         }
       `}</style>
 
-      {/* MINIMALIST CONTROL BAR - CLEAN & RESPONSIVE */}
+      {/* EXECUTIVE CONTROL BAR */}
       <div className="epdf-toolbar">
-        {isMobile ? (
-          <>
-            <div className="epdf-toolbar-top-row">
-              <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flex: 1 }}>
-                <Compass size={18} color="#C8A74D" style={{ flexShrink: 0 }} />
-                <div style={{ fontWeight: 700, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {lead.name}'s Financial Report
-                </div>
-              </div>
-              <button
-                onClick={onClose}
-                style={{
-                  background: "rgba(255, 255, 255, 0.06)",
-                  border: "1px solid rgba(255, 255, 255, 0.12)",
-                  borderRadius: 6,
-                  color: "#94A3B8",
-                  cursor: "pointer",
-                  padding: "5px 8px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center"
-                }}
-                aria-label="Close"
-              >
-                <X size={18} />
-              </button>
+        <div className="epdf-toolbar-lead">
+          <div className="epdf-toolbar-icon">
+            <Compass size={18} color="#C8A74D" />
+          </div>
+          <div className="epdf-toolbar-info">
+            <div className="epdf-toolbar-title">
+              Financial Health Report — {lead.name}
             </div>
+            <div className="epdf-toolbar-meta">
+              Report ID: {reportId} • {dateStr}
+            </div>
+          </div>
+        </div>
 
-            <div className="epdf-toolbar-bottom-row">
-              <div style={{ fontSize: 10.5, color: "#94A3B8" }}>
-                {dateStr}
-              </div>
-              <button
-                onClick={handlePrint}
-                style={{
-                  background: "#C8A74D",
-                  color: "#07080C",
-                  border: "none",
-                  borderRadius: 6,
-                  padding: "7px 16px",
-                  fontWeight: 700,
-                  fontSize: 12.5,
-                  cursor: "pointer",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6
-                }}
-              >
-                <Printer size={14} /> Print / Save PDF
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: 1 }}>
-              <Compass size={20} color="#C8A74D" style={{ flexShrink: 0 }} />
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontWeight: 700, fontSize: 14 }}>Financial Health & Wealth Planning Report — {lead.name}</div>
-                <div style={{ fontSize: 11, color: "#94A3B8" }}>Report ID: {reportId} • Generated on {dateStr}</div>
-              </div>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-              <button
-                onClick={handlePrint}
-                style={{
-                  background: "#C8A74D",
-                  color: "#07080C",
-                  border: "none",
-                  borderRadius: 6,
-                  padding: "8px 16px",
-                  fontWeight: 700,
-                  fontSize: 13,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6
-                }}
-              >
-                <Printer size={15} /> Print Report
-              </button>
-              <button onClick={onClose} style={{ background: "none", border: "none", color: "#94A3B8", cursor: "pointer" }}>
-                <X size={20} />
-              </button>
-            </div>
-          </>
-        )}
+        <div className="epdf-toolbar-actions">
+          <button onClick={handlePrint} className="epdf-toolbar-btn-print">
+            <Printer size={15} /> Print / Save PDF
+          </button>
+          <button onClick={onClose} className="epdf-toolbar-btn-close" aria-label="Close">
+            <X size={18} />
+          </button>
+        </div>
       </div>
 
       {isPrinting && (
