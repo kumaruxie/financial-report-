@@ -334,7 +334,7 @@ export default function FormsPortal({ onRedirectHome }) {
             }}
           />
 
-          {/* powered by aapkaconsultant.com with logo */}
+          {/* powered by apkacoach.com with logo */}
           <div
             style={{
               display: "inline-flex",
@@ -346,15 +346,15 @@ export default function FormsPortal({ onRedirectHome }) {
           >
             <span style={{ textTransform: "lowercase", letterSpacing: "0.02em" }}>powered by</span>
             <a
-              href="https://aapkaconsultant.com"
+              href="https://apkacoach.com"
               target="_blank"
               rel="noopener noreferrer"
               style={{ display: "inline-flex", alignItems: "center" }}
-              title="aapkaconsultant.com"
+              title="apkacoach.com"
             >
               <img
                 src="/apkacoach-logo-dark.png"
-                alt="aapkaconsultant.com"
+                alt="apkacoach.com"
                 style={{
                   height: "clamp(18px, 4vw, 22px)",
                   width: "auto",
