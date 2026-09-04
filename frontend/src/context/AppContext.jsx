@@ -84,35 +84,50 @@ export function AppProvider({ children }) {
     setLoadingAssessments(true);
     try {
       const uId = userData.id || userData.uid || "";
-      const uEmail = userData.email || "";
-      const uMob = userData.mobile || "";
+      const uEmail = (userData.email || "").trim();
+      const uMob = (userData.mobile || "").trim();
+      const cleanMob = uMob.replace(/\D/g, "").slice(-10);
 
       const backendData = await getMyAssessmentsApi({
         userId: uId,
         email: uEmail,
-        mobile: uMob
+        mobile: cleanMob || uMob
       });
 
+      // Get any local assessments saved in browser
+      let localItems = [];
+      try {
+        const localUserSaved = localStorage.getItem(STORAGE_USER_ASSESSMENTS_KEY);
+        const localLeadsSaved = localStorage.getItem(STORAGE_LEADS_KEY);
+        const allLocal = [
+          ...(localUserSaved ? JSON.parse(localUserSaved) : []),
+          ...(localLeadsSaved ? JSON.parse(localLeadsSaved) : [])
+        ];
+        localItems = allLocal.filter((l) => {
+          if (!l) return false;
+          const emailMatch = uEmail && l.email && l.email.toLowerCase() === uEmail.toLowerCase();
+          const lCleanMob = (l.mobile || "").replace(/\D/g, "").slice(-10);
+          const mobMatch = cleanMob && lCleanMob && (lCleanMob === cleanMob || l.mobile.includes(cleanMob));
+          const idMatch = l.userId && (l.userId === uId || l.userId === userData.uid);
+          return emailMatch || mobMatch || idMatch;
+        });
+      } catch (e) {}
+
       if (backendData && Array.isArray(backendData)) {
-        setUserAssessments(backendData);
-        try {
-          localStorage.setItem(STORAGE_USER_ASSESSMENTS_KEY, JSON.stringify(backendData));
-        } catch (e) {}
-      } else {
-        // Filter local leads as fallback
-        try {
-          const localSaved = localStorage.getItem(STORAGE_LEADS_KEY);
-          if (localSaved) {
-            const all = JSON.parse(localSaved);
-            const filtered = all.filter(
-              (l) =>
-                (uEmail && l.email && l.email.toLowerCase() === uEmail.toLowerCase()) ||
-                (uMob && l.mobile && l.mobile.includes(uMob)) ||
-                (l.userId && (l.userId === uId || l.userId === userData.uid))
-            );
-            setUserAssessments(filtered);
+        // Merge backendData with local items without duplicates
+        const merged = [...backendData];
+        localItems.forEach((item) => {
+          const exists = merged.some((m) => (m.id && m.id === item.id) || (m._id && m._id === item._id));
+          if (!exists) {
+            merged.push(item);
           }
+        });
+        setUserAssessments(merged);
+        try {
+          localStorage.setItem(STORAGE_USER_ASSESSMENTS_KEY, JSON.stringify(merged));
         } catch (e) {}
+      } else if (localItems.length > 0) {
+        setUserAssessments(localItems);
       }
     } finally {
       setLoadingAssessments(false);

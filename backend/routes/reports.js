@@ -166,8 +166,15 @@ router.get("/my-assessments", async (req, res) => {
 
     const filters = [];
     if (targetUserId) filters.push({ userId: targetUserId });
-    if (targetEmail) filters.push({ email: new RegExp("^" + targetEmail.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$", "i") });
-    if (targetMobile) filters.push({ mobile: new RegExp(targetMobile.replace(/\D/g, "")) });
+    if (targetEmail && !targetEmail.endsWith("@mobile.client") && !targetEmail.includes("mobile.client")) {
+      filters.push({ email: new RegExp("^" + targetEmail.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "$", "i") });
+    }
+
+    const cleanPhoneDigits = targetMobile ? targetMobile.replace(/\D/g, "") : "";
+    const last10 = cleanPhoneDigits.length >= 10 ? cleanPhoneDigits.slice(-10) : cleanPhoneDigits;
+    if (last10 && last10.length >= 7) {
+      filters.push({ mobile: new RegExp(last10) });
+    }
 
     if (filters.length === 0) {
       return res.json({ success: true, assessments: [] });
