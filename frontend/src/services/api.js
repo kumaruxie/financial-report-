@@ -1,3 +1,5 @@
+export const DIRECT_RENDER_URL = "https://financial-report-aq7m.onrender.com/api/v1";
+
 const getApiBaseUrl = () => {
   if (import.meta.env && import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
@@ -7,12 +9,38 @@ const getApiBaseUrl = () => {
     if (host === "localhost" || host === "127.0.0.1" || host.startsWith("192.168.") || host.startsWith("10.") || host.startsWith("172.")) {
       return `http://${host}:5000/api/v1`;
     }
-    return "https://financial-report-aq7m.onrender.com/api/v1";
+    // In production on Vercel: use same-origin /api/v1 (proxied by Vercel rewrites to avoid any CORS/Brave Shield blocks)
+    return "/api/v1";
   }
   return "http://localhost:5000/api/v1";
 };
 
 export const API_BASE_URL = getApiBaseUrl();
+
+export async function requestWithFallback(path, options = {}) {
+  const primaryUrl = `${API_BASE_URL}${path}`;
+  const directUrl = `${DIRECT_RENDER_URL}${path}`;
+
+  try {
+    const res = await fetch(primaryUrl, options);
+    if (!res.ok && res.status >= 500) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+    return await res.json();
+  } catch (err) {
+    if (API_BASE_URL !== DIRECT_RENDER_URL) {
+      console.warn(`Primary endpoint ${primaryUrl} failed (${err.message}), retrying via direct backend:`, directUrl);
+      try {
+        const fallbackRes = await fetch(directUrl, options);
+        return await fallbackRes.json();
+      } catch (fallbackErr) {
+        console.error(`Direct fallback ${directUrl} also failed:`, fallbackErr.message);
+        throw fallbackErr;
+      }
+    }
+    throw err;
+  }
+}
 
 function getAuthHeader() {
   try {
@@ -189,16 +217,14 @@ export async function verifyAdminPasswordApi(password) {
 
 export async function submitReportApi(payload) {
   try {
-    const res = await fetch(`${API_BASE_URL}/reports/submit`, {
+    return await requestWithFallback("/reports/submit", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         ...getAuthHeader()
       },
-      cache: "no-store",
       body: JSON.stringify(payload)
     });
-    return await res.json();
   } catch (err) {
     console.warn("Backend API submitReport failed, fallback to local storage:", err.message);
     return {
@@ -217,15 +243,12 @@ export async function getMyAssessmentsApi(userParams = {}) {
     if (userParams.mobile) query.set("mobile", userParams.mobile);
     query.set("_t", Date.now().toString());
 
-    const res = await fetch(`${API_BASE_URL}/reports/my-assessments?${query.toString()}`, {
-      cache: "no-store",
+    const data = await requestWithFallback(`/reports/my-assessments?${query.toString()}`, {
       headers: {
-        "Cache-Control": "no-cache, no-store, must-revalidate",
         ...getAuthHeader()
       }
     });
-    const data = await res.json();
-    return data.assessments || [];
+    return data && Array.isArray(data.assessments) ? data.assessments : [];
   } catch (err) {
     console.warn("Backend API getMyAssessments failed:", err.message);
     return null;
@@ -234,11 +257,10 @@ export async function getMyAssessmentsApi(userParams = {}) {
 
 export async function deleteAssessmentApi(id) {
   try {
-    const res = await fetch(`${API_BASE_URL}/reports/${id}`, {
+    return await requestWithFallback(`/reports/${id}`, {
       method: "DELETE",
       headers: { ...getAuthHeader() }
     });
-    return await res.json();
   } catch (err) {
     console.warn("Delete assessment failed:", err.message);
     return { success: true };
@@ -247,12 +269,11 @@ export async function deleteAssessmentApi(id) {
 
 export async function adminLoginApi(identifier, password) {
   try {
-    const res = await fetch(`${API_BASE_URL}/admin/auth/login`, {
+    return await requestWithFallback("/admin/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ identifier, password })
     });
-    return await res.json();
   } catch (err) {
     console.warn("adminLoginApi failed:", err.message);
     if (password === "work2026@") {
@@ -270,11 +291,7 @@ export async function fetchAdminTeamUsersApi(token) {
   try {
     const headers = { "Content-Type": "application/json" };
     if (token) headers["Authorization"] = `Bearer ${token}`;
-    const res = await fetch(`${API_BASE_URL}/admin/users?_t=${Date.now()}`, {
-      cache: "no-store",
-      headers
-    });
-    return await res.json();
+    return await requestWithFallback(`/admin/users?_t=${Date.now()}`, { headers });
   } catch (err) {
     console.warn("fetchAdminTeamUsersApi failed:", err.message);
     return { success: false, users: [] };
@@ -378,14 +395,10 @@ export async function updateLeadStatusAndNotesApi(leadId, { leadStatus, note }, 
 
 export async function getLeadsApi(token) {
   try {
-    const headers = { "Cache-Control": "no-cache, no-store, must-revalidate" };
+    const headers = {};
     if (token) headers["Authorization"] = `Bearer ${token}`;
-    const res = await fetch(`${API_BASE_URL}/admin/leads?_t=${Date.now()}`, {
-      cache: "no-store",
-      headers
-    });
-    const data = await res.json();
-    return data.leads || [];
+    const data = await requestWithFallback(`/admin/leads?_t=${Date.now()}`, { headers });
+    return data && Array.isArray(data.leads) ? data.leads : [];
   } catch (err) {
     console.warn("Backend API getLeads failed:", err.message);
     return null;
@@ -396,12 +409,10 @@ export async function deleteLeadApi(leadId, token) {
   try {
     const headers = {};
     if (token) headers["Authorization"] = `Bearer ${token}`;
-    const res = await fetch(`${API_BASE_URL}/admin/leads/${leadId}`, {
+    return await requestWithFallback(`/admin/leads/${leadId}`, {
       method: "DELETE",
-      headers,
-      cache: "no-store"
+      headers
     });
-    return await res.json();
   } catch (err) {
     console.warn("Backend API deleteLead failed:", err.message);
     return { success: true };
@@ -410,14 +421,10 @@ export async function deleteLeadApi(leadId, token) {
 
 export async function getAuditLogsApi(token) {
   try {
-    const headers = { "Cache-Control": "no-cache, no-store, must-revalidate" };
+    const headers = {};
     if (token) headers["Authorization"] = `Bearer ${token}`;
-    const res = await fetch(`${API_BASE_URL}/admin/logs?_t=${Date.now()}`, {
-      cache: "no-store",
-      headers
-    });
-    const data = await res.json();
-    return data.logs || [];
+    const data = await requestWithFallback(`/admin/logs?_t=${Date.now()}`, { headers });
+    return data && Array.isArray(data.logs) ? data.logs : [];
   } catch (err) {
     console.warn("Backend API getAuditLogs failed:", err.message);
     return null;
@@ -426,13 +433,11 @@ export async function getAuditLogsApi(token) {
 
 export async function submitEnquiryApi(payload) {
   try {
-    const res = await fetch(`${API_BASE_URL}/reports/enquiry`, {
+    return await requestWithFallback("/reports/enquiry", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      cache: "no-store",
       body: JSON.stringify(payload)
     });
-    return await res.json();
   } catch (err) {
     console.warn("Backend API submitEnquiry failed:", err.message);
     return { success: true };
@@ -441,12 +446,8 @@ export async function submitEnquiryApi(payload) {
 
 export async function getEnquiriesApi() {
   try {
-    const res = await fetch(`${API_BASE_URL}/admin/enquiries?_t=${Date.now()}`, {
-      cache: "no-store",
-      headers: { "Cache-Control": "no-cache, no-store, must-revalidate" }
-    });
-    const data = await res.json();
-    return data.enquiries || [];
+    const data = await requestWithFallback(`/admin/enquiries?_t=${Date.now()}`);
+    return data && Array.isArray(data.enquiries) ? data.enquiries : [];
   } catch (err) {
     console.warn("Backend API getEnquiries failed:", err.message);
     return null;

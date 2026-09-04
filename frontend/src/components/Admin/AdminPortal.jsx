@@ -95,11 +95,18 @@ function AdminPortalMain() {
 
   const isSuperAdmin = adminUser?.role === "superadmin" || adminUser?.id === "superadmin_master";
 
-  const loadPortalData = async (token = adminToken) => {
+  const loadPortalData = async (token = adminToken, retryCount = 0) => {
     setIsRefreshing(true);
     try {
       // 1. Fetch leads (role-filtered by backend)
       const fetchedLeads = await getLeadsApi(token);
+
+      // Auto-retry once if server was sleeping
+      if (!fetchedLeads && retryCount < 2) {
+        await new Promise((r) => setTimeout(r, 2500));
+        return loadPortalData(token, retryCount + 1);
+      }
+
       if (Array.isArray(fetchedLeads) && fetchedLeads.length > 0) {
         setAdminLeads(fetchedLeads);
         try {
