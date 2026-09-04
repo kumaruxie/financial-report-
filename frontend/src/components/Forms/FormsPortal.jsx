@@ -346,15 +346,15 @@ export default function FormsPortal({ onRedirectHome }) {
           >
             <span style={{ textTransform: "lowercase", letterSpacing: "0.02em" }}>powered by</span>
             <a
-              href="https://apkacoach.com"
+              href="https://www.apkacoach.com"
               target="_blank"
               rel="noopener noreferrer"
               style={{ display: "inline-flex", alignItems: "center" }}
-              title="apkacoach.com"
+              title="www.apkacoach.com"
             >
               <img
                 src="/apkacoach-logo-dark.png"
-                alt="apkacoach.com"
+                alt="www.apkacoach.com"
                 style={{
                   height: "clamp(18px, 4vw, 22px)",
                   width: "auto",
