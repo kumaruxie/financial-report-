@@ -20,6 +20,7 @@ echo.
 echo ===================================================
 echo   All Servers Launched!
 echo   Frontend URL: http://localhost:5173
+echo   Forms Portal: http://localhost:5173/forms
 echo   Admin Portal: http://localhost:5173/#adm
 echo ===================================================
 echo.

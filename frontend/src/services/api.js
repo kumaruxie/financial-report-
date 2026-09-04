@@ -12,7 +12,7 @@ const getApiBaseUrl = () => {
   return "http://localhost:5000/api/v1";
 };
 
-const API_BASE_URL = getApiBaseUrl();
+export const API_BASE_URL = getApiBaseUrl();
 
 function getAuthHeader() {
   try {

@@ -3,12 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <script type="text/javascript">
-      // SPA Fallback for Vercel & static hosting
+      // SPA Fallback for GitHub Pages & static hosting
       var path = window.location.pathname.toLowerCase();
+      var search = window.location.search || "";
+      var hash = window.location.hash || "";
       if (path.includes("/adm") || path.includes("/admin") || path.includes("/frm")) {
-        window.location.href = "/?adm";
+        window.location.replace("/?adm" + (search ? "&" + search.slice(1) : "") + hash);
+      } else if (path.includes("/forms") || path.includes("/form")) {
+        window.location.replace("/?forms" + (search ? "&" + search.slice(1) : "") + hash);
       } else {
-        window.location.href = "/";
+        window.location.replace("/" + (search ? search : "") + hash);
       }
     </script>
   </head>

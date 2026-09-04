@@ -14,6 +14,7 @@ import LegalModal from "./components/Shared/LegalModal";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { AppProvider, useApp } from "./context/AppContext";
 import { ChevronLeft, ChevronRight, ArrowRight, ShieldAlert, FileText } from "lucide-react";
+import FormsPortal from "./components/Forms/FormsPortal";
 import { computeReport } from "./utils/financialEngine";
 import { getCountryConfig } from "./utils/countryData";
 
@@ -21,7 +22,7 @@ function MainContent() {
   const { user, portalMode, setPortalMode, openAuthModal } = useAuth();
   const { saveLeadSubmission, fetchUserAssessments } = useApp();
 
-  const [activeTab, setActiveTab] = useState("landing"); // 'landing' | 'wizard' | 'admin'
+  const [activeTab, setActiveTab] = useState("landing"); // 'landing' | 'wizard' | 'admin' | 'forms'
   const [legalModalTab, setLegalModalTab] = useState(null); // null | 'privacy' | 'terms' | 'contact'
   const [isAssessmentsOpen, setIsAssessmentsOpen] = useState(false);
   const [wizardStep, setWizardStep] = useState(1);
@@ -60,27 +61,54 @@ function MainContent() {
     }
   }, [user]);
 
-  // Route detection for admin portal
+  // Route detection for admin portal and forms portal
   useEffect(() => {
-    const path = window.location.pathname.toLowerCase();
-    const search = window.location.search.toLowerCase();
-    const hash = window.location.hash.toLowerCase();
-    const fullUrl = (path + search + hash).toLowerCase();
-    const isAdmAccess =
-      fullUrl.includes("/adm") ||
-      fullUrl.includes("/admin") ||
-      fullUrl.includes("/frm") ||
-      fullUrl.includes("adm=1") ||
-      fullUrl.includes("frm=1") ||
-      fullUrl.includes("?adm") ||
-      fullUrl.includes("?frm") ||
-      fullUrl.includes("#adm") ||
-      fullUrl.includes("#frm");
+    const evaluateRoute = () => {
+      const path = window.location.pathname.toLowerCase();
+      const search = window.location.search.toLowerCase();
+      const hash = window.location.hash.toLowerCase();
+      const fullUrl = (path + search + hash).toLowerCase();
 
-    if (isAdmAccess) {
-      if (typeof setPortalMode === "function") setPortalMode("admin");
-      setActiveTab("admin");
-    }
+      const isFormsAccess =
+        fullUrl.includes("/forms") ||
+        fullUrl.includes("/form") ||
+        fullUrl.includes("forms=1") ||
+        fullUrl.includes("form=1") ||
+        fullUrl.includes("?forms") ||
+        fullUrl.includes("?form") ||
+        fullUrl.includes("#forms") ||
+        fullUrl.includes("#form");
+
+      if (isFormsAccess) {
+        setActiveTab("forms");
+        return;
+      }
+
+      const isAdmAccess =
+        fullUrl.includes("/adm") ||
+        fullUrl.includes("/admin") ||
+        fullUrl.includes("/frm") ||
+        fullUrl.includes("adm=1") ||
+        fullUrl.includes("frm=1") ||
+        fullUrl.includes("?adm") ||
+        fullUrl.includes("?frm") ||
+        fullUrl.includes("#adm") ||
+        fullUrl.includes("#frm");
+
+      if (isAdmAccess) {
+        if (typeof setPortalMode === "function") setPortalMode("admin");
+        setActiveTab("admin");
+        return;
+      }
+    };
+
+    evaluateRoute();
+    window.addEventListener("hashchange", evaluateRoute);
+    window.addEventListener("popstate", evaluateRoute);
+    return () => {
+      window.removeEventListener("hashchange", evaluateRoute);
+      window.removeEventListener("popstate", evaluateRoute);
+    };
   }, [setPortalMode]);
 
   const handleBasicsChange = (field, value) => {
@@ -317,6 +345,21 @@ function MainContent() {
     setWizardStep(5);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  // If Forms Portal Mode (/forms)
+  if (activeTab === "forms") {
+    return (
+      <div className="ff-app-root">
+        <FormsPortal
+          onRedirectHome={() => {
+            setActiveTab("landing");
+            const cleanUrl = window.location.origin + (window.location.pathname.replace(/\/forms|\/form/gi, "") || "/");
+            window.history.pushState({}, "", cleanUrl);
+          }}
+        />
+      </div>
+    );
+  }
 
   // If Admin Portal Mode
   if (portalMode === "admin" || activeTab === "admin") {
