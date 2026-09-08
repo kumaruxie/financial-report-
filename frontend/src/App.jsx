@@ -11,7 +11,7 @@ import AuthModal from "./components/Auth/AuthModal";
 import InteractiveReport from "./components/Client/InteractiveReport";
 import PdfViewer from "./components/Client/PdfViewer";
 import LegalModal from "./components/Shared/LegalModal";
-import { AuthProvider, useAuth } from "./context/AuthContext";
+import { AuthProvider, useAuth, AUTH_REQUIRED } from "./context/AuthContext";
 import { AppProvider, useApp } from "./context/AppContext";
 import { ChevronLeft, ChevronRight, ArrowRight, ShieldAlert, FileText } from "lucide-react";
 import FormsPortal from "./components/Forms/FormsPortal";
@@ -296,7 +296,7 @@ function MainContent() {
   };
 
   const startAssessmentFlow = (prefillData = null) => {
-    if (!user) {
+    if (AUTH_REQUIRED && !user) {
       setPendingPrefillData(true);
       openAuthModal("signup");
       return;
@@ -586,42 +586,44 @@ function MainContent() {
         <LegalModal activeTab={legalModalTab} onClose={() => setLegalModalTab(null)} />
       )}
 
-      {/* Authentication Modal */}
-      <AuthModal
-        onSuccess={(loggedUser) => {
-          if (loggedUser) {
-            fetchUserAssessments(loggedUser);
+      {/* Authentication Modal - Only rendered when AUTH_REQUIRED is active */}
+      {AUTH_REQUIRED && (
+        <AuthModal
+          onSuccess={(loggedUser) => {
+            if (loggedUser) {
+              fetchUserAssessments(loggedUser);
 
-            const parts = (loggedUser.mobile || "").split(" ");
-            const cCode = parts.length > 1 && parts[0].startsWith("+") ? parts[0] : "+91";
-            const mob = parts.length > 1 ? parts.slice(1).join("") : loggedUser.mobile || "";
+              const parts = (loggedUser.mobile || "").split(" ");
+              const cCode = parts.length > 1 && parts[0].startsWith("+") ? parts[0] : "+91";
+              const mob = parts.length > 1 ? parts.slice(1).join("") : loggedUser.mobile || "";
 
-            setBasics({
-              name: loggedUser.name || "",
-              email: loggedUser.email || "",
-              countryCode: cCode,
-              mobile: mob.replace(/\D/g, "")
-            });
+              setBasics({
+                name: loggedUser.name || "",
+                email: loggedUser.email || "",
+                countryCode: cCode,
+                mobile: mob.replace(/\D/g, "")
+              });
 
-            if (pendingPrefillData) {
-              const prefill = typeof pendingPrefillData === "object" ? pendingPrefillData : null;
-              if (prefill) {
-                setFinancials((prev) => ({
-                  ...prev,
-                  age: prefill.age || prev.age,
-                  income: prefill.income || prev.income,
-                  expenses: prefill.expenses || prev.expenses,
-                  savings: prefill.savings || prev.savings
-                }));
+              if (pendingPrefillData) {
+                const prefill = typeof pendingPrefillData === "object" ? pendingPrefillData : null;
+                if (prefill) {
+                  setFinancials((prev) => ({
+                    ...prev,
+                    age: prefill.age || prev.age,
+                    income: prefill.income || prev.income,
+                    expenses: prefill.expenses || prev.expenses,
+                    savings: prefill.savings || prev.savings
+                  }));
+                }
+                setPendingPrefillData(null);
+                setWizardStep(1);
+                setActiveTab("wizard");
+                window.scrollTo({ top: 0, behavior: "smooth" });
               }
-              setPendingPrefillData(null);
-              setWizardStep(1);
-              setActiveTab("wizard");
-              window.scrollTo({ top: 0, behavior: "smooth" });
             }
-          }
-        }}
-      />
+          }}
+        />
+      )}
     </div>
   );
 }

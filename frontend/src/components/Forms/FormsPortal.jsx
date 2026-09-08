@@ -12,7 +12,7 @@ import {
   ShieldCheck,
   Check
 } from "lucide-react";
-import { API_BASE_URL } from "../../services/api";
+import { API_BASE_URL, submitEnquiryApi } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 
 // Google Form Submission Action Endpoint
@@ -353,18 +353,14 @@ export default function FormsPortal({ onRedirectHome }) {
         console.warn("Google Form direct fetch notice (safe fallback used):", fetchErr);
       });
 
-      // 3. Record as verified lead enquiry in the backend database
-      fetch(`${API_BASE_URL}/reports/enquiry`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          email: formData.email.trim(),
-          mobile: formData.mobile.trim(),
-          topic: `Form Profile: ${effectiveProfession} (${effectiveEducation})`,
-          message: `City: ${effectiveCity} | Education: ${effectiveEducation} | Profession: ${effectiveProfession} | Verified Email: ${formData.email}`
-        })
-      }).catch(() => {});
+      // 3. Record as verified lead enquiry in the backend database (with auto-fallback to Render)
+      submitEnquiryApi({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        mobile: formData.mobile.trim(),
+        topic: `Form Profile: ${effectiveProfession} (${effectiveEducation})`,
+        message: `City: ${effectiveCity} | Education: ${effectiveEducation} | Profession: ${effectiveProfession} | Verified Email: ${formData.email}`
+      }).catch((enqErr) => console.warn("Enquiry DB sync notice:", enqErr));
 
       // Success screen transition
       setTimeout(() => {

@@ -20,6 +20,13 @@ import {
 const AuthContext = createContext(null);
 const AUTH_STORAGE_KEY = "ff_auth_session";
 
+// =========================================================================
+// FEATURE FLAG: CLIENT AUTHENTICATION REQUIREMENT
+// Set to true once SMS provider (Fast2SMS / Twilio / MSG91) is fully active.
+// When false: visitors access and submit assessment forms directly without login/OTP.
+// =========================================================================
+export const AUTH_REQUIRED = false;
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
@@ -99,6 +106,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const openAuthModal = (mode = "signin") => {
+    if (!AUTH_REQUIRED) return; // Login requirement temporarily disabled
     setAuthModalMode(mode);
     setIsAuthModalOpen(true);
   };
@@ -308,6 +316,7 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider
       value={{
+        AUTH_REQUIRED,
         user,
         loadingAuth,
         portalMode,

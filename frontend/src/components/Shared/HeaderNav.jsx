@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { User, LogOut, PlusCircle, FileText, Menu, X, ShieldCheck } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth, AUTH_REQUIRED } from "../../context/AuthContext";
 
 export default function HeaderNav({ activeTab, setActiveTab, onResetWizard, onOpenAssessments }) {
   const { user, logout, openAuthModal, portalMode, setPortalMode } = useAuth();
@@ -15,7 +15,7 @@ export default function HeaderNav({ activeTab, setActiveTab, onResetWizard, onOp
 
   const handleStartForm = () => {
     setPortalMode("client");
-    if (!user) {
+    if (AUTH_REQUIRED && !user) {
       openAuthModal("signup");
       return;
     }
@@ -54,7 +54,7 @@ export default function HeaderNav({ activeTab, setActiveTab, onResetWizard, onOp
               >
                 {user.name ? user.name.charAt(0).toUpperCase() : "U"}
               </div>
-            ) : (
+            ) : AUTH_REQUIRED ? (
               <button
                 onClick={() => openAuthModal("signin")}
                 className="ff-btn-ghost ff-corner-signin-btn"
@@ -62,7 +62,7 @@ export default function HeaderNav({ activeTab, setActiveTab, onResetWizard, onOp
                 <User size={14} />
                 <span>Sign In</span>
               </button>
-            )}
+            ) : null}
 
             {/* 3-Bars Hamburger Button */}
             <button
@@ -141,7 +141,7 @@ export default function HeaderNav({ activeTab, setActiveTab, onResetWizard, onOp
                 >
                   <LogOut size={16} /> Sign Out
                 </button>
-              ) : (
+              ) : AUTH_REQUIRED ? (
                 <button
                   className="ff-btn-ghost"
                   onClick={() => {
@@ -152,7 +152,7 @@ export default function HeaderNav({ activeTab, setActiveTab, onResetWizard, onOp
                 >
                   <User size={15} /> Sign In to Account
                 </button>
-              )}
+              ) : null}
             </div>
           </div>
         </div>

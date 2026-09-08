@@ -15,7 +15,7 @@ import {
   RefreshCw,
   Sparkles
 } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth, AUTH_REQUIRED } from "../../context/AuthContext";
 import { COUNTRY_CONFIGS, getCountryConfig } from "../../utils/countryData";
 
 export default function AuthModal({ onSuccess }) {
@@ -99,7 +99,7 @@ export default function AuthModal({ onSuccess }) {
     return () => clearInterval(interval);
   }, [mode, timer]);
 
-  if (!isAuthModalOpen) return null;
+  if (!AUTH_REQUIRED || !isAuthModalOpen) return null;
 
   // 1. Google 1-Click Sign-In
   const handleGoogleClick = async () => {
