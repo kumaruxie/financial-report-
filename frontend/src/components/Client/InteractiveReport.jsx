@@ -54,6 +54,8 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
 
   const isConsultant = audience === "consultant";
   const age = Number(lead.age) || 0;
+  const clientCity = lead.city || lead.protection?.city || "";
+  const retirementTarget = lead.retirementAge || lead.protection?.retirementAge || 60;
   const genDate = new Date(lead.updatedAt || lead.submittedAt || Date.now()).toLocaleDateString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
 
   const hasData = Number(lead.income) > 0 || Number(lead.expenses) > 0 || Number(lead.savings) > 0 || (Array.isArray(lead.goals) && lead.goals.length > 0);
@@ -67,7 +69,7 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
     highPriority.push(`Increase Term Life cover by ${INR_L(r.termGap)} to reach recommended protection of ${INR_L(r.recommendedCover)}.`);
   }
   if (r.healthGap > 0) {
-    highPriority.push(`Upgrade Health Insurance floater by ${INR_L(r.healthGap)} for ${lead.city || "your city"} medical baseline.`);
+    highPriority.push(`Upgrade Health Insurance floater by ${INR_L(r.healthGap)} for ${clientCity || "your city"} medical baseline.`);
   }
   if (r.emergencyGap > 0) {
     mediumPriority.push(`Build ${INR_L(r.emergencyGap)} in liquid emergency funds to reach 6 months buffer (${INR_L(r.emergencyTarget)}).`);
@@ -227,13 +229,19 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
               <span style={{ fontSize: 12, color: "var(--text-fog)" }}>Generated on {genDate}</span>
-              {(lead.age || lead.city) && (
+              {(lead.age || clientCity) && (
                 <span style={{ fontSize: 12, color: "var(--text-fog)" }}>
-                  &bull; {lead.age ? `Age ${lead.age}` : ""}{lead.age && lead.city ? " • " : ""}{lead.city ? lead.city : ""}
+                  &bull; {lead.age ? `Age ${lead.age}` : ""}{lead.age && clientCity ? " • " : ""}{clientCity ? clientCity : ""}
                 </span>
               )}
             </div>
             <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "var(--text-main)", letterSpacing: "-0.01em" }}>Financial Fitness Report</h2>
+            <div style={{ marginTop: 10, display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(201, 154, 75, 0.12)", border: "1px solid rgba(201, 154, 75, 0.35)", borderRadius: 10, padding: "6px 14px" }}>
+              <Award size={15} color="var(--accent-gold)" />
+              <div style={{ fontSize: 12.5, color: "#E2E8F0" }}>
+                Prepared by <b style={{ color: "var(--accent-gold)" }}>Jagat Turkiya, CFP</b> <span style={{ color: "var(--text-fog)" }}>(Certified Financial Planner)</span>
+              </div>
+            </div>
           </div>
 
           <button
@@ -331,8 +339,8 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
       <div className="ffr-info-grid">
         <div className="ffr-info-item"><div className="l">Client Name</div><div className="v">{lead.name || "—"}</div></div>
         <div className="ffr-info-item"><div className="l">Current Age</div><div className="v">{lead.age ? `${lead.age} yrs` : "—"}</div></div>
-        <div className="ffr-info-item"><div className="l">City</div><div className="v">{lead.city || "—"}</div></div>
-        <div className="ffr-info-item"><div className="l">Retirement Target</div><div className="v">{lead.retirementAge ? `${lead.retirementAge} yrs` : "60 yrs"}</div></div>
+        <div className="ffr-info-item"><div className="l">City</div><div className="v">{clientCity || "—"}</div></div>
+        <div className="ffr-info-item"><div className="l">Retirement Target</div><div className="v">{retirementTarget ? `${retirementTarget} yrs` : "60 yrs"}</div></div>
         <div className="ffr-info-item"><div className="l">Monthly Income</div><div className="v">{INR_L(lead.income)}</div></div>
         <div className="ffr-info-item"><div className="l">Monthly Expenses</div><div className="v">{INR_L(lead.expenses)}</div></div>
         <div className="ffr-info-item"><div className="l">Liquid Savings</div><div className="v">{INR_L(lead.savings)}</div></div>
@@ -572,9 +580,9 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
           </div>
           <p style={{ margin: 0, fontSize: 13.5, color: "var(--text-fog)" }}>
             {lead.healthInsurance === "yes" ? (
-              <>Active health cover: <b style={{ color: "var(--accent-gold)" }}>{INR_L(lead.healthAmount)}</b> &bull; Target baseline: <b style={{ color: "var(--text-main)" }}>{INR_L(r.healthTarget)}</b>. An additional top-up cover of <b style={{ color: "var(--accent-gold)" }}>{INR_L(r.healthGap)}</b> is recommended ({lead.city || "Metro"} city tier baseline).</>
+              <>Active health cover: <b style={{ color: "var(--accent-gold)" }}>{INR_L(lead.healthAmount)}</b> &bull; Target baseline: <b style={{ color: "var(--text-main)" }}>{INR_L(r.healthTarget)}</b>. An additional top-up cover of <b style={{ color: "var(--accent-gold)" }}>{INR_L(r.healthGap)}</b> is recommended ({clientCity || "Metro"} city tier baseline).</>
             ) : (
-              <>Current active cover: ₹0 &bull; Recommended target baseline: <b style={{ color: "var(--text-main)" }}>{INR_L(r.healthTarget)}</b> ({lead.city || "Metro"} city tier baseline).</>
+              <>Current active cover: ₹0 &bull; Recommended target baseline: <b style={{ color: "var(--text-main)" }}>{INR_L(r.healthTarget)}</b> ({clientCity || "Metro"} city tier baseline).</>
             )}
           </p>
         </div>
@@ -677,6 +685,64 @@ export default function InteractiveReport({ lead, audience = "client", onOpenPdf
 
       <div className="ffr-surplus-ok">
         <b>Advisory Cashflow Baseline:</b> Your available monthly savings of <b>{INR_L(r.monthlySurplus)}</b> provides a healthy baseline to structure your milestone goals and retirement portfolio on your client call.
+      </div>
+
+      {/* LUXURY PLANNER CREDENTIAL SIGNATURE CARD */}
+      <div
+        style={{
+          marginTop: 24,
+          marginBottom: 16,
+          background: "linear-gradient(135deg, rgba(20, 24, 38, 0.95) 0%, rgba(13, 16, 26, 0.98) 100%)",
+          border: "1.5px solid rgba(201, 154, 75, 0.4)",
+          borderRadius: 18,
+          padding: "24px 28px",
+          boxShadow: "0 14px 38px rgba(0, 0, 0, 0.4)",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 20
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+          <div
+            style={{
+              width: 54,
+              height: 54,
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, rgba(201, 154, 75, 0.25) 0%, rgba(201, 154, 75, 0.08) 100%)",
+              border: "1.5px solid var(--accent-gold)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "var(--accent-gold)",
+              boxShadow: "0 0 16px rgba(201, 154, 75, 0.25)",
+              flexShrink: 0
+            }}
+          >
+            <Award size={26} />
+          </div>
+          <div>
+            <div style={{ fontSize: 10.5, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--text-fog)", fontWeight: 700, marginBottom: 3 }}>
+              FIDUCIARY FINANCIAL ARCHITECTURE
+            </div>
+            <div style={{ fontSize: 19, fontWeight: 800, color: "#FFFFFF", letterSpacing: "-0.01em" }}>
+              Prepared by <span style={{ color: "var(--accent-gold)" }}>Jagat Turkiya, CFP</span>
+            </div>
+            <div style={{ fontSize: 13, color: "#94A3B8", fontWeight: 600, marginTop: 2 }}>
+              Certified Financial Planner
+            </div>
+          </div>
+        </div>
+
+        <div style={{ textAlign: "right" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(16, 185, 129, 0.1)", border: "1px solid rgba(16, 185, 129, 0.3)", padding: "6px 14px", borderRadius: 20, color: "#34D399", fontSize: 12, fontWeight: 700 }}>
+            <CheckCircle2 size={14} /> Verified CFP Diagnostic
+          </div>
+          <div style={{ fontSize: 11, color: "var(--text-fog)", marginTop: 6 }}>
+            Report Ref: {lead._id || lead.id || "YWC-2026"} &bull; {genDate}
+          </div>
+        </div>
       </div>
 
       {showPdfDossier && <EnterprisePdfDossier lead={lead} onClose={() => setShowPdfDossier(false)} />}

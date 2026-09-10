@@ -11,6 +11,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
 
   const reportId = lead._id || lead.id || `YWC-2026-${Math.floor(1000 + Math.random() * 9000)}`;
   const dateStr = new Date(lead.submittedAt || Date.now()).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+  const clientCity = lead.city || lead.protection?.city || "";
 
   const [isPrinting, setIsPrinting] = React.useState(false);
   const [printStatusText, setPrintStatusText] = React.useState("Preparing Document Layout...");
@@ -553,7 +554,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
               <div style={{ fontSize: 9.5, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, letterSpacing: "0.1em" }}>PREPARED EXCLUSIVELY FOR</div>
               <div style={{ fontSize: 22, fontWeight: 800, color: "#1B2035", marginTop: 4 }}>{lead.name ? lead.name.toUpperCase() : "CLIENT PROFILE"}</div>
               <div style={{ fontSize: 12, color: "#6B7280", marginTop: 2 }}>
-                {lead.age ? `Age ${lead.age}` : "Age Unspecified"}{lead.city ? ` • ${lead.city}` : ""}
+                {lead.age ? `Age ${lead.age}` : "Age Unspecified"}{clientCity ? ` • ${clientCity}` : ""}
               </div>
             </div>
 
@@ -596,7 +597,11 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
           <div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, borderTop: "1px solid #E5E7EB", paddingTop: 14 }}>
               <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>GENERATED ON</div><div style={{ fontSize: 11.5, fontWeight: 700, color: "#1B2035" }}>{dateStr}</div></div>
-              <div><div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>PREPARED BY</div><div style={{ fontSize: 11.5, fontWeight: 700, color: "#1B2035" }}>apkacoach.com</div></div>
+              <div>
+                <div style={{ fontSize: 9.5, color: "#6B7280", textTransform: "uppercase" }}>PREPARED BY</div>
+                <div style={{ fontSize: 12, fontWeight: 800, color: "#1B2035" }}>Jagat Turkiya, CFP</div>
+                <div style={{ fontSize: 9.5, color: "#C8A74D", fontWeight: 700 }}>Certified Financial Planner</div>
+              </div>
             </div>
           </div>
         </div>
@@ -641,7 +646,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
               <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 11.5, color: "#1B2035" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}><CheckCircle2 size={14} color="#3E9F6E" /> <b>Strong Net Monthly Savings:</b> Net monthly savings of {INR_L(r.monthlySurplus)} provides strong capacity for systematic investments.</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}><CheckCircle2 size={14} color="#3E9F6E" /> <b>Retirement Horizon:</b> Target corpus of {INR_L(r.retirement.corpusNeeded)} can be systematically accumulated over {r.retirement.yearsToRetire} years.</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}><CheckCircle2 size={14} color="#3E9F6E" /> <b>Health Cover Baseline:</b> Active health insurance of {INR_L(lead.healthAmount)} provides baseline coverage in {lead.city || "Metro"}.</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}><CheckCircle2 size={14} color="#3E9F6E" /> <b>Health Cover Baseline:</b> Active health insurance of {INR_L(lead.healthAmount)} provides baseline coverage in {clientCity || "Metro"}.</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}><AlertTriangle size={14} color={r.termGap > 0 ? "#C05656" : "#3E9F6E"} /> <b>Term Life Insurance Gap:</b> {r.termGap > 0 ? `Additional top-up cover of ${INR_L(r.termGap)} is recommended to protect family income.` : `Term cover target is fully adequate.`}</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}><AlertTriangle size={14} color={r.emergencyGap > 0 ? "#C8A74D" : "#3E9F6E"} /> <b>Emergency Buffer:</b> {r.emergencyGap > 0 ? `Current liquid reserve of ${INR_L(lead.savings)} is below the recommended 6-month buffer target (${INR_L(r.emergencyTarget)}).` : `Emergency fund target is fully met.`}</div>
               </div>
@@ -845,33 +850,33 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
             </div>
 
             {/* MIDDLE SECTION: RICH GOAL CARDS */}
-            <div style={{ marginBottom: 14 }}>
+            <div style={{ marginBottom: r.rows.length > 2 ? 10 : 14 }}>
               <div style={{ fontSize: 10, textTransform: "uppercase", color: "#6B7280", fontWeight: 700, marginBottom: 8 }}>MILESTONE GOAL BREAKDOWN</div>
               <div style={{ display: "grid", gridTemplateColumns: r.rows.length >= 3 ? "repeat(3, 1fr)" : "repeat(2, 1fr)", gap: 10 }}>
                 {r.rows.map((row) => (
-                  <div key={row.id} style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: 12 }}>
+                  <div key={row.id} style={{ background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 8, padding: r.rows.length > 2 ? "9px 11px" : 12 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                      <div style={{ fontSize: 12, fontWeight: 800, color: "#1B2035" }}>{row.label}</div>
-                      <span style={{ background: "#F1F5F9", color: "#475569", fontSize: 9, padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>{row.years.toFixed(1)} Yrs Left</span>
+                      <div style={{ fontSize: 11.5, fontWeight: 800, color: "#1B2035", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.label}</div>
+                      <span style={{ background: "#F1F5F9", color: "#475569", fontSize: 8.5, padding: "2px 5px", borderRadius: 4, fontWeight: 700, flexShrink: 0 }}>{row.years.toFixed(1)}y</span>
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 10.5, marginTop: 6, paddingTop: 6, borderTop: "1px dashed #E5E7EB" }}>
-                      <div><span style={{ color: "#6B7280" }}>Today Cost:</span><div style={{ fontWeight: 700, color: "#1B2035" }}>{INR_L(row.cost)}</div></div>
-                      <div><span style={{ color: "#6B7280" }}>Future Target:</span><div style={{ fontWeight: 700, color: "#C8A74D" }}>{INR_L(row.fv)}</div></div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 10, marginTop: 4, paddingTop: 4, borderTop: "1px dashed #E5E7EB" }}>
+                      <div><span style={{ color: "#6B7280" }}>Today:</span><div style={{ fontWeight: 700, color: "#1B2035" }}>{INR_L(row.cost)}</div></div>
+                      <div><span style={{ color: "#6B7280" }}>Future:</span><div style={{ fontWeight: 700, color: "#C8A74D" }}>{INR_L(row.fv)}</div></div>
                     </div>
 
-                    <div style={{ marginTop: 8, paddingTop: 6, borderTop: "1px solid #F1F5F9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: 9.5, color: "#6B7280" }}>Required Investment</span>
-                      <span style={{ fontSize: 11.5, fontWeight: 800, color: "#1B2035" }}>{INR(row.annual)}/yr</span>
+                    <div style={{ marginTop: 6, paddingTop: 4, borderTop: "1px solid #F1F5F9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: 9, color: "#6B7280" }}>Required SIP</span>
+                      <span style={{ fontSize: 11, fontWeight: 800, color: "#1B2035" }}>{INR(row.annual)}/yr</span>
                     </div>
                   </div>
                 ))}
 
                 {/* Retirement Goal Card */}
-                <div style={{ background: "#FFFFFF", border: "1px solid #C8A74D", borderRadius: 8, padding: 12 }}>
+                <div style={{ background: "#FFFFFF", border: "1px solid #C8A74D", borderRadius: 8, padding: r.rows.length > 2 ? "9px 11px" : 12 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                    <div style={{ fontSize: 12, fontWeight: 800, color: "#C8A74D" }}>🏖 Retirement Corpus</div>
-                    <span style={{ background: "#FEF3C7", color: "#92400E", fontSize: 9, padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>{r.retirement.yearsToRetire} Yrs Left</span>
+                    <div style={{ fontSize: 11.5, fontWeight: 800, color: "#C8A74D" }}>🏖 Retirement Corpus</div>
+                    <span style={{ background: "#FEF3C7", color: "#92400E", fontSize: 8.5, padding: "2px 5px", borderRadius: 4, fontWeight: 700, flexShrink: 0 }}>{r.retirement.yearsToRetire}y</span>
                   </div>
 
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, fontSize: 10.5, marginTop: 6, paddingTop: 6, borderTop: "1px dashed #E5E7EB" }}>
@@ -1100,7 +1105,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <HeartPulse size={18} color={r.healthGap > 0 ? "#C8A74D" : "#3E9F6E"} />
-                    <span style={{ fontSize: 13, fontWeight: 800, color: "#1B2035" }}>Health Insurance Floater ({lead.city || "Metro"} Baseline)</span>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: "#1B2035" }}>Health Insurance Floater ({clientCity || "Metro"} Baseline)</span>
                   </div>
                   <span style={{ background: r.healthGap > 0 ? "#FFFBEB" : "#ECFDF5", color: r.healthGap > 0 ? "#C8A74D" : "#3E9F6E", border: `1px solid ${r.healthGap > 0 ? "#FCD34D" : "#A7F3D0"}`, padding: "3px 10px", borderRadius: 12, fontSize: 10, fontWeight: 800 }}>
                     {r.healthGap > 0 ? (r.currentHealth > 0 ? `Top-Up Needed ${INR_L(r.healthGap)}` : `Gap ${INR_L(r.healthGap)}`) : "Fully Covered"}
@@ -1501,7 +1506,10 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
 
             {/* ROW 3: CONSULTANT ADVISORY RECOMMENDATION */}
             <div style={{ background: "rgba(200, 167, 77, 0.08)", border: "1px solid rgba(200, 167, 77, 0.3)", borderLeft: "4px solid #C8A74D", borderRadius: 10, padding: 12, marginBottom: 14 }}>
-              <div style={{ fontSize: 10, fontWeight: 800, color: "#C8A74D", textTransform: "uppercase", marginBottom: 4 }}>CONSULTANT ADVISORY RECOMMENDATION</div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: "#C8A74D", textTransform: "uppercase" }}>CONSULTANT ADVISORY RECOMMENDATION</div>
+                <div style={{ fontSize: 9.5, fontWeight: 800, color: "#1B2035" }}>Advisor: Jagat Turkiya, CFP (Certified Financial Planner)</div>
+              </div>
               <p style={{ fontSize: 10.5, color: "#1B2035", margin: 0, lineHeight: 1.45 }}>
                 Based on the audited financial data, {lead.name} possesses strong net monthly savings ({INR_L(r.monthlySurplus)}/mo) to achieve all stated goals. Priority should be given to closing the {INR_L(r.termGap)} term insurance gap before expanding equity investments. Annual reviews are recommended.
               </p>
@@ -1533,7 +1541,7 @@ export default function EnterprisePdfDossier({ lead, onClose }) {
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, paddingTop: 4, borderTop: "1px dashed #E5E7EB", fontSize: 9, color: "#94A3B8" }}>
                 <span>Generated On: {dateStr}</span>
-                <span>Prepared By: apkacoach.com</span>
+                <span><b>Prepared By:</b> Jagat Turkiya, CFP (Certified Financial Planner)</span>
               </div>
             </div>
           </div>

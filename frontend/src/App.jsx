@@ -133,12 +133,18 @@ function MainContent() {
     income: financials.income || "0",
     expenses: financials.expenses || "0",
     savings: financials.savings || "0",
+    city: protection.city ? protection.city.trim() : "",
+    retirementAge: protection.retirementAge || "60",
+    termInsurance: protection.termInsurance || "no",
+    termAmount: protection.termAmount || "0",
+    healthInsurance: protection.healthInsurance || "no",
+    healthAmount: protection.healthAmount || "0",
     protection: {
       termInsurance: protection.termInsurance === "yes",
       termAmount: protection.termAmount || "0",
       healthInsurance: protection.healthInsurance === "yes",
       healthAmount: protection.healthAmount || "0",
-      city: protection.city || "",
+      city: protection.city ? protection.city.trim() : "",
       retirementAge: protection.retirementAge || "60"
     },
     goals: goals || []
@@ -328,8 +334,8 @@ function MainContent() {
         termAmount: assessment.protection?.termAmount || "",
         healthInsurance: assessment.protection?.healthInsurance ? "yes" : "no",
         healthAmount: assessment.protection?.healthAmount || "",
-        city: assessment.protection?.city || "",
-        retirementAge: assessment.protection?.retirementAge || ""
+        city: assessment.city || assessment.protection?.city || "",
+        retirementAge: assessment.retirementAge || assessment.protection?.retirementAge || ""
       });
       setGoals(Array.isArray(assessment.goals) ? assessment.goals : []);
       setSubmittedLead(null);

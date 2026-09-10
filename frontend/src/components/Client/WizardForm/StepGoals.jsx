@@ -1,5 +1,5 @@
-import React from "react";
-import { Plus, Trash2, GraduationCap, Heart, Home } from "lucide-react";
+import React, { useEffect } from "react";
+import { Plus, Trash2, GraduationCap, Heart, Home, Car, Plane, Briefcase } from "lucide-react";
 import { GOAL_TYPES } from "../../../utils/financialEngine";
 
 export default function StepGoals({ goals, setGoals }) {
@@ -30,6 +30,13 @@ export default function StepGoals({ goals, setGoals }) {
     ]);
   };
 
+  // If user opens the step with zero goals, auto-initialize with 1 milestone goal
+  useEffect(() => {
+    if (!goals || goals.length === 0) {
+      addGoal();
+    }
+  }, []);
+
   const removeGoal = (id) => {
     setGoals(goals.filter((g) => g.id !== id));
   };
@@ -41,11 +48,11 @@ export default function StepGoals({ goals, setGoals }) {
   return (
     <div>
       <div style={{ marginBottom: 32 }}>
-        <h2 style={{ fontSize: 26, fontWeight: 600, color: "var(--text-main)", fontFamily: "var(--font-sans)", letterSpacing: "-0.01em", marginBottom: 8 }}>
+        <h2 style={{ fontSize: 26, fontWeight: 600, color: "var(--text-main)", fontFamily: "var(--font-sans)", letterSpacing: "-0.01em", margin: "0 0 6px" }}>
           Milestone Goals
         </h2>
-        <p style={{ fontSize: 14.5, color: "var(--text-fog)", margin: 0, lineHeight: 1.5 }}>
-          Set your future goals and timeline targets.
+        <p style={{ fontSize: 14, color: "var(--text-fog)", margin: 0, lineHeight: 1.5 }}>
+          Set your future goals and timeline targets. Our actuarial engine calculates exact inflation-adjusted investment targets.
         </p>
       </div>
 
@@ -60,7 +67,8 @@ export default function StepGoals({ goals, setGoals }) {
             style={{
               background: "rgba(19, 21, 32, 0.8)",
               border: "1px solid rgba(255, 255, 255, 0.1)",
-              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)"
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+              marginBottom: 20
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
@@ -142,7 +150,7 @@ export default function StepGoals({ goals, setGoals }) {
                     <input
                       type="text"
                       className="ff-input-56px"
-                      placeholder="Child's Name"
+                      placeholder="e.g. Aarav"
                       value={goal.childName || ""}
                       onChange={(e) => updateGoal(goal.id, { childName: e.target.value })}
                     />
@@ -151,31 +159,36 @@ export default function StepGoals({ goals, setGoals }) {
 
                 <div className="ff-grid-2col">
                   <div className="ff-input-group">
-                    <label className="ff-input-label-uppercase">Child's Current Class</label>
+                    <label className="ff-input-label-uppercase">Child's Current Class / Stage</label>
                     <select
                       className="ff-input-56px"
                       style={{ background: "#151824", color: "var(--text-main)", cursor: "pointer", appearance: "auto" }}
                       value={goal.childClass || ""}
                       onChange={(e) => updateGoal(goal.id, { childClass: e.target.value })}
                     >
-                      <option value="" style={{ background: "#151824", color: "#888" }}>Select Child's Class</option>
-                      {Array.from({ length: 7 }, (_, i) => i + 1).map((c) => (
+                      <option value="" style={{ background: "#151824", color: "#888" }}>Select Current Class / Stage</option>
+                      <option value="kindergarten" style={{ background: "#151824", color: "#FFFFFF" }}>
+                        Preschool / Kindergarten (~14 yrs to college)
+                      </option>
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map((c) => (
                         <option key={c} value={c} style={{ background: "#151824", color: "#FFFFFF" }}>
-                          Class {c} ({12 - c} yrs to college)
+                          Class {c} ({c === 12 ? "Entering College Next Year ~1 yr" : `${12 - c} yrs to college`})
                         </option>
                       ))}
+                      <option value="graduation" style={{ background: "#151824", color: "#FFFFFF" }}>
+                        Graduation / College (Planning for Masters / Post-Graduation ~2 yrs)
+                      </option>
                     </select>
-                    <span style={{ fontSize: 11, color: "var(--accent-gold)", marginTop: 4, display: "block" }}>
-                      Minimum 5-year timeline required for proper college investment planning.
-                    </span>
                   </div>
 
                   <div className="ff-input-group">
-                    <label className="ff-input-label-uppercase">College Cost Today (₹)</label>
+                    <label className="ff-input-label-uppercase">
+                      {goal.childClass === "graduation" ? "Post-Grad / Masters Cost Today (₹)" : "College Cost Today (₹)"}
+                    </label>
                     <input
                       type="text"
                       className="ff-input-56px"
-                      placeholder="e.g. ₹10,00,000"
+                      placeholder={goal.childClass === "graduation" ? "e.g. ₹15,00,000" : "e.g. ₹10,00,000"}
                       value={formatRupeeInput(goal.ugCost)}
                       onChange={(e) => updateGoal(goal.id, { ugCost: e.target.value.replace(/[^0-9]/g, "") })}
                     />
@@ -188,7 +201,7 @@ export default function StepGoals({ goals, setGoals }) {
             {goal.type === "marriage" && (
               <div className="ff-grid-2col">
                 <div className="ff-input-group">
-                  <label className="ff-input-label-uppercase">Child's Age</label>
+                  <label className="ff-input-label-uppercase">Child's Current Age</label>
                   <input
                     type="text"
                     className="ff-input-56px"
@@ -196,6 +209,9 @@ export default function StepGoals({ goals, setGoals }) {
                     value={goal.childAge}
                     onChange={(e) => updateGoal(goal.id, { childAge: e.target.value.replace(/[^0-9]/g, "") })}
                   />
+                  <span style={{ fontSize: 11, color: "var(--text-fog)", marginTop: 4, display: "block" }}>
+                    Standard marriage horizon planned at target age 26-27.
+                  </span>
                 </div>
 
                 <div className="ff-input-group">
@@ -211,26 +227,37 @@ export default function StepGoals({ goals, setGoals }) {
               </div>
             )}
 
-            {/* HOUSE FIELDS */}
-            {goal.type === "house" && (
+            {/* GENERIC MILESTONE GOALS: HOUSE, CAR, VACATION, WEALTH */}
+            {["house", "car", "vacation", "wealth"].includes(goal.type) && (
               <div className="ff-grid-2col">
                 <div className="ff-input-group">
                   <label className="ff-input-label-uppercase">Years to Goal</label>
                   <input
                     type="text"
                     className="ff-input-56px"
-                    placeholder="e.g. 5 yrs"
+                    placeholder={goal.type === "car" ? "e.g. 3 yrs" : goal.type === "vacation" ? "e.g. 2 yrs" : "e.g. 5 yrs"}
                     value={goal.years}
                     onChange={(e) => updateGoal(goal.id, { years: e.target.value.replace(/[^0-9]/g, "") })}
                   />
+                  <span style={{ fontSize: 11, color: "var(--text-fog)", marginTop: 4, display: "block" }}>
+                    Target timeline in years.
+                  </span>
                 </div>
 
                 <div className="ff-input-group">
-                  <label className="ff-input-label-uppercase">Property Cost Today (₹)</label>
+                  <label className="ff-input-label-uppercase">
+                    {goal.type === "car"
+                      ? "Vehicle Budget Today (₹)"
+                      : goal.type === "vacation"
+                      ? "Vacation Budget Today (₹)"
+                      : goal.type === "wealth"
+                      ? "Target Capital Today (₹)"
+                      : "Property Cost Today (₹)"}
+                  </label>
                   <input
                     type="text"
                     className="ff-input-56px"
-                    placeholder="e.g. ₹40,00,000"
+                    placeholder={goal.type === "car" ? "e.g. ₹15,00,000" : goal.type === "vacation" ? "e.g. ₹5,00,000" : "e.g. ₹40,00,000"}
                     value={formatRupeeInput(goal.cost)}
                     onChange={(e) => updateGoal(goal.id, { cost: e.target.value.replace(/[^0-9]/g, "") })}
                   />
@@ -266,3 +293,4 @@ export default function StepGoals({ goals, setGoals }) {
     </div>
   );
 }
+

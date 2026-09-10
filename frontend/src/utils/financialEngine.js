@@ -1,4 +1,4 @@
-import { GraduationCap, Heart, Home, Plane, Shield, PiggyBank, HeartPulse, AlertTriangle } from "lucide-react";
+import { GraduationCap, Heart, Home, Plane, Shield, PiggyBank, HeartPulse, AlertTriangle, Car, Briefcase } from "lucide-react";
 
 /* ---------------- constants & assumptions ---------------- */
 export const EDU_INFLATION = 6;        // 6.0% p.a. college tuition fee inflation
@@ -27,6 +27,9 @@ export const GOAL_META = {
   education: { label: "Child's Higher Education", Icon: GraduationCap },
   marriage: { label: "Child's Marriage", Icon: Heart },
   house: { label: "Dream House", Icon: Home },
+  car: { label: "Dream Car / Vehicle", Icon: Car },
+  vacation: { label: "World Tour / Vacation", Icon: Plane },
+  wealth: { label: "Wealth Creation / Business", Icon: Briefcase },
 };
 
 export const GOAL_TYPES = GOAL_META;
@@ -35,6 +38,9 @@ export const TYPE_DEFAULTS = {
   education: { childSelection: "", childName: "", childClass: "", ugCost: "", pgPlanned: "no", pgCost: "" },
   marriage: { childAge: "", cost: "" },
   house: { years: "", cost: "" },
+  car: { years: "", cost: "" },
+  vacation: { years: "", cost: "" },
+  wealth: { years: "", cost: "" },
 };
 
 export const DEFAULT_GOALS = [];
@@ -163,19 +169,44 @@ export function buildGoalRows(goals) {
 
   list.forEach((g) => {
     if (g.type === "education") {
-      const yearsTo12th = Math.max(0, 12 - (Number(g.childClass) || 12));
-      const ugFV = futureValue(Number(g.ugCost || g.cost) || 0, EDU_INFLATION, yearsTo12th);
-      const ugBucket = yearsTo12th <= SHORT_TERM_MAX_YEARS ? "short" : "insurance";
+      let yearsToGoal = 5;
+      let label = "Under-graduation";
+      let sub = "";
+
+      const rawClass = String(g.childClass || "").toLowerCase().trim();
+      if (rawClass === "kindergarten" || rawClass === "kg") {
+        yearsToGoal = 14;
+        label = "Higher Education (UG)";
+        sub = "starts in ~14 yrs (after Class 12)";
+      } else if (rawClass === "graduation" || rawClass === "college") {
+        yearsToGoal = 2;
+        label = "Masters / Post-Graduation";
+        sub = "starts in ~2 yrs (Post-Graduation)";
+      } else {
+        const cNum = Number(rawClass);
+        if (!isNaN(cNum) && cNum >= 1 && cNum <= 12) {
+          yearsToGoal = Math.max(1, 12 - cNum);
+          label = cNum >= 12 ? "College Entry (UG)" : "Under-graduation";
+          sub = `starts in ${yearsToGoal} yr${yearsToGoal === 1 ? "" : "s"} (after Class 12)`;
+        } else {
+          yearsToGoal = Math.max(1, Number(g.years) || 5);
+          label = "Higher Education";
+          sub = `target in ${yearsToGoal} yrs`;
+        }
+      }
+
+      const ugFV = futureValue(Number(g.ugCost || g.cost) || 0, EDU_INFLATION, yearsToGoal);
+      const ugBucket = yearsToGoal <= SHORT_TERM_MAX_YEARS ? "short" : "insurance";
       const ugRate = ugBucket === "short" ? SHORT_TERM_RETURN : GUARANTEED_RETURN;
-      const ugAnnual = annualRequired(ugFV, ugRate, Math.max(yearsTo12th, 0.1));
+      const ugAnnual = annualRequired(ugFV, ugRate, Math.max(yearsToGoal, 0.5));
       rows.push({
         id: (g.id || Math.random()) + "-ug",
         groupId: g.id,
         type: "education",
         Icon: GraduationCap,
-        label: "Under-graduation",
-        sub: `starts in ${yearsTo12th} yr${yearsTo12th === 1 ? "" : "s"} (after Class 12)`,
-        years: yearsTo12th,
+        label: g.childName ? `${g.childName}'s ${label}` : label,
+        sub: sub,
+        years: yearsToGoal,
         cost: Number(g.ugCost || g.cost) || 0,
         fv: ugFV,
         bucket: ugBucket,
@@ -184,7 +215,7 @@ export function buildGoalRows(goals) {
       });
 
       if (g.pgPlanned === "yes") {
-        const pgYears = yearsTo12th + UG_DURATION;
+        const pgYears = yearsToGoal + UG_DURATION;
         const pgFV = futureValue(Number(g.pgCost) || 0, EDU_INFLATION, pgYears);
         const pgBucket = pgYears <= SHORT_TERM_MAX_YEARS ? "short" : "insurance";
         const pgRate = pgBucket === "short" ? SHORT_TERM_RETURN : GUARANTEED_RETURN;
@@ -194,7 +225,7 @@ export function buildGoalRows(goals) {
           groupId: g.id,
           type: "education",
           Icon: GraduationCap,
-          label: "Masters",
+          label: g.childName ? `${g.childName}'s Masters` : "Masters / Post-Graduation",
           sub: `starts in ~${pgYears.toFixed(1)} yrs (after UG)`,
           years: pgYears,
           cost: Number(g.pgCost) || 0,
@@ -227,12 +258,12 @@ export function buildGoalRows(goals) {
       });
     } else {
       const meta = GOAL_META[g.type] || { label: g.label || "Life Goal", Icon: Home };
-      const inflation = HOUSE_INFLATION;
-      const years = Number(g.years) || 0;
+      const inflation = g.type === "vacation" ? TRAVEL_INFLATION : HOUSE_INFLATION;
+      const years = Math.max(0.5, Number(g.years) || 5);
       const fv = futureValue(Number(g.cost) || 0, inflation, years);
       const bucket = years <= SHORT_TERM_MAX_YEARS ? "short" : "insurance";
       const rate = bucket === "short" ? SHORT_TERM_RETURN : GUARANTEED_RETURN;
-      const annual = annualRequired(fv, rate, Math.max(years, 0.1));
+      const annual = annualRequired(fv, rate, Math.max(years, 0.5));
       rows.push({
         id: String(g.id || Math.random()),
         groupId: g.id,
@@ -257,10 +288,11 @@ export function computeReport(lead) {
   if (!lead) return null;
 
   const age = Number(lead.age) || 0;
-  const retirementAge = Number(lead.retirementAge) || 0;
+  const retirementAge = Number(lead.retirementAge || lead.protection?.retirementAge) || 60;
   const income = Number(lead.income) || 0;
   const expenses = Number(lead.expenses) || 0;
   const savings = Number(lead.savings) || 0;
+  const city = (lead.city || lead.protection?.city || "").trim();
   const goals = Array.isArray(lead.goals) ? lead.goals : [];
 
   // STRICT ZERO-CHECK GUARD: If user hasn't entered inputs, return clean 0 state without fake data
@@ -307,11 +339,15 @@ export function computeReport(lead) {
 
   const futureBigGoals = rows.filter((r) => r.years > SHORT_TERM_MAX_YEARS).reduce((s, r) => s + r.fv, 0);
   const recommendedCover = income > 0 ? Math.max(0, income * 12 * coverMultiplier(age) + futureBigGoals * 0.3 - savings) : 0;
-  const currentTerm = lead.termInsurance === "yes" ? Number(lead.termAmount) || 0 : 0;
+  const currentTerm = (lead.termInsurance === "yes" || lead.protection?.termInsurance === true || lead.protection?.termInsurance === "yes")
+    ? Number(lead.termAmount || lead.protection?.termAmount) || 0
+    : 0;
   const termGap = Math.max(0, recommendedCover - currentTerm);
 
-  const healthTarget = (income > 0 || expenses > 0) ? healthBaseline(lead.city, age) : 0;
-  const currentHealth = lead.healthInsurance === "yes" ? Number(lead.healthAmount) || 0 : 0;
+  const healthTarget = (income > 0 || expenses > 0) ? healthBaseline(city, age) : 0;
+  const currentHealth = (lead.healthInsurance === "yes" || lead.protection?.healthInsurance === true || lead.protection?.healthInsurance === "yes")
+    ? Number(lead.healthAmount || lead.protection?.healthAmount) || 0
+    : 0;
   const healthGap = Math.max(0, healthTarget - currentHealth);
 
   const emergencyTarget = expenses * EMERGENCY_MONTHS;
