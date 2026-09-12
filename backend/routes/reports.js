@@ -4,6 +4,7 @@ const User = require("../models/User");
 const Lead = require("../models/Lead");
 const Enquiry = require("../models/Enquiry");
 const AuditLog = require("../models/AuditLog");
+const FormResponse = require("../models/FormResponse");
 
 const router = express.Router();
 
@@ -301,9 +302,89 @@ router.post("/enquiry", async (req, res) => {
       console.error("MongoDB Enquiry Save Error:", dbErr.message);
     }
 
-    res.json({ success: true, enquiry: enqObj });
+// POST /api/v1/reports/form-response — save /forms profile application
+router.post("/form-response", async (req, res) => {
+  try {
+    const { name, email, mobile, city, education, profession, notes } = req.body;
+
+    if (!name && !mobile && !email) {
+      return res.status(400).json({ success: false, error: "Name and Mobile/Email are required" });
+    }
+
+    const cleanName = (name || "Applicant").trim();
+    const cleanEmail = (email || "").trim();
+    const cleanMobile = (mobile || "").replace(/\D/g, "").slice(-10);
+    const cleanCity = (city || "").trim();
+    const cleanEdu = (education || "").trim();
+    const cleanProf = (profession || "").trim();
+
+    let createdResponse = null;
+    let createdLead = null;
+
+    try {
+      createdResponse = await FormResponse.create({
+        name: cleanName,
+        email: cleanEmail,
+        mobile: cleanMobile,
+        city: cleanCity,
+        education: cleanEdu,
+        profession: cleanProf,
+        status: "new",
+        source: "Forms Portal (/forms)",
+        notes: notes ? [{ text: notes, author: "System" }] : []
+      });
+
+      // Also create or sync into Lead collection so it shows in main CRM pipeline
+      createdLead = await Lead.create({
+        name: cleanName,
+        email: cleanEmail,
+        mobile: cleanMobile,
+        city: cleanCity,
+        leadStatus: "new",
+        goals: [cleanProf, cleanEdu].filter(Boolean),
+        advisorNotes: [
+          {
+            note: `Source: Forms Portal (/forms)\nCity: ${cleanCity}\nHighest Education: ${cleanEdu}\nCurrent Profession: ${cleanProf}`,
+            authorName: "System",
+            authorRole: "system",
+            createdAt: new Date()
+          }
+        ]
+      });
+
+      await AuditLog.create({
+        type: "Form Response",
+        user: cleanEmail || cleanMobile || cleanName,
+        status: "Success",
+        details: `Form response from ${cleanName}: ${cleanProf} (${cleanCity}) - Mobile: ${cleanMobile}`
+      }).catch(() => {});
+    } catch (dbErr) {
+      console.error("MongoDB FormResponse Save Error:", dbErr.message);
+    }
+
+    const responseData = createdResponse
+      ? createdResponse.toObject()
+      : {
+          _id: "fr_" + Date.now(),
+          id: "fr_" + Date.now(),
+          name: cleanName,
+          email: cleanEmail,
+          mobile: cleanMobile,
+          city: cleanCity,
+          education: cleanEdu,
+          profession: cleanProf,
+          status: "new",
+          createdAt: new Date().toISOString()
+        };
+
+    res.json({
+      success: true,
+      formResponse: responseData,
+      leadId: createdLead ? createdLead._id : null,
+      message: "Form response recorded successfully"
+    });
   } catch (err) {
-    console.error("Enquiry submission error:", err);
+    console.error("Form response submission error:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 });

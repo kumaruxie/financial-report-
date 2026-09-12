@@ -5,6 +5,7 @@ const User = require("../models/User");
 const Lead = require("../models/Lead");
 const Enquiry = require("../models/Enquiry");
 const AuditLog = require("../models/AuditLog");
+const FormResponse = require("../models/FormResponse");
 
 const router = express.Router();
 
@@ -594,9 +595,88 @@ router.get("/logs", async (req, res) => {
       details: l.details,
     }));
 
-    res.json({ success: true, logs: mapped });
+// -------------------------------------------------------------
+// 5. FORM RESPONSES (/forms Portal)
+// -------------------------------------------------------------
+
+// GET /api/v1/admin/form-responses — fetch all form submissions
+router.get("/form-responses", async (req, res) => {
+  try {
+    let responses = [];
+    try {
+      responses = await FormResponse.find().sort({ createdAt: -1 }).lean();
+    } catch (dbErr) {
+      console.error("Form responses fetch error:", dbErr.message);
+    }
+
+    const mapped = responses.map((fr) => ({
+      id: fr._id,
+      _id: fr._id,
+      name: fr.name,
+      email: fr.email,
+      mobile: fr.mobile || "",
+      city: fr.city || "",
+      education: fr.education || "",
+      profession: fr.profession || "",
+      status: fr.status || "new",
+      source: fr.source || "Forms Portal (/forms)",
+      notes: fr.notes || [],
+      submittedAt: fr.createdAt,
+      createdAt: fr.createdAt
+    }));
+
+    res.json({ success: true, formResponses: mapped });
   } catch (err) {
-    console.error("Get logs error:", err);
+    console.error("Get form responses error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// PATCH /api/v1/admin/form-responses/:id — update status or add note
+router.patch("/form-responses/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, noteText, authorName } = req.body;
+
+    const updateObj = {};
+    if (status) updateObj.status = status;
+
+    let updated = null;
+    if (noteText) {
+      updated = await FormResponse.findByIdAndUpdate(
+        id,
+        {
+          ...updateObj,
+          $push: {
+            notes: {
+              id: "fn_" + Date.now() + "_" + Math.random().toString(36).substring(2, 6),
+              text: noteText,
+              author: authorName || "Admin",
+              createdAt: new Date()
+            }
+          }
+        },
+        { new: true }
+      );
+    } else {
+      updated = await FormResponse.findByIdAndUpdate(id, updateObj, { new: true });
+    }
+
+    res.json({ success: true, formResponse: updated });
+  } catch (err) {
+    console.error("Update form response error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// DELETE /api/v1/admin/form-responses/:id — delete a form response
+router.delete("/form-responses/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await FormResponse.findByIdAndDelete(id).catch(() => {});
+    res.json({ success: true, message: "Form response deleted successfully" });
+  } catch (err) {
+    console.error("Delete form response error:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 });

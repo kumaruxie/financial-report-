@@ -466,6 +466,71 @@ export async function deleteEnquiryApi(enquiryId) {
   }
 }
 
+export async function submitFormResponseApi(payload) {
+  try {
+    return await requestWithFallback("/reports/form-response", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+  } catch (err) {
+    console.warn("Backend API submitFormResponse failed:", err.message);
+    return {
+      success: true,
+      formResponse: {
+        id: "fr_local_" + Date.now(),
+        ...payload,
+        status: "new",
+        createdAt: new Date().toISOString()
+      }
+    };
+  }
+}
+
+export async function getFormResponsesApi(token) {
+  try {
+    const headers = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const data = await requestWithFallback(`/admin/form-responses?_t=${Date.now()}`, { headers });
+    return data && Array.isArray(data.formResponses) ? data.formResponses : [];
+  } catch (err) {
+    console.warn("Backend API getFormResponses failed:", err.message);
+    return null;
+  }
+}
+
+export async function updateFormResponseStatusApi(id, updateData, token) {
+  try {
+    const headers = { "Content-Type": "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const res = await fetch(`${API_BASE_URL}/admin/form-responses/${id}`, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify(updateData)
+    });
+    return await res.json();
+  } catch (err) {
+    console.warn("Backend API updateFormResponseStatus failed:", err.message);
+    return { success: true };
+  }
+}
+
+export async function deleteFormResponseApi(id, token) {
+  try {
+    const headers = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const res = await fetch(`${API_BASE_URL}/admin/form-responses/${id}`, {
+      method: "DELETE",
+      headers
+    });
+    return await res.json();
+  } catch (err) {
+    console.warn("Backend API deleteFormResponse failed:", err.message);
+    return { success: true };
+  }
+}
+
 export function getPdfDownloadUrl(reportId) {
   return `${API_BASE_URL}/reports/${reportId}/pdf`;
 }
+

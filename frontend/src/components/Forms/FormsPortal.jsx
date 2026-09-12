@@ -10,10 +10,13 @@ import {
   AlertCircle,
   Send,
   ShieldCheck,
-  Check
+  Check,
+  ExternalLink,
+  Home
 } from "lucide-react";
 import { API_BASE_URL, submitEnquiryApi } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
+import { useApp } from "../../context/AppContext";
 
 // Google Form Submission Action Endpoint
 const GOOGLE_FORM_ACTION =
@@ -25,7 +28,7 @@ const EDUCATION_OPTIONS = [
   { value: "Any Professional Certification ,Diploma , Degree", label: "Any Professional Certification ,Diploma , Degree" },
   { value: "12th pass", label: "12th pass" },
   { value: "Doctor", label: "Doctor" },
-  { value: "Others", label: "Others (Specify qualification)" }
+  { value: "Others", label: "Others" }
 ];
 
 // City Options (Exactly matching Google Form)
@@ -33,7 +36,7 @@ const CITY_OPTIONS = [
   { value: "Delhi NCR", label: "Delhi NCR" },
   { value: "Gurgaon", label: "Gurgaon" },
   { value: "Noida", label: "Noida" },
-  { value: "Other", label: "Other (Type your city)" }
+  { value: "Other", label: "Other" }
 ];
 
 // Current Profession Options (Exactly matching Google Form)
@@ -43,7 +46,7 @@ const PROFESSION_OPTIONS = [
   { value: "Insurance Professional (Agent , Adviser, Consultant)", label: "Insurance Professional (Agent , Adviser, Consultant)" },
   { value: "Finance Consultant , Banker and Mutual Funds Distributors or agents", label: "Finance Consultant , Banker and Mutual Funds Distributors or agents" },
   { value: "Health Care Professionl", label: "Health Care Professionl" },
-  { value: "Others", label: "Others (Specify profession)" }
+  { value: "Others", label: "Others" }
 ];
 
 // Helper: Strict Indian 10-digit mobile check
@@ -62,17 +65,15 @@ export function isValidEmailFormat(email) {
 
 export default function FormsPortal({ onRedirectHome }) {
   const { user, loginWithGoogle } = useAuth();
+  const { saveFormResponse } = useApp();
 
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     mobile: "",
     city: "",
-    customCity: "",
     profession: "",
-    customProfession: "",
-    education: "",
-    customEducation: ""
+    education: ""
   });
 
   const [recordEmailConsent, setRecordEmailConsent] = useState(true);
@@ -121,47 +122,29 @@ export default function FormsPortal({ onRedirectHome }) {
 
       // Match city option
       let matchedCity = "";
-      let customCityVal = "";
       if (cityValRaw) {
         const foundCity = CITY_OPTIONS.find(
           (c) => c.value.toLowerCase() === cityValRaw.toLowerCase()
         );
-        if (foundCity) {
-          matchedCity = foundCity.value;
-        } else {
-          matchedCity = "Other";
-          customCityVal = cityValRaw.slice(0, 40);
-        }
+        matchedCity = foundCity ? foundCity.value : "Other";
       }
 
       // Match education option
       let matchedEdu = "";
-      let customEduVal = "";
       if (eduValRaw) {
         const foundEdu = EDUCATION_OPTIONS.find(
           (e) => e.value.toLowerCase() === eduValRaw.toLowerCase()
         );
-        if (foundEdu) {
-          matchedEdu = foundEdu.value;
-        } else {
-          matchedEdu = "Others";
-          customEduVal = eduValRaw.slice(0, 60);
-        }
+        matchedEdu = foundEdu ? foundEdu.value : "Others";
       }
 
       // Match profession option
       let matchedProf = "";
-      let customProfVal = "";
       if (profValRaw) {
         const foundProf = PROFESSION_OPTIONS.find(
           (p) => p.value.toLowerCase() === profValRaw.toLowerCase()
         );
-        if (foundProf) {
-          matchedProf = foundProf.value;
-        } else {
-          matchedProf = "Others";
-          customProfVal = profValRaw.slice(0, 60);
-        }
+        matchedProf = foundProf ? foundProf.value : "Others";
       }
 
       setFormData((prev) => ({
@@ -169,24 +152,21 @@ export default function FormsPortal({ onRedirectHome }) {
         email: (emailVal || prev.email).slice(0, 80),
         mobile: mobileVal || prev.mobile,
         city: matchedCity || prev.city,
-        customCity: customCityVal || prev.customCity,
         education: matchedEdu || prev.education,
-        customEducation: customEduVal || prev.customEducation,
-        profession: matchedProf || prev.profession,
-        customProfession: customProfVal || prev.customProfession
+        profession: matchedProf || prev.profession
       }));
     } catch (e) {
       console.warn("FormsPortal: URL prefill parse notice:", e);
     }
   }, []);
 
-  // Redirect to home screen after submission
+  // Auto-redirect to home screen after submission (gives ample time to view confirmation)
   useEffect(() => {
     if (!isSubmitted) return;
 
     const timer = setTimeout(() => {
       handleDoneRedirect();
-    }, 2400);
+    }, 15000);
 
     return () => clearTimeout(timer);
   }, [isSubmitted]);
@@ -228,12 +208,6 @@ export default function FormsPortal({ onRedirectHome }) {
       cleanVal = value.trim().slice(0, 80);
     } else if (field === "mobile") {
       cleanVal = value.replace(/\D/g, "").slice(0, 10);
-    } else if (field === "customCity") {
-      cleanVal = value.slice(0, 40);
-    } else if (field === "customProfession") {
-      cleanVal = value.slice(0, 60);
-    } else if (field === "customEducation") {
-      cleanVal = value.slice(0, 60);
     }
 
     setFormData((prev) => ({ ...prev, [field]: cleanVal }));
@@ -284,39 +258,26 @@ export default function FormsPortal({ onRedirectHome }) {
     // 4. City (Compulsory)
     if (!formData.city) {
       errs.city = "Please select your city";
-    } else if (formData.city === "Other" && !formData.customCity.trim()) {
-      errs.customCity = "Please specify your city name";
     }
 
     // 5. Highest Education (Compulsory)
     if (!formData.education) {
       errs.education = "Please select your highest education";
-    } else if (formData.education === "Others" && !formData.customEducation.trim()) {
-      errs.customEducation = "Please specify your qualification";
     }
 
     // 6. Current Profession (Compulsory)
     if (!formData.profession) {
       errs.profession = "Please select your profession";
-    } else if (formData.profession === "Others" && !formData.customProfession.trim()) {
-      errs.customProfession = "Please specify your profession";
     }
 
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
-  // Compute effective field values for submission
-  const effectiveCity =
-    formData.city === "Other" ? formData.customCity.trim() || "Other" : formData.city;
-  const effectiveEducation =
-    formData.education === "Others"
-      ? formData.customEducation.trim() || "Others"
-      : formData.education;
-  const effectiveProfession =
-    formData.profession === "Others"
-      ? formData.customProfession.trim() || "Others"
-      : formData.profession;
+  // Field values for submission
+  const effectiveCity = formData.city;
+  const effectiveEducation = formData.education;
+  const effectiveProfession = formData.profession;
 
   const handleSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
@@ -329,20 +290,21 @@ export default function FormsPortal({ onRedirectHome }) {
     setIsSubmitting(true);
 
     try {
-      // 1. Submit via hidden form iframe for seamless, 100% reliable Google Form capture
+      // 1. Submit via hidden form iframe with exact entry IDs and Google Form hidden tokens
       if (hiddenFormRef.current) {
         hiddenFormRef.current.submit();
       }
 
       // 2. Dual submit via fetch (no-cors) to Google Forms endpoint
       const postParams = new URLSearchParams();
-      postParams.append("emailAddress", formData.email.trim());
-      postParams.append("entry.388060596", formData.email.trim());
       postParams.append("entry.183190177", formData.name.trim());
       postParams.append("entry.1384209841", formData.mobile.trim());
       postParams.append("entry.72691823", effectiveCity);
       postParams.append("entry.1170563700", effectiveEducation);
       postParams.append("entry.1764066533", effectiveProfession);
+      postParams.append("fvv", "1");
+      postParams.append("pageHistory", "0");
+      postParams.append("fbzx", "5017803040604775895");
 
       fetch(GOOGLE_FORM_ACTION, {
         method: "POST",
@@ -353,7 +315,20 @@ export default function FormsPortal({ onRedirectHome }) {
         console.warn("Google Form direct fetch notice (safe fallback used):", fetchErr);
       });
 
-      // 3. Record as verified lead enquiry in the backend database (with auto-fallback to Render)
+      // 3. Record directly to Database & Admin Panel via AppContext + Backend API
+      if (typeof saveFormResponse === "function") {
+        saveFormResponse({
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          mobile: formData.mobile.trim(),
+          city: effectiveCity,
+          education: effectiveEducation,
+          profession: effectiveProfession,
+          notes: `Consent recorded: ${recordEmailConsent ? "yes" : "no"}`
+        }).catch((err) => console.warn("Form response save notice:", err));
+      }
+
+      // 4. Record as verified lead enquiry in backend database
       submitEnquiryApi({
         name: formData.name.trim(),
         email: formData.email.trim(),
@@ -403,13 +378,14 @@ export default function FormsPortal({ onRedirectHome }) {
         target="gform_hidden_iframe"
         style={{ display: "none" }}
       >
-        <input type="hidden" name="emailAddress" value={formData.email} />
-        <input type="hidden" name="entry.388060596" value={formData.email} />
         <input type="hidden" name="entry.183190177" value={formData.name} />
         <input type="hidden" name="entry.1384209841" value={formData.mobile} />
         <input type="hidden" name="entry.72691823" value={effectiveCity} />
         <input type="hidden" name="entry.1170563700" value={effectiveEducation} />
         <input type="hidden" name="entry.1764066533" value={effectiveProfession} />
+        <input type="hidden" name="fvv" value="1" />
+        <input type="hidden" name="pageHistory" value="0" />
+        <input type="hidden" name="fbzx" value="5017803040604775895" />
       </form>
 
       {/* Ambient background glow accents */}
@@ -527,7 +503,7 @@ export default function FormsPortal({ onRedirectHome }) {
               background: "var(--bg-surface, #0D0E15)",
               border: "1px solid rgba(16, 185, 129, 0.35)",
               borderRadius: 20,
-              padding: "clamp(36px, 8vw, 56px) clamp(20px, 5vw, 36px)",
+              padding: "clamp(32px, 6vw, 48px) clamp(20px, 5vw, 32px)",
               textAlign: "center",
               boxShadow: "0 20px 50px rgba(0, 0, 0, 0.6)",
               animation: "fadeIn 0.35s ease"
@@ -535,18 +511,18 @@ export default function FormsPortal({ onRedirectHome }) {
           >
             <div
               style={{
-                width: 72,
-                height: 72,
+                width: 68,
+                height: 68,
                 borderRadius: "50%",
                 background: "rgba(16, 185, 129, 0.14)",
                 border: "2px solid #10B981",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                margin: "0 auto 18px"
+                margin: "0 auto 16px"
               }}
             >
-              <CheckCircle2 size={40} color="#10B981" />
+              <CheckCircle2 size={38} color="#10B981" />
             </div>
 
             <h2
@@ -570,24 +546,110 @@ export default function FormsPortal({ onRedirectHome }) {
                 lineHeight: 1.6
               }}
             >
-              Our team will carefully review your application. If your profile is shortlisted, we will contact you at{" "}
+              Our team will carefully review your application. We will contact you at{" "}
               <strong style={{ color: "#FFFFFF" }}>{formData.mobile ? `+91 ${formData.mobile}` : formData.email}</strong> to schedule a meeting with one of our experts.
             </p>
 
+            {/* VERIFICATION BADGE */}
             <div
               style={{
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 6,
-                padding: "6px 14px",
+                padding: "8px 16px",
                 borderRadius: 20,
                 background: "rgba(16, 185, 129, 0.12)",
+                border: "1px solid rgba(16, 185, 129, 0.3)",
                 color: "#10B981",
                 fontSize: 13,
-                fontWeight: 600
+                fontWeight: 700,
+                marginBottom: 24
               }}
             >
-              <Check size={14} /> Response Recorded Direct to Database
+              <Check size={15} /> Recorded Directly to Admin Panel Database
+            </div>
+
+            {/* SUMMARY CARD OF RECORDED DATA */}
+            <div
+              style={{
+                background: "rgba(255, 255, 255, 0.03)",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                borderRadius: 14,
+                padding: "16px 20px",
+                textAlign: "left",
+                maxWidth: 460,
+                margin: "0 auto 24px",
+                fontSize: 13,
+                display: "flex",
+                flexDirection: "column",
+                gap: 8
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: 6 }}>
+                <span style={{ color: "var(--text-fog)" }}>Name:</span>
+                <strong style={{ color: "#FFFFFF" }}>{formData.name}</strong>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: 6 }}>
+                <span style={{ color: "var(--text-fog)" }}>Mobile:</span>
+                <strong style={{ color: "#FFFFFF" }}>+91 {formData.mobile}</strong>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: 6 }}>
+                <span style={{ color: "var(--text-fog)" }}>City:</span>
+                <strong style={{ color: "#5FA8A0" }}>{effectiveCity}</strong>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: 6 }}>
+                <span style={{ color: "var(--text-fog)" }}>Education:</span>
+                <strong style={{ color: "#A78BFA" }}>{effectiveEducation}</strong>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "var(--text-fog)" }}>Profession:</span>
+                <strong style={{ color: "var(--accent-gold)" }}>{effectiveProfession}</strong>
+              </div>
+            </div>
+
+            {/* ACTION BUTTONS: GOOGLE FORM PREFILL & RETURN HOME */}
+            <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+              <a
+                href={`https://docs.google.com/forms/d/e/1FAIpQLSfplzBIcOWuDBsczdUasKnxMVt57OvJSntLYrYyUyo5Nqf67w/viewform?usp=pp_url&entry.183190177=${encodeURIComponent(formData.name.trim())}&entry.1384209841=${encodeURIComponent(formData.mobile.trim())}&entry.72691823=${encodeURIComponent(effectiveCity)}&entry.1170563700=${encodeURIComponent(effectiveEducation)}&entry.1764066533=${encodeURIComponent(effectiveProfession)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  background: "rgba(201, 154, 75, 0.15)",
+                  border: "1px solid var(--accent-gold, #C99A4B)",
+                  borderRadius: 12,
+                  padding: "12px 20px",
+                  color: "var(--accent-gold, #C99A4B)",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  transition: "all 0.2s ease"
+                }}
+              >
+                <ExternalLink size={15} /> Open in Google Forms (Prefilled)
+              </a>
+
+              <button
+                type="button"
+                onClick={handleDoneRedirect}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  background: "rgba(255, 255, 255, 0.08)",
+                  border: "1px solid rgba(255, 255, 255, 0.18)",
+                  borderRadius: 12,
+                  padding: "12px 22px",
+                  color: "#FFFFFF",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: "pointer"
+                }}
+              >
+                <Home size={15} /> Return to Home
+              </button>
             </div>
           </div>
         ) : (
@@ -979,37 +1041,6 @@ export default function FormsPortal({ onRedirectHome }) {
                     ))}
                   </select>
 
-                  {/* If "Other" selected, show custom city input (Compulsory) */}
-                  {formData.city === "Other" && (
-                    <div style={{ marginTop: 10, animation: "fadeIn 0.25s ease" }}>
-                      <input
-                        type="text"
-                        maxLength={40}
-                        value={formData.customCity}
-                        onChange={(e) => handleChange("customCity", e.target.value)}
-                        placeholder="Type your city name"
-                        style={{
-                          width: "100%",
-                          padding: "12px 14px",
-                          borderRadius: 8,
-                          backgroundColor: "rgba(21, 24, 36, 0.8)",
-                          border: formErrors.customCity
-                            ? "1px solid #EF4444"
-                            : "1px solid var(--accent-gold, #C99A4B)",
-                          color: "#FFFFFF",
-                          fontSize: 14,
-                          outline: "none",
-                          boxSizing: "border-box"
-                        }}
-                      />
-                      {formErrors.customCity && (
-                        <div style={{ fontSize: 12, color: "#EF4444", marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
-                          <AlertCircle size={13} /> {formErrors.customCity}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
                   {formErrors.city && (
                     <div style={{ fontSize: 12, color: "#EF4444", marginTop: 5, display: "flex", alignItems: "center", gap: 4 }}>
                       <AlertCircle size={13} /> {formErrors.city}
@@ -1066,37 +1097,6 @@ export default function FormsPortal({ onRedirectHome }) {
                     ))}
                   </select>
 
-                  {/* If "Others" selected, show custom education input (Compulsory) */}
-                  {formData.education === "Others" && (
-                    <div style={{ marginTop: 10, animation: "fadeIn 0.25s ease" }}>
-                      <input
-                        type="text"
-                        maxLength={60}
-                        value={formData.customEducation}
-                        onChange={(e) => handleChange("customEducation", e.target.value)}
-                        placeholder="Specify your qualification"
-                        style={{
-                          width: "100%",
-                          padding: "12px 14px",
-                          borderRadius: 8,
-                          backgroundColor: "rgba(21, 24, 36, 0.8)",
-                          border: formErrors.customEducation
-                            ? "1px solid #EF4444"
-                            : "1px solid var(--accent-gold, #C99A4B)",
-                          color: "#FFFFFF",
-                          fontSize: 14,
-                          outline: "none",
-                          boxSizing: "border-box"
-                        }}
-                      />
-                      {formErrors.customEducation && (
-                        <div style={{ fontSize: 12, color: "#EF4444", marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
-                          <AlertCircle size={13} /> {formErrors.customEducation}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
                   {formErrors.education && (
                     <div style={{ fontSize: 12, color: "#EF4444", marginTop: 5, display: "flex", alignItems: "center", gap: 4 }}>
                       <AlertCircle size={13} /> {formErrors.education}
@@ -1148,37 +1148,6 @@ export default function FormsPortal({ onRedirectHome }) {
                       </option>
                     ))}
                   </select>
-
-                  {/* If "Others" selected, show custom profession input (Compulsory) */}
-                  {formData.profession === "Others" && (
-                    <div style={{ marginTop: 10, animation: "fadeIn 0.25s ease" }}>
-                      <input
-                        type="text"
-                        maxLength={60}
-                        value={formData.customProfession}
-                        onChange={(e) => handleChange("customProfession", e.target.value)}
-                        placeholder="Specify your profession"
-                        style={{
-                          width: "100%",
-                          padding: "12px 14px",
-                          borderRadius: 8,
-                          backgroundColor: "rgba(21, 24, 36, 0.8)",
-                          border: formErrors.customProfession
-                            ? "1px solid #EF4444"
-                            : "1px solid var(--accent-gold, #C99A4B)",
-                          color: "#FFFFFF",
-                          fontSize: 14,
-                          outline: "none",
-                          boxSizing: "border-box"
-                        }}
-                      />
-                      {formErrors.customProfession && (
-                        <div style={{ fontSize: 12, color: "#EF4444", marginTop: 4, display: "flex", alignItems: "center", gap: 4 }}>
-                          <AlertCircle size={13} /> {formErrors.customProfession}
-                        </div>
-                      )}
-                    </div>
-                  )}
 
                   {formErrors.profession && (
                     <div style={{ fontSize: 12, color: "#EF4444", marginTop: 5, display: "flex", alignItems: "center", gap: 4 }}>

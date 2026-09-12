@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   Users, AlertTriangle, FileCheck2, Clock, Filter, Lock, ShieldCheck,
-  LogOut, ArrowRight, KeyRound, Mail, RefreshCw, UserCheck, Shield, Sparkles, User, CheckCircle2
+  LogOut, ArrowRight, KeyRound, Mail, RefreshCw, UserCheck, Shield, Sparkles, User, CheckCircle2, FileSpreadsheet
 } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import { useAuth } from "../../context/AuthContext";
@@ -16,6 +16,7 @@ import LeadTable from "./LeadTable";
 import LeadDetailModal from "./LeadDetailModal";
 import SystemLogsTable from "./SystemLogsTable";
 import EnquiryTable from "./EnquiryTable";
+import FormResponsesTable from "./FormResponsesTable";
 import AdvisorTeamManager from "./AdvisorTeamManager";
 
 class AdminErrorBoundary extends React.Component {
@@ -53,7 +54,7 @@ class AdminErrorBoundary extends React.Component {
 
 function AdminPortalMain() {
   const { setPortalMode } = useAuth();
-  const { contactEnquiries = [], refreshBackendData, leads: appLeads = [] } = useApp();
+  const { contactEnquiries = [], formResponses = [], refreshBackendData, leads: appLeads = [] } = useApp();
 
   // Authentication State
   const [adminUser, setAdminUser] = useState(() => {
@@ -359,9 +360,11 @@ function AdminPortalMain() {
     ? adminLeads
     : (Array.isArray(appLeads) && appLeads.length > 0 ? appLeads : []);
   const safeEnquiries = Array.isArray(contactEnquiries) ? contactEnquiries : [];
+  const safeForms = Array.isArray(formResponses) ? formResponses : [];
 
   const totalLeads = safeLeads.length;
   const totalEnquiries = safeEnquiries.length;
+  const totalForms = safeForms.length;
   let highRiskCount = 0;
   let reportsTodayCount = 0;
   let convertedCount = 0;
@@ -548,6 +551,7 @@ function AdminPortalMain() {
       <div className="ff-admin-tab-bar-container">
         <div style={{ fontSize: 15, color: "var(--text-main)", fontWeight: 700 }}>
           {activeTab === "crm" && (isSuperAdmin ? `Platform Leads CRM (${totalLeads})` : `My Assigned Leads (${totalLeads})`)}
+          {activeTab === "forms" && `Form Responses (/forms) (${totalForms})`}
           {activeTab === "team" && `Advisor Team & Credentials (${teamUsers.length})`}
           {activeTab === "enquiries" && `Advisory Form Enquiries (${totalEnquiries})`}
           {activeTab === "logs" && `System Audit Trails`}
@@ -564,6 +568,17 @@ function AdminPortalMain() {
             }}
           >
             <Users size={14} /> {isSuperAdmin ? `All Leads (${totalLeads})` : `My Leads (${totalLeads})`}
+          </button>
+
+          <button
+            onClick={() => setActiveTab("forms")}
+            className="ff-admin-tab-btn"
+            style={{
+              background: activeTab === "forms" ? "var(--accent-gold)" : "transparent",
+              color: activeTab === "forms" ? "#07080C" : "var(--text-fog)",
+            }}
+          >
+            <FileSpreadsheet size={14} /> Form Responses ({totalForms})
           </button>
 
           {isSuperAdmin && (
@@ -612,6 +627,13 @@ function AdminPortalMain() {
           teamUsers={teamUsers}
           onSelectLead={(lead) => setSelectedLead(lead)}
           adminRole={adminUser?.role}
+          adminToken={adminToken}
+          onRefresh={() => loadPortalData(adminToken)}
+        />
+      )}
+
+      {activeTab === "forms" && (
+        <FormResponsesTable
           adminToken={adminToken}
           onRefresh={() => loadPortalData(adminToken)}
         />

@@ -8,7 +8,11 @@ import {
   getEnquiriesApi,
   deleteEnquiryApi,
   getMyAssessmentsApi,
-  deleteAssessmentApi
+  deleteAssessmentApi,
+  submitFormResponseApi,
+  getFormResponsesApi,
+  updateFormResponseStatusApi,
+  deleteFormResponseApi
 } from "../services/api";
 
 const AppContext = createContext(null);
@@ -17,6 +21,7 @@ const STORAGE_LEADS_KEY = "ff_leads_db";
 const STORAGE_LOGS_KEY = "ff_audit_logs_db";
 const STORAGE_ENQUIRIES_KEY = "ff_contact_enquiries_db";
 const STORAGE_USER_ASSESSMENTS_KEY = "ff_user_assessments_db";
+const STORAGE_FORM_RESPONSES_KEY = "ff_form_responses_db";
 
 export function AppProvider({ children }) {
   const [leads, setLeads] = useState(() => {
@@ -46,6 +51,15 @@ export function AppProvider({ children }) {
     }
   });
 
+  const [formResponses, setFormResponses] = useState(() => {
+    try {
+      const localSaved = localStorage.getItem(STORAGE_FORM_RESPONSES_KEY);
+      return localSaved ? JSON.parse(localSaved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [auditLogs, setAuditLogs] = useState([]);
   const [activeLead, setActiveLead] = useState(null);
   const [loadingAssessments, setLoadingAssessments] = useState(false);
@@ -67,6 +81,14 @@ export function AppProvider({ children }) {
       setContactEnquiries(backendEnquiries);
       try {
         localStorage.setItem(STORAGE_ENQUIRIES_KEY, JSON.stringify(backendEnquiries));
+      } catch (e) {}
+    }
+
+    const backendForms = await getFormResponsesApi();
+    if (backendForms && Array.isArray(backendForms)) {
+      setFormResponses(backendForms);
+      try {
+        localStorage.setItem(STORAGE_FORM_RESPONSES_KEY, JSON.stringify(backendForms));
       } catch (e) {}
     }
 
@@ -187,6 +209,88 @@ export function AppProvider({ children }) {
     addAuditLog("Enquiry Management", "Admin", "Success", `Contact enquiry deleted: ${enquiryId}`);
   };
 
+  const saveFormResponse = async (formData) => {
+    const res = await submitFormResponseApi(formData);
+    const rawRes = res.formResponse || {};
+
+    const newResponse = {
+      id: rawRes._id || rawRes.id || "fr_" + Date.now(),
+      _id: rawRes._id || rawRes.id || "fr_" + Date.now(),
+      name: formData.name || "Applicant",
+      email: formData.email || "",
+      mobile: formData.mobile || "",
+      city: formData.city || "",
+      education: formData.education || "",
+      profession: formData.profession || "",
+      status: rawRes.status || "new",
+      source: "Forms Portal (/forms)",
+      submittedAt: rawRes.createdAt || new Date().toISOString(),
+      createdAt: rawRes.createdAt || new Date().toISOString()
+    };
+
+    setFormResponses((prev) => {
+      const updated = [newResponse, ...prev.filter((item) => item.id !== newResponse.id && item._id !== newResponse.id)];
+      try {
+        localStorage.setItem(STORAGE_FORM_RESPONSES_KEY, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    // Also reflect in CRM leads list
+    const newLeadFromForm = {
+      id: res.leadId || "lead_form_" + Date.now(),
+      _id: res.leadId || "lead_form_" + Date.now(),
+      name: newResponse.name,
+      email: newResponse.email,
+      mobile: newResponse.mobile,
+      city: newResponse.city,
+      leadStatus: "new",
+      goals: [newResponse.profession, newResponse.education].filter(Boolean),
+      submittedAt: newResponse.submittedAt,
+      createdAt: newResponse.createdAt,
+      source: "Forms Portal (/forms)"
+    };
+
+    setLeads((prev) => {
+      const updated = [newLeadFromForm, ...prev.filter((l) => l.id !== newLeadFromForm.id)];
+      try {
+        localStorage.setItem(STORAGE_LEADS_KEY, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    addAuditLog("Form Application", newResponse.email || newResponse.mobile || newResponse.name, "Success", `Form response from: ${newResponse.name} (${newResponse.city})`);
+    return newResponse;
+  };
+
+  const updateFormResponseStatus = async (id, status, notes = "", token = "") => {
+    await updateFormResponseStatusApi(id, { status, noteText: notes }, token);
+    setFormResponses((prev) => {
+      const updated = prev.map((item) => {
+        if (item.id === id || item._id === id) {
+          return { ...item, status };
+        }
+        return item;
+      });
+      try {
+        localStorage.setItem(STORAGE_FORM_RESPONSES_KEY, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+  };
+
+  const deleteFormResponse = async (id, token = "") => {
+    await deleteFormResponseApi(id, token);
+    setFormResponses((prev) => {
+      const updated = prev.filter((item) => item.id !== id && item._id !== id);
+      try {
+        localStorage.setItem(STORAGE_FORM_RESPONSES_KEY, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+    addAuditLog("Form Management", "Admin", "Success", `Form response deleted: ${id}`);
+  };
+
   const saveLeadSubmission = async (leadData, currentUser = null) => {
     const payload = {
       ...leadData,
@@ -295,6 +399,10 @@ export function AppProvider({ children }) {
         contactEnquiries,
         saveContactEnquiry,
         deleteContactEnquiry,
+        formResponses,
+        saveFormResponse,
+        updateFormResponseStatus,
+        deleteFormResponse,
         auditLogs,
         addAuditLog,
         saveLeadSubmission,
