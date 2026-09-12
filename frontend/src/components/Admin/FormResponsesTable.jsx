@@ -55,6 +55,25 @@ const STATUS_CONFIGS = {
   }
 };
 
+export function formatPhoneDisplay(raw) {
+  if (!raw) return "—";
+  const str = String(raw).trim();
+  const digits = str.replace(/\D/g, "");
+  if (digits.length === 10) return `+91 ${digits}`;
+  if (digits.length === 12 && digits.startsWith("91")) return `+91 ${digits.slice(2)}`;
+  if (str.startsWith("+")) return str;
+  return digits ? `+91 ${digits}` : str;
+}
+
+export function getPhoneRaw(item) {
+  return item?.mobile || item?.phone || item?.phoneNumber || item?.contact || item?.number || "";
+}
+
+export function getCleanPhoneDigits(raw) {
+  const digits = String(raw || "").replace(/\D/g, "");
+  return digits.length >= 10 ? digits.slice(-10) : digits;
+}
+
 export default function FormResponsesTable({ adminToken = "", onRefresh = () => {} }) {
   const { formResponses = [], updateFormResponseStatus, deleteFormResponse } = useApp();
 
@@ -422,7 +441,9 @@ export default function FormResponsesTable({ adminToken = "", onRefresh = () => 
                 filtered.map((item, idx) => {
                   const itemId = item.id || item._id;
                   const st = STATUS_CONFIGS[item.status || "new"] || STATUS_CONFIGS.new;
-                  const cleanPhone = (item.mobile || "").replace(/\D/g, "").slice(-10);
+                  const rawPhone = getPhoneRaw(item);
+                  const cleanPhone = getCleanPhoneDigits(rawPhone);
+                  const displayPhone = formatPhoneDisplay(rawPhone);
                   const waLink = cleanPhone
                     ? `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(`Hello ${item.name || ""}, thank you for your application on Your Wealth Compass. We would like to schedule your expert session.`)}`
                     : null;
@@ -479,7 +500,7 @@ export default function FormResponsesTable({ adminToken = "", onRefresh = () => 
                         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                           <div style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 700, color: "#FFFFFF", fontSize: 14, letterSpacing: "0.02em" }}>
                             <Phone size={13} color="var(--accent-gold)" />
-                            <span>{item.mobile ? `+91 ${item.mobile}` : "—"}</span>
+                            <span>{displayPhone}</span>
                           </div>
 
                           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -507,9 +528,9 @@ export default function FormResponsesTable({ adminToken = "", onRefresh = () => 
                                 <MessageCircle size={12} /> WhatsApp
                               </a>
                             )}
-                            {item.mobile && (
+                            {cleanPhone && (
                               <a
-                                href={`tel:${item.mobile}`}
+                                href={`tel:${cleanPhone}`}
                                 onClick={(e) => e.stopPropagation()}
                                 style={{
                                   display: "inline-flex",
@@ -761,7 +782,7 @@ export default function FormResponsesTable({ adminToken = "", onRefresh = () => 
             >
               <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: 10 }}>
                 <span style={{ fontSize: 13, color: "var(--text-fog)" }}>Mobile Phone:</span>
-                <strong style={{ fontSize: 14, color: "#FFFFFF" }}>{selectedResponse.mobile ? `+91 ${selectedResponse.mobile}` : "—"}</strong>
+                <strong style={{ fontSize: 14, color: "#FFFFFF" }}>{formatPhoneDisplay(getPhoneRaw(selectedResponse))}</strong>
               </div>
 
               <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: 10 }}>
@@ -787,9 +808,9 @@ export default function FormResponsesTable({ adminToken = "", onRefresh = () => 
 
             {/* Quick Actions */}
             <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
-              {selectedResponse.mobile && (
+              {getCleanPhoneDigits(getPhoneRaw(selectedResponse)) && (
                 <a
-                  href={`https://wa.me/91${(selectedResponse.mobile || "").replace(/\D/g, "").slice(-10)}?text=${encodeURIComponent(`Hello ${selectedResponse.name || ""}, thank you for your application on Your Wealth Compass.`)}`}
+                  href={`https://wa.me/91${getCleanPhoneDigits(getPhoneRaw(selectedResponse))}?text=${encodeURIComponent(`Hello ${selectedResponse.name || ""}, thank you for your application on Your Wealth Compass.`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
@@ -813,9 +834,9 @@ export default function FormResponsesTable({ adminToken = "", onRefresh = () => 
                 </a>
               )}
 
-              {selectedResponse.mobile && (
+              {getCleanPhoneDigits(getPhoneRaw(selectedResponse)) && (
                 <a
-                  href={`tel:${selectedResponse.mobile}`}
+                  href={`tel:${getCleanPhoneDigits(getPhoneRaw(selectedResponse))}`}
                   style={{
                     flex: 1,
                     minWidth: 120,

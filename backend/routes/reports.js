@@ -302,6 +302,17 @@ router.post("/enquiry", async (req, res) => {
       console.error("MongoDB Enquiry Save Error:", dbErr.message);
     }
 
+    res.json({
+      success: true,
+      enquiry: enqObj,
+      message: "Enquiry submitted successfully"
+    });
+  } catch (err) {
+    console.error("Enquiry submission error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // POST /api/v1/reports/form-response — save /forms profile application
 router.post("/form-response", async (req, res) => {
   try {
@@ -313,7 +324,8 @@ router.post("/form-response", async (req, res) => {
 
     const cleanName = (name || "Applicant").trim();
     const cleanEmail = (email || "").trim();
-    const cleanMobile = (mobile || "").replace(/\D/g, "").slice(-10);
+    const digitsOnly = (mobile || "").replace(/\D/g, "");
+    const cleanMobile = digitsOnly.length >= 10 ? digitsOnly.slice(-10) : (digitsOnly || String(mobile || "").trim());
     const cleanCity = (city || "").trim();
     const cleanEdu = (education || "").trim();
     const cleanProf = (profession || "").trim();

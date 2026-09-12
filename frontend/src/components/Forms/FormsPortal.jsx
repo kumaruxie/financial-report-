@@ -10,9 +10,7 @@ import {
   AlertCircle,
   Send,
   ShieldCheck,
-  Check,
-  ExternalLink,
-  Home
+  Check
 } from "lucide-react";
 import { API_BASE_URL, submitEnquiryApi } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
@@ -115,7 +113,11 @@ export default function FormsPortal({ onRedirectHome }) {
       const nameVal = getVal("entry.183190177", "name", "fullname");
       const emailVal = getVal("emailAddress", "entry.388060596", "email", "mail");
       const mobileValRaw = getVal("entry.1384209841", "mobile", "phone");
-      const mobileVal = (mobileValRaw || "").replace(/\D/g, "").slice(0, 10);
+      let mobileVal = (mobileValRaw || "").replace(/\D/g, "");
+      if (mobileVal.length > 10 && mobileVal.startsWith("91")) {
+        mobileVal = mobileVal.slice(2);
+      }
+      mobileVal = mobileVal.slice(-10);
       const cityValRaw = getVal("entry.72691823", "city");
       const eduValRaw = getVal("entry.1170563700", "education", "qualification");
       const profValRaw = getVal("entry.1764066533", "profession", "occupation");
@@ -160,13 +162,13 @@ export default function FormsPortal({ onRedirectHome }) {
     }
   }, []);
 
-  // Auto-redirect to home screen after submission (gives ample time to view confirmation)
+  // Auto-redirect to home screen after 2 seconds
   useEffect(() => {
     if (!isSubmitted) return;
 
     const timer = setTimeout(() => {
       handleDoneRedirect();
-    }, 15000);
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, [isSubmitted]);
@@ -207,7 +209,11 @@ export default function FormsPortal({ onRedirectHome }) {
     } else if (field === "email") {
       cleanVal = value.trim().slice(0, 80);
     } else if (field === "mobile") {
-      cleanVal = value.replace(/\D/g, "").slice(0, 10);
+      let digits = value.replace(/\D/g, "");
+      if (digits.length > 10 && digits.startsWith("91")) {
+        digits = digits.slice(2);
+      }
+      cleanVal = digits.slice(0, 10);
     }
 
     setFormData((prev) => ({ ...prev, [field]: cleanVal }));
@@ -218,7 +224,7 @@ export default function FormsPortal({ onRedirectHome }) {
   };
 
   // Real-time detection state helpers
-  const isMobileValid = isValidIndianMobile(formData.mobile);
+  const isMobileValid = isValidIndianMobile(formData.mobile) || /^\d{10}$/.test(formData.mobile.trim());
   const isEmailValid = isValidEmailFormat(formData.email);
 
   // ALL MENUS ARE COMPULSORY
@@ -243,16 +249,14 @@ export default function FormsPortal({ onRedirectHome }) {
       errs.name = "Please enter a valid alphabetic name";
     }
 
-    // 3. Mobile (Compulsory, Strict Indian 10 digits starting with 6,7,8,9)
+    // 3. Mobile (Compulsory, 10 Digits)
     const trimmedMobile = formData.mobile.trim();
     if (!trimmedMobile) {
       errs.mobile = "Mobile number is required";
     } else if (trimmedMobile.length !== 10) {
-      errs.mobile = `Please enter exactly 10 digits (currently ${trimmedMobile.length} digits)`;
-    } else if (!/^[6-9]/.test(trimmedMobile)) {
-      errs.mobile = "Indian mobile numbers must begin with 6, 7, 8, or 9";
-    } else if (!/^[6-9]\d{9}$/.test(trimmedMobile)) {
-      errs.mobile = "Please enter a valid 10-digit mobile number";
+      errs.mobile = `Please enter 10-digit mobile number (currently ${trimmedMobile.length} digits)`;
+    } else if (!/^\d{10}$/.test(trimmedMobile)) {
+      errs.mobile = "Please enter digits only";
     }
 
     // 4. City (Compulsory)
@@ -519,137 +523,57 @@ export default function FormsPortal({ onRedirectHome }) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                margin: "0 auto 16px"
+                margin: "0 auto 20px"
               }}
             >
-              <CheckCircle2 size={38} color="#10B981" />
+              <CheckCircle2 size={40} color="#10B981" />
             </div>
 
             <h2
               style={{
-                fontSize: "clamp(20px, 4.5vw, 24px)",
+                fontSize: "clamp(22px, 5vw, 28px)",
                 fontWeight: 800,
                 color: "#FFFFFF",
-                marginBottom: 10,
+                marginBottom: 12,
                 fontFamily: "var(--font-serif, sans-serif)"
               }}
             >
-              Your application has been submitted successfully
+              Application Submitted Successfully!
             </h2>
 
             <p
               style={{
-                fontSize: 14,
-                color: "var(--text-fog, #8FA0AC)",
+                fontSize: 16,
+                color: "var(--text-ivory, #F3EFE6)",
                 maxWidth: 480,
                 margin: "0 auto 16px",
                 lineHeight: 1.6
               }}
             >
-              Our team will carefully review your application. We will contact you at{" "}
-              <strong style={{ color: "#FFFFFF" }}>{formData.mobile ? `+91 ${formData.mobile}` : formData.email}</strong> to schedule a meeting with one of our experts.
+              Aapka data successfully record ho gaya hai. Hamari expert team aapse jald hi contact karegi.
             </p>
 
-            {/* VERIFICATION BADGE */}
             <div
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: 6,
-                padding: "8px 16px",
-                borderRadius: 20,
-                background: "rgba(16, 185, 129, 0.12)",
-                border: "1px solid rgba(16, 185, 129, 0.3)",
-                color: "#10B981",
+                gap: 8,
+                color: "var(--accent-gold, #C99A4B)",
                 fontSize: 13,
-                fontWeight: 700,
-                marginBottom: 24
+                fontWeight: 600,
+                marginTop: 10
               }}
             >
-              <Check size={15} /> Recorded Directly to Admin Panel Database
-            </div>
-
-            {/* SUMMARY CARD OF RECORDED DATA */}
-            <div
-              style={{
-                background: "rgba(255, 255, 255, 0.03)",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
-                borderRadius: 14,
-                padding: "16px 20px",
-                textAlign: "left",
-                maxWidth: 460,
-                margin: "0 auto 24px",
-                fontSize: 13,
-                display: "flex",
-                flexDirection: "column",
-                gap: 8
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: 6 }}>
-                <span style={{ color: "var(--text-fog)" }}>Name:</span>
-                <strong style={{ color: "#FFFFFF" }}>{formData.name}</strong>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: 6 }}>
-                <span style={{ color: "var(--text-fog)" }}>Mobile:</span>
-                <strong style={{ color: "#FFFFFF" }}>+91 {formData.mobile}</strong>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: 6 }}>
-                <span style={{ color: "var(--text-fog)" }}>City:</span>
-                <strong style={{ color: "#5FA8A0" }}>{effectiveCity}</strong>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.06)", paddingBottom: 6 }}>
-                <span style={{ color: "var(--text-fog)" }}>Education:</span>
-                <strong style={{ color: "#A78BFA" }}>{effectiveEducation}</strong>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--text-fog)" }}>Profession:</span>
-                <strong style={{ color: "var(--accent-gold)" }}>{effectiveProfession}</strong>
-              </div>
-            </div>
-
-            {/* ACTION BUTTONS: GOOGLE FORM PREFILL & RETURN HOME */}
-            <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-              <a
-                href={`https://docs.google.com/forms/d/e/1FAIpQLSfplzBIcOWuDBsczdUasKnxMVt57OvJSntLYrYyUyo5Nqf67w/viewform?usp=pp_url&entry.183190177=${encodeURIComponent(formData.name.trim())}&entry.1384209841=${encodeURIComponent(formData.mobile.trim())}&entry.72691823=${encodeURIComponent(effectiveCity)}&entry.1170563700=${encodeURIComponent(effectiveEducation)}&entry.1764066533=${encodeURIComponent(effectiveProfession)}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <span
                 style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  background: "rgba(201, 154, 75, 0.15)",
-                  border: "1px solid var(--accent-gold, #C99A4B)",
-                  borderRadius: 12,
-                  padding: "12px 20px",
-                  color: "var(--accent-gold, #C99A4B)",
-                  fontSize: 13,
-                  fontWeight: 700,
-                  textDecoration: "none",
-                  transition: "all 0.2s ease"
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  background: "var(--accent-gold)",
+                  display: "inline-block"
                 }}
-              >
-                <ExternalLink size={15} /> Open in Google Forms (Prefilled)
-              </a>
-
-              <button
-                type="button"
-                onClick={handleDoneRedirect}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  background: "rgba(255, 255, 255, 0.08)",
-                  border: "1px solid rgba(255, 255, 255, 0.18)",
-                  borderRadius: 12,
-                  padding: "12px 22px",
-                  color: "#FFFFFF",
-                  fontSize: 13,
-                  fontWeight: 700,
-                  cursor: "pointer"
-                }}
-              >
-                <Home size={15} /> Return to Home
-              </button>
+              />
+              Redirecting to home screen...
             </div>
           </div>
         ) : (

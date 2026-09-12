@@ -1,6 +1,52 @@
 import React, { useState } from "react";
-import { Mail, Search, Trash2, Eye, Calendar, User, MessageSquare, Tag, X, Sparkles } from "lucide-react";
+import { Mail, Search, Trash2, Eye, Calendar, User, MessageSquare, Tag, X, Sparkles, Phone, MessageCircle, MapPin, Briefcase, GraduationCap } from "lucide-react";
 import { useApp } from "../../context/AppContext";
+
+function formatPhoneDisplay(raw) {
+  if (!raw) return "—";
+  const str = String(raw).trim();
+  const digits = str.replace(/\D/g, "");
+  if (digits.length === 10) return `+91 ${digits}`;
+  if (digits.length === 12 && digits.startsWith("91")) return `+91 ${digits.slice(2)}`;
+  if (str.startsWith("+")) return str;
+  return digits ? `+91 ${digits}` : str;
+}
+
+function getPhoneRaw(enq) {
+  return enq?.mobile || enq?.phone || enq?.phoneNumber || enq?.contact || enq?.number || "";
+}
+
+function getCleanPhoneDigits(raw) {
+  const digits = String(raw || "").replace(/\D/g, "");
+  return digits.length >= 10 ? digits.slice(-10) : digits;
+}
+
+export function parseFormProfile(msg) {
+  if (!msg || typeof msg !== "string") return null;
+  const hasProfile = msg.includes("City:") || msg.includes("Education:") || msg.includes("Profession:");
+  if (!hasProfile) return null;
+
+  const cityMatch = msg.match(/City:\s*([^|]+)/i);
+  const eduMatch = msg.match(/Education:\s*([^|]+)/i);
+  const profMatch = msg.match(/Profession:\s*([^|]+)/i);
+  const emailMatch = msg.match(/Verified Email:\s*([^|]+)/i);
+
+  let remaining = msg
+    .replace(/City:\s*[^|]+(\|)?/i, "")
+    .replace(/Education:\s*[^|]+(\|)?/i, "")
+    .replace(/Profession:\s*[^|]+(\|)?/i, "")
+    .replace(/Verified Email:\s*[^|]+(\|)?/i, "")
+    .replace(/^[|\s]+|[|\s]+$/g, "")
+    .trim();
+
+  return {
+    city: cityMatch ? cityMatch[1].trim() : "",
+    education: eduMatch ? eduMatch[1].trim() : "",
+    profession: profMatch ? profMatch[1].trim() : "",
+    verifiedEmail: emailMatch ? emailMatch[1].trim() : "",
+    remainingMessage: remaining
+  };
+}
 
 export default function EnquiryTable() {
   const { contactEnquiries = [], deleteContactEnquiry } = useApp();
@@ -20,10 +66,12 @@ export default function EnquiryTable() {
 
   // Filter enquiries
   const filteredEnquiries = contactEnquiries.filter((enq) => {
+    const rawMob = getPhoneRaw(enq);
     const nameMatch = (enq.name || "").toLowerCase().includes(searchTerm.toLowerCase());
     const emailMatch = (enq.email || "").toLowerCase().includes(searchTerm.toLowerCase());
+    const phoneMatch = rawMob.toLowerCase().includes(searchTerm.toLowerCase());
     const msgMatch = (enq.message || "").toLowerCase().includes(searchTerm.toLowerCase());
-    const searchPass = nameMatch || emailMatch || msgMatch;
+    const searchPass = nameMatch || emailMatch || phoneMatch || msgMatch;
 
     const topicPass = topicFilter === "all" || topicFilter === "All Topics" || enq.topic === topicFilter;
 
@@ -135,6 +183,7 @@ export default function EnquiryTable() {
                 >
                   <th style={{ padding: "16px 20px" }}>Date & Time</th>
                   <th style={{ padding: "16px 20px" }}>Client Name</th>
+                  <th style={{ padding: "16px 20px" }}>Phone Number</th>
                   <th style={{ padding: "16px 20px" }}>Email Address</th>
                   <th style={{ padding: "16px 20px" }}>Enquiry Topic</th>
                   <th style={{ padding: "16px 20px" }}>Message Preview</th>
@@ -144,6 +193,9 @@ export default function EnquiryTable() {
               <tbody>
                 {filteredEnquiries.map((enq) => {
                   const topicStyle = getTopicColor(enq.topic);
+                  const rawPhone = getPhoneRaw(enq);
+                  const cleanPhone = getCleanPhoneDigits(rawPhone);
+                  const displayPhone = formatPhoneDisplay(rawPhone);
                   const dateStr = enq.submittedAt
                     ? new Date(enq.submittedAt).toLocaleString("en-IN", {
                         day: "2-digit",
@@ -195,6 +247,42 @@ export default function EnquiryTable() {
                         </div>
                       </td>
 
+                      {/* Phone Column */}
+                      <td style={{ padding: "16px 20px", whiteSpace: "nowrap" }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 700, color: "#FFFFFF", fontSize: 13.5 }}>
+                            <Phone size={13} color="var(--accent-gold)" />
+                            <span>{displayPhone}</span>
+                          </div>
+                          {cleanPhone && (
+                            <div style={{ display: "flex", gap: 6, marginTop: 2 }}>
+                              <a
+                                href={`https://wa.me/91${cleanPhone}?text=${encodeURIComponent(`Hello ${enq.name || ""}, thank you for contacting Your Wealth Compass.`)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 4,
+                                  background: "rgba(37, 211, 102, 0.14)",
+                                  border: "1px solid rgba(37, 211, 102, 0.35)",
+                                  borderRadius: 6,
+                                  padding: "2px 8px",
+                                  color: "#25D366",
+                                  fontSize: 11,
+                                  fontWeight: 700,
+                                  textDecoration: "none"
+                                }}
+                                title="Chat on WhatsApp"
+                              >
+                                <MessageCircle size={11} /> WhatsApp
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+
                       <td style={{ padding: "16px 20px", color: "var(--text-fog)", whiteSpace: "nowrap" }}>
                         <a
                           href={`mailto:${enq.email}`}
@@ -222,8 +310,27 @@ export default function EnquiryTable() {
                         </span>
                       </td>
 
-                      <td style={{ padding: "16px 20px", color: "var(--text-fog)", fontSize: 13, maxWidth: 280, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {enq.message || "(No message written)"}
+                      <td style={{ padding: "16px 20px", fontSize: 13, maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {(() => {
+                          const prof = parseFormProfile(enq.message);
+                          if (prof) {
+                            return (
+                              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                                {prof.city && (
+                                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "#5FA8A0", fontWeight: 700, fontSize: 12.5 }}>
+                                    <MapPin size={12} /> {prof.city}
+                                  </span>
+                                )}
+                                {prof.profession && (
+                                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4, color: "var(--accent-gold)", fontWeight: 700, fontSize: 12.5 }}>
+                                    <Briefcase size={12} /> {prof.profession}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          }
+                          return <span style={{ color: "var(--text-fog)" }}>{enq.message || "(No message written)"}</span>;
+                        })()}
                       </td>
 
                       <td style={{ padding: "16px 20px", textAlign: "right", whiteSpace: "nowrap" }}>
@@ -338,7 +445,15 @@ export default function EnquiryTable() {
             </div>
 
             {/* DETAILS GRID */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 20, fontSize: 13.5 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 14, marginBottom: 20, fontSize: 13.5 }}>
+              <div style={{ background: "rgba(255, 255, 255, 0.03)", padding: "12px 16px", borderRadius: 12, border: "1px solid var(--border-subtle)" }}>
+                <div style={{ fontSize: 11, color: "var(--text-fog)", textTransform: "uppercase", marginBottom: 4 }}>Phone Number</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#FFFFFF", fontWeight: 700 }}>
+                  <Phone size={13} color="var(--accent-gold)" />
+                  <span>{formatPhoneDisplay(getPhoneRaw(selectedEnquiry))}</span>
+                </div>
+              </div>
+
               <div style={{ background: "rgba(255, 255, 255, 0.03)", padding: "12px 16px", borderRadius: 12, border: "1px solid var(--border-subtle)" }}>
                 <div style={{ fontSize: 11, color: "var(--text-fog)", textTransform: "uppercase", marginBottom: 4 }}>Email Address</div>
                 <a href={`mailto:${selectedEnquiry.email}`} style={{ color: "var(--accent-teal)", fontWeight: 600, textDecoration: "none" }}>
@@ -359,6 +474,57 @@ export default function EnquiryTable() {
               </div>
             </div>
 
+            {/* QUICK ACTIONS FOR ENQUIRY (WHATSAPP & CALL) */}
+            {getCleanPhoneDigits(getPhoneRaw(selectedEnquiry)) && (
+              <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
+                <a
+                  href={`https://wa.me/91${getCleanPhoneDigits(getPhoneRaw(selectedEnquiry))}?text=${encodeURIComponent(`Hello ${selectedEnquiry.name || ""}, thank you for contacting Your Wealth Compass.`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    flex: 1,
+                    minWidth: 140,
+                    height: 40,
+                    background: "rgba(37, 211, 102, 0.15)",
+                    border: "1px solid #25D366",
+                    borderRadius: 10,
+                    color: "#25D366",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    fontWeight: 700,
+                    fontSize: 13,
+                    textDecoration: "none"
+                  }}
+                >
+                  <MessageCircle size={15} /> WhatsApp
+                </a>
+
+                <a
+                  href={`tel:${getCleanPhoneDigits(getPhoneRaw(selectedEnquiry))}`}
+                  style={{
+                    flex: 1,
+                    minWidth: 120,
+                    height: 40,
+                    background: "rgba(255, 255, 255, 0.08)",
+                    border: "1px solid rgba(255, 255, 255, 0.18)",
+                    borderRadius: 10,
+                    color: "#FFFFFF",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    fontWeight: 700,
+                    fontSize: 13,
+                    textDecoration: "none"
+                  }}
+                >
+                  <Phone size={15} /> Call Client
+                </a>
+              </div>
+            )}
+
             {/* TOPIC BADGE */}
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 11, color: "var(--text-fog)", textTransform: "uppercase", marginBottom: 6 }}>Selected Advisory Topic</div>
@@ -378,25 +544,81 @@ export default function EnquiryTable() {
               </span>
             </div>
 
-            {/* MESSAGE BOX */}
-            <div style={{ marginBottom: 28 }}>
-              <div style={{ fontSize: 11, color: "var(--text-fog)", textTransform: "uppercase", marginBottom: 6 }}>Client Message</div>
-              <div
-                style={{
-                  background: "rgba(0, 0, 0, 0.3)",
-                  border: "1px solid var(--border-subtle)",
-                  borderRadius: 14,
-                  padding: 16,
-                  color: "var(--text-main)",
-                  fontSize: 14,
-                  lineHeight: 1.6,
-                  minHeight: 100,
-                  whiteSpace: "pre-wrap"
-                }}
-              >
-                {selectedEnquiry.message || "No specific message provided by client."}
-              </div>
-            </div>
+            {/* CLIENT DATA / PROFILE DETAILS */}
+            {(() => {
+              const modalProf = parseFormProfile(selectedEnquiry.message);
+              if (modalProf) {
+                return (
+                  <div
+                    style={{
+                      background: "rgba(255, 255, 255, 0.03)",
+                      border: "1px solid var(--border-gold, rgba(201, 154, 75, 0.4))",
+                      borderRadius: 16,
+                      padding: 20,
+                      marginBottom: 24,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 12
+                    }}
+                  >
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "var(--accent-gold)", textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: 6 }}>
+                      <Sparkles size={14} /> Client Application Profile Details
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                      <div style={{ background: "rgba(0, 0, 0, 0.25)", padding: "10px 14px", borderRadius: 10, border: "1px solid rgba(255, 255, 255, 0.06)" }}>
+                        <div style={{ fontSize: 11, color: "var(--text-fog)", textTransform: "uppercase", marginBottom: 3 }}>City / Location</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 5, color: "#5FA8A0", fontWeight: 700, fontSize: 14 }}>
+                          <MapPin size={14} /> {modalProf.city || "—"}
+                        </div>
+                      </div>
+
+                      <div style={{ background: "rgba(0, 0, 0, 0.25)", padding: "10px 14px", borderRadius: 10, border: "1px solid rgba(255, 255, 255, 0.06)" }}>
+                        <div style={{ fontSize: 11, color: "var(--text-fog)", textTransform: "uppercase", marginBottom: 3 }}>Current Profession</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 5, color: "var(--accent-gold)", fontWeight: 700, fontSize: 14 }}>
+                          <Briefcase size={14} /> {modalProf.profession || "—"}
+                        </div>
+                      </div>
+
+                      <div style={{ background: "rgba(0, 0, 0, 0.25)", padding: "10px 14px", borderRadius: 10, border: "1px solid rgba(255, 255, 255, 0.06)", gridColumn: "span 2" }}>
+                        <div style={{ fontSize: 11, color: "var(--text-fog)", textTransform: "uppercase", marginBottom: 3 }}>Highest Education</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 5, color: "#A78BFA", fontWeight: 700, fontSize: 14 }}>
+                          <GraduationCap size={14} /> {modalProf.education || "—"}
+                        </div>
+                      </div>
+                    </div>
+
+                    {modalProf.remainingMessage && (
+                      <div style={{ marginTop: 6, paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                        <div style={{ fontSize: 11, color: "var(--text-fog)", textTransform: "uppercase", marginBottom: 4 }}>Note / Message</div>
+                        <div style={{ color: "var(--text-main)", fontSize: 13 }}>{modalProf.remainingMessage}</div>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              return (
+                <div style={{ marginBottom: 28 }}>
+                  <div style={{ fontSize: 11, color: "var(--text-fog)", textTransform: "uppercase", marginBottom: 6 }}>Client Message</div>
+                  <div
+                    style={{
+                      background: "rgba(0, 0, 0, 0.3)",
+                      border: "1px solid var(--border-subtle)",
+                      borderRadius: 14,
+                      padding: 16,
+                      color: "var(--text-main)",
+                      fontSize: 14,
+                      lineHeight: 1.6,
+                      minHeight: 100,
+                      whiteSpace: "pre-wrap"
+                    }}
+                  >
+                    {selectedEnquiry.message || "No specific message provided by client."}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* FOOTER ACTIONS */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>

@@ -37,6 +37,20 @@ export default function LeadTable({
   const safeLeads = Array.isArray(leads) ? leads : [];
   const cities = Array.from(new Set(safeLeads.map((l) => l && l.city).filter(Boolean)));
 
+  const formatPhoneDisplay = (raw) => {
+    if (!raw) return "—";
+    const str = String(raw).trim();
+    const digits = str.replace(/\D/g, "");
+    if (digits.length === 10) return `+91 ${digits}`;
+    if (digits.length === 12 && digits.startsWith("91")) return `+91 ${digits.slice(2)}`;
+    if (str.startsWith("+")) return str;
+    return digits ? `+91 ${digits}` : str;
+  };
+
+  const getPhoneRaw = (lead) => {
+    return lead?.mobile || lead?.phone || lead?.phoneNumber || lead?.contact || lead?.number || "";
+  };
+
   const getTime = (val) => {
     if (!val) return 0;
     const d = new Date(val);
@@ -313,8 +327,8 @@ export default function LeadTable({
 
                     {/* 2. Contact & City */}
                     <td style={{ padding: "16px 16px", verticalAlign: "middle" }}>
-                      <div style={{ fontSize: 13, color: "var(--text-main)", display: "flex", alignItems: "center", gap: 6, fontWeight: 500 }}>
-                        <span style={{ color: "var(--text-fog)", fontSize: 11 }}>☎</span> {lead.mobile || "—"}
+                      <div style={{ fontSize: 13, color: "var(--text-main)", display: "flex", alignItems: "center", gap: 6, fontWeight: 600 }}>
+                        <span style={{ color: "var(--accent-gold)", fontSize: 13 }}>☎</span> {formatPhoneDisplay(getPhoneRaw(lead))}
                       </div>
                       <div style={{ fontSize: 12, color: "var(--text-fog)", display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
                         <span>📍</span> {lead.city || "—"} &bull; Age {lead.age || "—"}
@@ -501,8 +515,8 @@ export default function LeadTable({
 
                 {/* 2. Inline Info Strip: Phone + Monthly Inflow */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12, background: "rgba(255,255,255,0.02)", padding: "6px 10px", borderRadius: 8, border: "1px solid var(--border-subtle)" }}>
-                  <span style={{ color: "var(--text-soft)", fontWeight: 500 }}>
-                    ☎ {lead.mobile || "—"}
+                  <span style={{ color: "var(--text-main)", fontWeight: 600 }}>
+                    ☎ {formatPhoneDisplay(getPhoneRaw(lead))}
                   </span>
                   <span style={{ color: "var(--accent-gold)", fontWeight: 700, fontFamily: "var(--font-mono)" }}>
                     Inflow: {INR_L(lead.income)}
