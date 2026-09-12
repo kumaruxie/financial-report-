@@ -56,6 +56,7 @@ export default function EnquiryTable() {
 
   const topicsList = [
     "All Topics",
+    "Application Form",
     "Comprehensive Financial Planning",
     "Retirement & Pension Strategy",
     "Child Education & Marriage Funding",
@@ -73,7 +74,11 @@ export default function EnquiryTable() {
     const msgMatch = (enq.message || "").toLowerCase().includes(searchTerm.toLowerCase());
     const searchPass = nameMatch || emailMatch || phoneMatch || msgMatch;
 
-    const topicPass = topicFilter === "all" || topicFilter === "All Topics" || enq.topic === topicFilter;
+    const topicPass =
+      topicFilter === "all" ||
+      topicFilter === "All Topics" ||
+      enq.topic === topicFilter ||
+      (topicFilter === "Application Form" && (enq.topic === "Application Form" || enq.topic?.startsWith("Form Profile")));
 
     return searchPass && topicPass;
   });
@@ -89,6 +94,7 @@ export default function EnquiryTable() {
   };
 
   const getTopicColor = (topic) => {
+    if ((topic || "").includes("Application") || (topic || "").includes("Form")) return { bg: "rgba(201, 154, 75, 0.15)", text: "#C99A4B", border: "rgba(201, 154, 75, 0.4)" };
     if ((topic || "").includes("Financial")) return { bg: "rgba(201, 154, 75, 0.15)", text: "#C99A4B", border: "rgba(201, 154, 75, 0.4)" };
     if ((topic || "").includes("Retirement")) return { bg: "rgba(95, 168, 160, 0.15)", text: "#5FA8A0", border: "rgba(95, 168, 160, 0.4)" };
     if ((topic || "").includes("Protection") || (topic || "").includes("Insurance")) return { bg: "rgba(244, 63, 94, 0.15)", text: "#F43F5E", border: "rgba(244, 63, 94, 0.4)" };
@@ -294,20 +300,37 @@ export default function EnquiryTable() {
                       </td>
 
                       <td style={{ padding: "16px 20px", whiteSpace: "nowrap" }}>
-                        <span
-                          style={{
-                            display: "inline-block",
-                            padding: "4px 12px",
-                            borderRadius: 20,
-                            fontSize: 12,
-                            fontWeight: 600,
-                            background: topicStyle.bg,
-                            color: topicStyle.text,
-                            border: `1px solid ${topicStyle.border}`
-                          }}
-                        >
-                          {enq.topic || "General Enquiry"}
-                        </span>
+                        {enq.topic?.startsWith("Form Profile") || parseFormProfile(enq.message) ? (
+                          <span
+                            style={{
+                              display: "inline-block",
+                              padding: "4px 12px",
+                              borderRadius: 20,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              background: "rgba(201, 154, 75, 0.15)",
+                              color: "var(--accent-gold)",
+                              border: "1px solid rgba(201, 154, 75, 0.3)"
+                            }}
+                          >
+                            Application Form
+                          </span>
+                        ) : (
+                          <span
+                            style={{
+                              display: "inline-block",
+                              padding: "4px 12px",
+                              borderRadius: 20,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              background: topicStyle.bg,
+                              color: topicStyle.text,
+                              border: `1px solid ${topicStyle.border}`
+                            }}
+                          >
+                            {enq.topic || "General Enquiry"}
+                          </span>
+                        )}
                       </td>
 
                       <td style={{ padding: "16px 20px", fontSize: 13, maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -525,24 +548,31 @@ export default function EnquiryTable() {
               </div>
             )}
 
-            {/* TOPIC BADGE */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 11, color: "var(--text-fog)", textTransform: "uppercase", marginBottom: 6 }}>Selected Advisory Topic</div>
-              <span
-                style={{
-                  display: "inline-block",
-                  padding: "6px 14px",
-                  borderRadius: 20,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  background: getTopicColor(selectedEnquiry.topic).bg,
-                  color: getTopicColor(selectedEnquiry.topic).text,
-                  border: `1px solid ${getTopicColor(selectedEnquiry.topic).border}`
-                }}
-              >
-                {selectedEnquiry.topic || "General Enquiry"}
-              </span>
-            </div>
+            {/* TOPIC BADGE — only show for standard advisory enquiries */}
+            {(() => {
+              const modalProf = parseFormProfile(selectedEnquiry.message);
+              const isFormProfile = selectedEnquiry.topic?.startsWith("Form Profile") || Boolean(modalProf);
+              if (isFormProfile) return null;
+              return (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 11, color: "var(--text-fog)", textTransform: "uppercase", marginBottom: 6 }}>Selected Advisory Topic</div>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      padding: "6px 14px",
+                      borderRadius: 20,
+                      fontSize: 13,
+                      fontWeight: 700,
+                      background: getTopicColor(selectedEnquiry.topic).bg,
+                      color: getTopicColor(selectedEnquiry.topic).text,
+                      border: `1px solid ${getTopicColor(selectedEnquiry.topic).border}`
+                    }}
+                  >
+                    {selectedEnquiry.topic || "General Enquiry"}
+                  </span>
+                </div>
+              );
+            })()}
 
             {/* CLIENT DATA / PROFILE DETAILS */}
             {(() => {

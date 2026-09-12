@@ -337,7 +337,7 @@ export default function FormsPortal({ onRedirectHome }) {
         name: formData.name.trim(),
         email: formData.email.trim(),
         mobile: formData.mobile.trim(),
-        topic: `Form Profile: ${effectiveProfession} (${effectiveEducation})`,
+        topic: "Application Form",
         message: `City: ${effectiveCity} | Education: ${effectiveEducation} | Profession: ${effectiveProfession} | Verified Email: ${formData.email}`
       }).catch((enqErr) => console.warn("Enquiry DB sync notice:", enqErr));
 
@@ -1156,6 +1156,29 @@ export default function FormsPortal({ onRedirectHome }) {
           </div>
         )}
       </main>
+
+      {/* Hidden Google Form Native Submission Form & Iframe */}
+      <form
+        ref={hiddenFormRef}
+        action={GOOGLE_FORM_ACTION}
+        method="POST"
+        target="google_form_iframe"
+        style={{ display: "none" }}
+      >
+        <input type="hidden" name="entry.183190177" value={formData.name.trim()} />
+        <input type="hidden" name="entry.1384209841" value={formData.mobile.trim()} />
+        <input type="hidden" name="entry.72691823" value={effectiveCity} />
+        <input type="hidden" name="entry.1170563700" value={effectiveEducation} />
+        <input type="hidden" name="entry.1764066533" value={effectiveProfession} />
+        <input type="hidden" name="fvv" value="1" />
+        <input type="hidden" name="pageHistory" value="0" />
+      </form>
+      <iframe
+        name="google_form_iframe"
+        id="google_form_iframe"
+        style={{ display: "none", width: 0, height: 0, border: 0 }}
+        title="google-form-target"
+      />
     </div>
   );
 }

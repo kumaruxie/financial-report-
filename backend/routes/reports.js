@@ -370,6 +370,43 @@ router.post("/form-response", async (req, res) => {
         status: "Success",
         details: `Form response from ${cleanName}: ${cleanProf} (${cleanCity}) - Mobile: ${cleanMobile}`
       }).catch(() => {});
+
+      // Asynchronously forward to Google Form endpoint
+      try {
+        const https = require("https");
+        const querystring = require("querystring");
+        const gPostData = querystring.stringify({
+          "fvv": "1",
+          "pageHistory": "0",
+          "entry.183190177": cleanName,
+          "entry.1384209841": cleanMobile,
+          "entry.72691823": cleanCity,
+          "entry.1170563700": cleanEdu,
+          "entry.1764066533": cleanProf
+        });
+        const gReq = https.request({
+          hostname: "docs.google.com",
+          port: 443,
+          path: "/forms/d/e/1FAIpQLSfplzBIcOWuDBsczdUasKnxMVt57OvJSntLYrYyUyo5Nqf67w/formResponse",
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Content-Length": Buffer.byteLength(gPostData),
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+          }
+        }, (gRes) => {
+          if (gRes.statusCode >= 200 && gRes.statusCode < 400) {
+            console.log("Google Form server sync OK:", gRes.statusCode);
+          } else {
+            console.warn("Google Form server sync status:", gRes.statusCode);
+          }
+        });
+        gReq.on("error", (e) => console.warn("Google Form forward notice:", e.message));
+        gReq.write(gPostData);
+        gReq.end();
+      } catch (gErr) {
+        console.warn("Google Form forward skipped:", gErr.message);
+      }
     } catch (dbErr) {
       console.error("MongoDB FormResponse Save Error:", dbErr.message);
     }
