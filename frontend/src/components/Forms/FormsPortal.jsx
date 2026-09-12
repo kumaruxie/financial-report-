@@ -550,7 +550,7 @@ export default function FormsPortal({ onRedirectHome }) {
                 lineHeight: 1.6
               }}
             >
-              Aapka data successfully record ho gaya hai. Hamari expert team aapse jald hi contact karegi.
+              Your details have been successfully recorded. Our expert advisory team will contact you shortly.
             </p>
 
             <div
