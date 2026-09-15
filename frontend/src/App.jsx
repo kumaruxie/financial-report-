@@ -31,7 +31,7 @@ function MainContent() {
   const [processingStatus, setProcessingStatus] = useState("Evaluating Monthly Cashflow...");
 
   const [basics, setBasics] = useState({ name: "", email: "", countryCode: "+91", mobile: "" });
-  const [financials, setFinancials] = useState({ age: "", income: "", expenses: "", savings: "" });
+  const [financials, setFinancials] = useState({ age: "", income: "", incomeLakhs: "", expenses: "", savings: "" });
   const [protection, setProtection] = useState({ termInsurance: "", termAmount: "", healthInsurance: "", healthAmount: "", city: "", retirementAge: "" });
   const [goals, setGoals] = useState([]);
 
@@ -182,7 +182,7 @@ function MainContent() {
       }
       const incNum = Number(financials.income);
       if (!financials.income || isNaN(incNum) || incNum <= 0) {
-        setStepError("Please enter your current monthly income.");
+        setStepError("Please enter your current monthly income in Lakhs (e.g. 0.3 for ₹30,000).");
         return;
       }
       const expNum = Number(financials.expenses);
@@ -191,7 +191,7 @@ function MainContent() {
         return;
       }
       if (expNum > incNum) {
-        setStepError("Monthly expenses cannot exceed your stated monthly income.");
+        setStepError(`Monthly living expenses (₹${expNum.toLocaleString("en-IN")}) cannot exceed your stated monthly income (₹${incNum.toLocaleString("en-IN")}).`);
         return;
       }
       const savNum = Number(financials.savings);
@@ -285,14 +285,18 @@ function MainContent() {
       mobile: user?.mobile ? user.mobile.replace(/\D/g, "") : ""
     });
     if (prefillData && typeof prefillData === "object") {
+      const rawInc = prefillData.income || "";
+      const numInc = Number(rawInc) || 0;
+      const lakhsStr = numInc > 0 ? String(Number((numInc / 100000).toFixed(2))) : (prefillData.incomeLakhs || "");
       setFinancials({
         age: prefillData.age || "",
-        income: prefillData.income || "",
+        income: rawInc,
+        incomeLakhs: lakhsStr,
         expenses: prefillData.expenses || "",
         savings: prefillData.savings || ""
       });
     } else {
-      setFinancials({ age: "", income: "", expenses: "", savings: "" });
+      setFinancials({ age: "", income: "", incomeLakhs: "", expenses: "", savings: "" });
     }
     setProtection({ termInsurance: "", termAmount: "", healthInsurance: "", healthAmount: "", city: "", retirementAge: "" });
     setGoals([]);
@@ -323,9 +327,13 @@ function MainContent() {
         countryCode: cCode,
         mobile: mob
       });
+      const rawInc = assessment.income || "";
+      const numInc = Number(rawInc) || 0;
+      const lakhsStr = numInc > 0 ? String(Number((numInc / 100000).toFixed(2))) : "";
       setFinancials({
         age: assessment.age || "",
-        income: assessment.income || "",
+        income: rawInc,
+        incomeLakhs: lakhsStr,
         expenses: assessment.expenses || "",
         savings: assessment.savings || ""
       });

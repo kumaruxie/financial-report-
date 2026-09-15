@@ -391,6 +391,28 @@ body {
   transition: all 0.25s ease;
 }
 
+.ff-nav-new-btn {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ff-nav-new-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 30px rgba(201, 154, 75, 0.45);
+}
+
+@media (max-width: 600px) {
+  .ff-nav-new-btn {
+    padding: 6px 11px !important;
+    font-size: 12px !important;
+    border-radius: 8px !important;
+    gap: 4px !important;
+  }
+  .ff-nav-new-btn svg {
+    width: 13px !important;
+    height: 13px !important;
+  }
+}
+
 .header-exit-btn {
   font-size: 12.5px;
   padding: 6px 14px;

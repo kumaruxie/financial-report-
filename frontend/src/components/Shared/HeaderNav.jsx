@@ -1,10 +1,9 @@
-import React, { useState } from "react";
-import { User, LogOut, PlusCircle, FileText, Menu, X, ShieldCheck } from "lucide-react";
+import React from "react";
+import { User, LogOut, Plus, FileText } from "lucide-react";
 import { useAuth, AUTH_REQUIRED } from "../../context/AuthContext";
 
 export default function HeaderNav({ activeTab, setActiveTab, onResetWizard, onOpenAssessments }) {
-  const { user, logout, openAuthModal, portalMode, setPortalMode } = useAuth();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, logout, openAuthModal, setPortalMode } = useAuth();
 
   const handleGoHome = () => {
     setPortalMode("client");
@@ -25,138 +24,90 @@ export default function HeaderNav({ activeTab, setActiveTab, onResetWizard, onOp
   };
 
   const handleOpenAssessments = () => {
-    setIsMobileMenuOpen(false);
     if (onOpenAssessments) onOpenAssessments();
   };
 
   const handleLogout = () => {
     logout();
-    setIsMobileMenuOpen(false);
     setActiveTab("landing");
   };
 
   return (
-    <>
-      <header className="ff-navbar no-print">
-        <div className="ff-navbar-inner">
-          {/* Brand Logo on the Left */}
-          <div className="ff-brand" onClick={handleGoHome} style={{ cursor: "pointer" }}>
-            Your<span style={{ color: "var(--accent-gold)", margin: "0 3px" }}>Wealth</span>Compass
-          </div>
+    <header className="ff-navbar no-print">
+      <div className="ff-navbar-inner">
+        {/* Brand Logo on the Left */}
+        <div className="ff-brand" onClick={handleGoHome} style={{ cursor: "pointer" }}>
+          Your<span style={{ color: "var(--accent-gold)", margin: "0 3px" }}>Wealth</span>Compass
+        </div>
 
-          {/* Corner Controls (Unified Minimalist: Sign In / Initial Dot + 3-Bars Menu) */}
-          <div className="ff-nav-actions" style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            {user ? (
-              <div
-                className="ff-user-initial-dot"
-                onClick={() => setIsMobileMenuOpen(true)}
-                title={`Signed in as ${user.name}`}
-              >
-                {user.name ? user.name.charAt(0).toUpperCase() : "U"}
-              </div>
-            ) : AUTH_REQUIRED ? (
-              <button
-                onClick={() => openAuthModal("signin")}
-                className="ff-btn-ghost ff-corner-signin-btn"
-              >
-                <User size={14} />
-                <span>Sign In</span>
-              </button>
-            ) : null}
-
-            {/* 3-Bars Hamburger Button */}
+        {/* Corner Controls: New Assessment CTA (Single Plus, No 3-Bars Hamburger) */}
+        <div className="ff-nav-actions" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {user && (
             <button
-              className="ff-hamburger-btn"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label="Open navigation menu"
+              className="ff-btn-ghost ff-nav-assessments-btn"
+              onClick={handleOpenAssessments}
+              title="View Previous Assessments"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "7px 12px",
+                borderRadius: 10,
+                fontSize: 13,
+                fontWeight: 600,
+                color: "var(--accent-gold)",
+                border: "1px solid rgba(201, 154, 75, 0.3)"
+              }}
             >
-              <Menu size={20} />
+              <FileText size={15} color="var(--accent-gold)" />
+              <span className="ff-btn-text-full">My Assessments</span>
             </button>
-          </div>
+          )}
+
+          {/* New Assessment CTA Button with single plus icon */}
+          <button
+            className="ff-btn-gold ff-nav-new-btn"
+            onClick={handleStartForm}
+            style={{
+              borderRadius: 10,
+              padding: "8px 16px",
+              fontSize: 13.5,
+              fontWeight: 700,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              background: "var(--accent-gold)",
+              color: "#07080C",
+              border: "none",
+              cursor: "pointer",
+              boxShadow: "0 0 20px rgba(201, 154, 75, 0.28)",
+              whiteSpace: "nowrap"
+            }}
+          >
+            <Plus size={16} strokeWidth={2.5} />
+            <span>New Assessment</span>
+          </button>
+
+          {user ? (
+            <button
+              className="ff-user-initial-dot"
+              onClick={handleLogout}
+              title={`Signed in as ${user.name} (Click to Sign Out)`}
+              style={{ border: "none", width: 34, height: 34, fontSize: 13 }}
+            >
+              {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+            </button>
+          ) : AUTH_REQUIRED ? (
+            <button
+              onClick={() => openAuthModal("signin")}
+              className="ff-btn-ghost ff-corner-signin-btn"
+            >
+              <User size={14} />
+              <span>Sign In</span>
+            </button>
+          ) : null}
         </div>
-      </header>
-
-      {/* Slide-Over Navigation Drawer Menu */}
-      {isMobileMenuOpen && (
-        <div className="ff-mobile-nav-backdrop" onClick={() => setIsMobileMenuOpen(false)}>
-          <div className="ff-mobile-nav-drawer" onClick={(e) => e.stopPropagation()}>
-            <div className="ff-mobile-nav-header">
-              <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text-main)", fontFamily: "var(--font-serif)" }}>
-                Your <span style={{ color: "var(--accent-gold)" }}>Wealth</span> Compass
-              </div>
-              <button
-                className="ff-btn-ghost"
-                onClick={() => setIsMobileMenuOpen(false)}
-                style={{ padding: 6, borderRadius: 8, color: "var(--text-fog)" }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {user && (
-              <div className="ff-mobile-user-card">
-                <div className="ff-user-initial-dot" style={{ width: 38, height: 38, fontSize: 16 }}>
-                  {user.name ? user.name.charAt(0).toUpperCase() : "U"}
-                </div>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-main)", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
-                    {user.name}
-                  </div>
-                  <div style={{ fontSize: 12, color: "var(--text-fog)", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
-                    {user.email || user.mobile}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="ff-mobile-nav-links">
-              <button
-                className="ff-btn-gold"
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  handleStartForm();
-                }}
-                style={{ width: "100%", justifyContent: "center", height: 44, borderRadius: 10, fontSize: 13.5, fontWeight: 700 }}
-              >
-                <PlusCircle size={16} /> {activeTab === "wizard" ? "Assess Health" : "+ New Assessment"}
-              </button>
-
-              {user && (
-                <button
-                  className="ff-btn-ghost"
-                  onClick={handleOpenAssessments}
-                  style={{ width: "100%", justifyContent: "flex-start", height: 42, padding: "0 14px", borderRadius: 10, fontSize: 13, gap: 10, border: "1px solid var(--border-subtle)" }}
-                >
-                  <FileText size={16} color="var(--accent-gold)" /> My Assessments
-                </button>
-              )}
-
-              <div style={{ height: 1, background: "var(--border-subtle)", margin: "8px 0" }} />
-
-              {user ? (
-                <button
-                  className="ff-btn-ghost"
-                  onClick={handleLogout}
-                  style={{ width: "100%", justifyContent: "flex-start", height: 42, padding: "0 14px", borderRadius: 10, fontSize: 13, gap: 10, color: "#F87171", border: "1px solid rgba(239,68,68,0.2)" }}
-                >
-                  <LogOut size={16} /> Sign Out
-                </button>
-              ) : AUTH_REQUIRED ? (
-                <button
-                  className="ff-btn-ghost"
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    openAuthModal("signin");
-                  }}
-                  style={{ width: "100%", justifyContent: "center", height: 42, borderRadius: 10, fontSize: 13.5, fontWeight: 600, border: "1px solid var(--border-medium)" }}
-                >
-                  <User size={15} /> Sign In to Account
-                </button>
-              ) : null}
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+      </div>
+    </header>
   );
 }
