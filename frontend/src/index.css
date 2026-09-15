@@ -413,6 +413,43 @@ body {
   }
 }
 
+/* Lakhs Input Styling - Ensures ₹ Symbol & Badge never overlap text */
+.ff-input-56px.ff-input-lakhs {
+  padding-left: 46px !important;
+  padding-right: 118px !important;
+}
+
+.ff-lakhs-rupee-symbol {
+  position: absolute;
+  left: 18px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent-gold);
+  pointer-events: none;
+  user-select: none;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+}
+
+.ff-lakhs-badge {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(201, 154, 75, 0.15);
+  border: 1px solid rgba(201, 154, 75, 0.35);
+  padding: 5px 11px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-gold);
+  pointer-events: none;
+  user-select: none;
+  z-index: 2;
+}
+
 .header-exit-btn {
   font-size: 12.5px;
   padding: 6px 14px;

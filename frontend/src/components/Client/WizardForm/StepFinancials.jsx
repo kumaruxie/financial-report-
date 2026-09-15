@@ -215,50 +215,20 @@ export default function StepFinancials({ data, onChange, onNext }) {
           </div>
         </div>
 
-        <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-          <span style={{
-            position: "absolute",
-            left: 18,
-            fontSize: 16,
-            fontWeight: 700,
-            color: "var(--accent-gold)",
-            pointerEvents: "none",
-            userSelect: "none"
-          }}>
+        <div style={{ position: "relative", display: "flex", alignItems: "center", width: "100%" }}>
+          <span className="ff-lakhs-rupee-symbol">
             ₹
           </span>
           <input
             type="text"
             inputMode="decimal"
             autoComplete="off"
-            className="ff-input-56px"
+            className="ff-input-56px ff-input-lakhs"
             placeholder="e.g. 0.3 for ₹30,000 or 1.5 for ₹1.5L"
             value={incomeLakhsInput}
             onChange={(e) => handleIncomeLakhsChange(e.target.value)}
-            style={{
-              paddingLeft: 38,
-              paddingRight: 115,
-              fontSize: 16,
-              fontWeight: 600,
-              letterSpacing: "0.02em"
-            }}
           />
-          <div style={{
-            position: "absolute",
-            right: 12,
-            display: "flex",
-            alignItems: "center",
-            gap: 4,
-            background: "rgba(201, 154, 75, 0.15)",
-            border: "1px solid rgba(201, 154, 75, 0.35)",
-            padding: "5px 11px",
-            borderRadius: 8,
-            fontSize: 12,
-            fontWeight: 700,
-            color: "var(--accent-gold)",
-            pointerEvents: "none",
-            userSelect: "none"
-          }}>
+          <div className="ff-lakhs-badge">
             Lakh / mo
           </div>
         </div>
